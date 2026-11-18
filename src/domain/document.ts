@@ -7,6 +7,7 @@ import {
   type JsonObject,
 } from "./commands.ts";
 import { assertBounds, containsTile, type Bounds } from "./coordinates.ts";
+import { DEFAULT_MAP_SIZE } from "./canvas.ts";
 import {
   STORAGE_PARTITION_SIZE as SIZE,
   TilePalette,
@@ -121,7 +122,12 @@ export class MapDocument {
 
   constructor(options: { bounds?: Bounds; layers?: readonly Layer[] } = {}) {
     this.#bounds = checkedBounds(
-      options.bounds ?? { minX: 0, minY: 0, maxX: 256, maxY: 256 },
+      options.bounds ?? {
+        minX: 0,
+        minY: 0,
+        maxX: DEFAULT_MAP_SIZE,
+        maxY: DEFAULT_MAP_SIZE,
+      },
     );
     const layers = options.layers ?? [
       { id: layerId("layer-1"), name: "Layer 1" },

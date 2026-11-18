@@ -15,6 +15,9 @@ npm run dev
 Implementation choices for coordinates, canvas growth, and component ownership
 are in [the foundation decisions](docs/foundation-decisions.md).
 
+New Map dimensions, validation, and undoable growth controls are documented in
+[map creation and growth](docs/canvas-creation.md).
+
 The pure TypeScript map API, storage choices, and change-notification contract are
 documented in [the sparse map document](docs/map-document.md).
 

@@ -2,6 +2,7 @@ import { MapDocument, type MutationResult } from "../domain/document.ts";
 import { CommandHistory } from "../domain/history.ts";
 import type { DocumentCommand } from "../domain/commands.ts";
 import type { LayerId } from "../domain/values.ts";
+import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import {
   assertBounds,
@@ -263,6 +264,16 @@ export class EditorSession {
   }
   execute(label: string, commands: Iterable<DocumentCommand>): boolean {
     return this.#run(label, () => this.history.execute(label, commands));
+  }
+  growCanvas(counts: GrowthCounts): boolean {
+    return this.#run("Grow canvas", () =>
+      this.history.execute("Grow canvas", [
+        {
+          kind: "bounds",
+          bounds: grownMapBounds(this.document.bounds, counts),
+        },
+      ]),
+    );
   }
   #run(label: string, run: () => MutationResult): boolean {
     try {

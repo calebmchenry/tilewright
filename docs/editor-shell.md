@@ -6,10 +6,13 @@ TW-006 implementation decisions, subordinate to [INTENT.md](../INTENT.md) and
 
 ## Ownership and subscriptions
 
-`src/main.tsx` constructs one `EditorSession` outside React, passes its stable
-identity to `App`, and disposes it after root unmount on pagehide or HMR. Strict
+`src/main.tsx` constructs an `EditorWorkspace` outside React. Its current
+`EditorSession` is passed to `App`; New Map replaces it with a fresh session.
+The workspace disposes its session after root unmount on pagehide or HMR. Strict
 Mode can replay canvas effects without creating duplicate document controllers.
 A replacement document must have a new session; never write around its history.
+See [map creation and growth](canvas-creation.md) for replacement, modal controls,
+dimension guardrails and undoable bounds changes.
 
 `src/editor/session.ts` owns the document and history, plus separate transient
 stores for active tool/layer, current color, viewport, pointer, focus, renderer

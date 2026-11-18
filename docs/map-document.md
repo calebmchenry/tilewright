@@ -61,8 +61,8 @@ Layer visibility/compositing is not baked into stored content. `addLayer`,
 `renameLayer`, and `reorderLayers` preserve all existing IDs and cells. The current
 model requires at least one layer; transactional removal is available through
 TW-005 commands, while layer-management UX belongs to later work. `setBounds` preserves world coordinates and rejects changes that
-would discard content. Expansion allocates no tile storage. Future growth commands
-enforce the chosen 64-tile increments; the primitive also permits restoring old
+would discard content. Expansion allocates no tile storage. The [Grow Canvas
+operation](canvas-creation.md) enforces the chosen 64-tile increments; the primitive also permits restoring old
 bounds after undoing subsequent edits.
 
 ## Bounded edits and notifications

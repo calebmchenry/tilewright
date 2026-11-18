@@ -6,6 +6,8 @@ import { canEditTiles } from "./editor/viewport";
 import { useStore, useStoreField } from "./editor/useStore";
 import { VISUAL_CHUNK_SIZE, visualChunkAt } from "./domain/coordinates";
 import { gridScale } from "./renderer/grid";
+import { CanvasControls } from "./CanvasControls";
+import type { EditorWorkspace } from "./editor/workspace";
 
 type Props = { session: EditorSession };
 
@@ -306,6 +308,7 @@ export function ViewControls({ session }: Props) {
           {(bounds.maxY - bounds.minY) / VISUAL_CHUNK_SIZE} chunks
         </small>
       </span>
+      <CanvasControls session={session} />
       <ActionButton session={session} action="fit-map" />
       <label>
         Zoom{" "}
@@ -396,7 +399,21 @@ function Feedback({ session }: Props) {
   );
 }
 
-export function App({ session }: Props) {
+export function Workspace({ workspace }: { workspace: EditorWorkspace }) {
+  const { session, generation } = useStore(workspace.state);
+  return (
+    <App
+      key={generation}
+      session={session}
+      onCreateMap={(width, height) => workspace.createMap(width, height)}
+    />
+  );
+}
+
+export function App({
+  session,
+  onCreateMap,
+}: Props & { onCreateMap?: (width: number, height: number) => void }) {
   useEffect(() => {
     const blur = () => session.focus.set("outside");
     window.addEventListener("blur", blur);
@@ -426,6 +443,9 @@ export function App({ session }: Props) {
           Untitled map <DocumentStatus session={session} />
         </div>
         <div className="history-controls">
+          {onCreateMap && (
+            <CanvasControls session={session} onCreateMap={onCreateMap} />
+          )}
           <ActionButton session={session} action="undo" />
           <ActionButton session={session} action="redo" />
           <ActionButton session={session} action="save" />

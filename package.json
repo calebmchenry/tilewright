@@ -17,8 +17,8 @@
     "test:ui": "playwright test",
     "perf:baseline": "node --expose-gc scripts/fixture-baseline.ts",
     "perf:model": "node scripts/model-baseline.ts",
-    "format": "prettier --write src tests 'scripts/*.ts' *.json *.ts index.html docs/desktop-development.md docs/performance.md docs/map-document.md docs/command-history.md docs/editor-shell.md docs/tile-renderer.md docs/navigation.md docs/grid-and-scale.md docs/overview-rendering.md docs/native-performance.md src-tauri/tauri.performance.conf.json README.md && cargo fmt --manifest-path src-tauri/Cargo.toml",
-    "format:check": "prettier --check src tests 'scripts/*.ts' *.json *.ts index.html docs/desktop-development.md docs/performance.md docs/map-document.md docs/command-history.md docs/editor-shell.md docs/tile-renderer.md docs/navigation.md docs/grid-and-scale.md docs/overview-rendering.md docs/native-performance.md src-tauri/tauri.performance.conf.json README.md && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check",
+    "format": "prettier --write src tests 'scripts/*.ts' *.json *.ts index.html docs/desktop-development.md docs/performance.md docs/map-document.md docs/command-history.md docs/editor-shell.md docs/canvas-creation.md docs/tile-renderer.md docs/navigation.md docs/grid-and-scale.md docs/overview-rendering.md docs/native-performance.md src-tauri/tauri.performance.conf.json README.md && cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "format:check": "prettier --check src tests 'scripts/*.ts' *.json *.ts index.html docs/desktop-development.md docs/performance.md docs/map-document.md docs/command-history.md docs/editor-shell.md docs/canvas-creation.md docs/tile-renderer.md docs/navigation.md docs/grid-and-scale.md docs/overview-rendering.md docs/native-performance.md src-tauri/tauri.performance.conf.json README.md && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check",
     "perf:history": "node scripts/history-baseline.ts",
     "build:performance": "tauri build --config src-tauri/tauri.performance.conf.json --features performance --bundles app -- --locked",
     "perf:native": "node scripts/native-performance.ts"

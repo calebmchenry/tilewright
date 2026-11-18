@@ -40,8 +40,9 @@ may create a layer/grow bounds and then paint into it.
   bottom-to-top order and name snapshots; at least one layer remains. Removing a
   layer captures its occupied data, including content hidden by other layers.
 - `bounds`: safe-integer fixed bounds, preserving world coordinates. This primitive
-  can restore/shrink bounds only when no occupied content would be lost. The later
-  Grow Canvas command enforces the chosen 64-tile increments.
+  can restore/shrink bounds only when no occupied content would be lost. The
+  [Grow Canvas operation](canvas-creation.md) enforces the chosen 64-tile increments
+  and authoring size guardrail before dispatching this command.
 - `registry` and `annotation`: upsert or delete (`value: null`) a record by its
   distinct branded identity. Values are immutable, finite, acyclic JSON objects;
   nested arrays/objects are copied, keys canonicalized, and non-JSON values rejected.
