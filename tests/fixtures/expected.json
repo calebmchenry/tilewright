@@ -1,0 +1,108 @@
+{
+  "frontier-v1": {
+    "version": 1,
+    "id": "frontier-v1",
+    "seed": 439041101,
+    "terrainPercent": 18,
+    "bounds": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 6400,
+      "maxY": 6400
+    },
+    "layers": ["terrain", "buildings", "furniture", "canopy"],
+    "palette": [
+      {
+        "key": "grass",
+        "rgba": "#629653ff",
+        "meaning": "Grass"
+      },
+      {
+        "key": "water",
+        "rgba": "#417aabff",
+        "meaning": "Water"
+      },
+      {
+        "key": "stone",
+        "rgba": "#8d939cff",
+        "meaning": "Stone building"
+      },
+      {
+        "key": "wood",
+        "rgba": "#a7754cff",
+        "meaning": "Wood building"
+      },
+      {
+        "key": "ink",
+        "rgba": "#000000ff",
+        "meaning": null
+      },
+      {
+        "key": "leaves",
+        "rgba": "#285c39ff",
+        "meaning": "Tree canopy"
+      }
+    ],
+    "runCount": 138222,
+    "occupiedByLayer": [6545856, 57024, 3564, 14256],
+    "occupiedLayerCells": 6620700,
+    "uniqueOccupiedPositions": 6545856,
+    "emptyPositions": 34414144,
+    "overlappingPositions": 64944,
+    "positionsByDepth": [34414144, 6480912, 55440, 9108, 396],
+    "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+  },
+  "heartland-v1": {
+    "version": 1,
+    "id": "heartland-v1",
+    "seed": 1584361601,
+    "terrainPercent": 82,
+    "bounds": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 6400,
+      "maxY": 6400
+    },
+    "layers": ["terrain", "buildings", "furniture", "canopy"],
+    "palette": [
+      {
+        "key": "grass",
+        "rgba": "#629653ff",
+        "meaning": "Grass"
+      },
+      {
+        "key": "water",
+        "rgba": "#417aabff",
+        "meaning": "Water"
+      },
+      {
+        "key": "stone",
+        "rgba": "#8d939cff",
+        "meaning": "Stone building"
+      },
+      {
+        "key": "wood",
+        "rgba": "#a7754cff",
+        "meaning": "Wood building"
+      },
+      {
+        "key": "ink",
+        "rgba": "#000000ff",
+        "meaning": null
+      },
+      {
+        "key": "leaves",
+        "rgba": "#285c39ff",
+        "meaning": "Tree canopy"
+      }
+    ],
+    "runCount": 500802,
+    "occupiedByLayer": [23950356, 57024, 3564, 14256],
+    "occupiedLayerCells": 24025200,
+    "uniqueOccupiedPositions": 23950356,
+    "emptyPositions": 17009644,
+    "overlappingPositions": 64944,
+    "positionsByDepth": [17009644, 23885412, 55440, 9108, 396],
+    "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+  }
+}

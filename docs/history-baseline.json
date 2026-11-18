@@ -1,0 +1,749 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-18T19:29:26.749Z",
+  "scope": "Atomic large sparse edit and undo/redo with verified notification content; domain only, no rendered-frame or desktop performance budget claim.",
+  "method": "Two fresh Node --expose-gc processes per background. Full 6400x6400 four-layer background (empty or golden-verified heartland). Two edit layers each seed 200 rows x 100 four-cell runs. Replace with eight-cell runs crossing storage/visual boundaries, clipped only in fixture construction at x=6400. Timing includes command generation/copies, storage, inverse capture, compaction, history accounting and validating notification listener. Post-GC heapUsed + arrayBuffers deltas include runtime/JIT and changed storage/history, not physical app footprint. External already includes ArrayBuffers. Before/after memory snapshots do not establish transient heap peak; maxRSS is the whole process high-water mark. A tiny edit under maxEntries=1 evicts the large history entry for a release measurement; GC outside timing. Full edited-layer equality and background hashing outside operation timing. No percentile claim from two samples.",
+  "inputsSha256": {
+    "package.json": "4bd1ff409312c6dda7d845a3aba817036aa136b75c80a2fa2a3f1c884abc4e0b",
+    "package-lock.json": "54acb86baa19877731ea3afdaa439712c696bbd91e6c27b9ade3dc71a632cc4a",
+    ".nvmrc": "584f19ccde29925286e32f566a2aa06c89efb4e2eb2bb2fc9ea5d56e2d190ac4",
+    "src/domain/coordinates.ts": "186cc3293555b5bd153f40a018c993a91ac92ab1a2c59219d3886dded8032b17",
+    "src/domain/values.ts": "181b387dc3ccb930085ccec8a713020ff92e5f17aafdfc90ff8984f1e8f55613",
+    "src/domain/storage.ts": "b8adefd3b9d6f197909b845a35e998375ac059fe72a220d5e9cae9f9dd07b670",
+    "src/domain/document.ts": "60be4304856aba1ed173c4b9fac20d6d8b05270d1e03f231612c65bee08feb94",
+    "src/domain/commands.ts": "1811ec5d77866137497366d89659fa5d484a0eb4925db0c319b124adc4594352",
+    "src/domain/history.ts": "7419ed9d3ab746b97d970f697cbd7002ccbc1b03928d6522107f8e4ed8c88b2c",
+    "tests/fixtures/document.ts": "2d97cb9e1f02390709d3defbfdf9bd90cb8d5716f5deaef3dd46b30f85a4a70a",
+    "tests/fixtures/maps.ts": "fc4a5576552bce3491d0b09fe2e13848af9aa314fa441fdf5ad35f8e15b0ca5a",
+    "tests/fixtures/inspect.ts": "60577c000437fca722183f52ff1e5aeb82835437e7121b8e776b42195bddc856",
+    "tests/fixtures/expected.json": "264bef125e7a84d86d3a538f91f4b04f8643bd510a681706fa62eaf926f8abe8",
+    "scripts/history-baseline.ts": "78467df6cf2461746aa49c96509151ad5794bf9c060b2ae96412d5278e65fa6c"
+  },
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v24.22.3",
+    "cpu": "Apple M1 Pro",
+    "logicalCpus": 8,
+    "totalMemoryBytes": 17179869184,
+    "model": "MacBookPro18,3",
+    "macOS": "15.8.1",
+    "macOSBuild": "24H32"
+  },
+  "measurements": [
+    {
+      "id": "empty",
+      "passes": [
+        {
+          "pass": 1,
+          "id": "empty",
+          "backgroundGoldenMatched": null,
+          "backgroundContentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "backgroundUnchanged": true,
+          "backgroundStorage": {
+            "partitionSize": 32,
+            "paletteEntries": 0,
+            "occupiedCells": 0,
+            "partitions": 0,
+            "typedArrayBytes": 0,
+            "layers": [
+              {
+                "layerId": "terrain",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "buildings",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "furniture",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "canopy",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              }
+            ]
+          },
+          "editedCells": 318400,
+          "overwrittenCells": 160000,
+          "inputRuns": 40000,
+          "notifications": [
+            {
+              "direction": "commit",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "undo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "redo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            }
+          ],
+          "retainedHistory": {
+            "revision": 1,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 29329292,
+            "undoLabel": "large sparse edit",
+            "redoLabel": null
+          },
+          "prunedHistory": {
+            "revision": 2,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 648,
+            "undoLabel": "evict",
+            "redoLabel": null
+          },
+          "timing": {
+            "commit": {
+              "ms": 139.52383300000002,
+              "afterOperation": {
+                "rss": 249888768,
+                "heapTotal": 132743168,
+                "heapUsed": 67521080,
+                "external": 9608445,
+                "arrayBuffers": 143635
+              }
+            },
+            "undo": {
+              "ms": 117.54908300000011,
+              "afterOperation": {
+                "rss": 310657024,
+                "heapTotal": 220315648,
+                "heapUsed": 106989120,
+                "external": 9608445,
+                "arrayBuffers": 143635
+              }
+            },
+            "redo": {
+              "ms": 117.68654199999992,
+              "afterOperation": {
+                "rss": 345276416,
+                "heapTotal": 208715776,
+                "heapUsed": 126488160,
+                "external": 9608445,
+                "arrayBuffers": 143635
+              }
+            }
+          },
+          "memoryBytes": {
+            "before": {
+              "rss": 129499136,
+              "heapTotal": 57131008,
+              "heapUsed": 22105960,
+              "external": 9576933,
+              "arrayBuffers": 143635
+            },
+            "committed": {
+              "rss": 244662272,
+              "heapTotal": 117800960,
+              "heapUsed": 40858136,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "undone": {
+              "rss": 306937856,
+              "heapTotal": 173899776,
+              "heapUsed": 30503600,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "redone": {
+              "rss": 339296256,
+              "heapTotal": 186220544,
+              "heapUsed": 41053960,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "pruned": {
+              "rss": 338657280,
+              "heapTotal": 171425792,
+              "heapUsed": 34624264,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "commitHeapAndBuffersDelta": 18752176,
+            "undoHeapAndBuffersDelta": 8397640,
+            "redoHeapAndBuffersDelta": 18948000,
+            "releasedByHistoryEviction": 6429696
+          },
+          "processMaxRssBytes": 349437952
+        },
+        {
+          "pass": 2,
+          "id": "empty",
+          "backgroundGoldenMatched": null,
+          "backgroundContentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "backgroundUnchanged": true,
+          "backgroundStorage": {
+            "partitionSize": 32,
+            "paletteEntries": 0,
+            "occupiedCells": 0,
+            "partitions": 0,
+            "typedArrayBytes": 0,
+            "layers": [
+              {
+                "layerId": "terrain",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "buildings",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "furniture",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "canopy",
+                "occupiedCells": 0,
+                "partitions": 0,
+                "densePartitions": 0,
+                "sparsePartitions": 0,
+                "typedArrayBytes": 0
+              }
+            ]
+          },
+          "editedCells": 318400,
+          "overwrittenCells": 160000,
+          "inputRuns": 40000,
+          "notifications": [
+            {
+              "direction": "commit",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "undo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "redo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            }
+          ],
+          "retainedHistory": {
+            "revision": 1,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 29329292,
+            "undoLabel": "large sparse edit",
+            "redoLabel": null
+          },
+          "prunedHistory": {
+            "revision": 2,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 648,
+            "undoLabel": "evict",
+            "redoLabel": null
+          },
+          "timing": {
+            "commit": {
+              "ms": 151.597083,
+              "afterOperation": {
+                "rss": 248627200,
+                "heapTotal": 133267456,
+                "heapUsed": 67821104,
+                "external": 9608445,
+                "arrayBuffers": 143635
+              }
+            },
+            "undo": {
+              "ms": 115.67937500000016,
+              "afterOperation": {
+                "rss": 309329920,
+                "heapTotal": 220053504,
+                "heapUsed": 106129016,
+                "external": 9608445,
+                "arrayBuffers": 143635
+              }
+            },
+            "redo": {
+              "ms": 119.53295800000001,
+              "afterOperation": {
+                "rss": 346341376,
+                "heapTotal": 208977920,
+                "heapUsed": 125730992,
+                "external": 9608445,
+                "arrayBuffers": 143635
+              }
+            }
+          },
+          "memoryBytes": {
+            "before": {
+              "rss": 128761856,
+              "heapTotal": 56606720,
+              "heapUsed": 22105992,
+              "external": 9576933,
+              "arrayBuffers": 143635
+            },
+            "committed": {
+              "rss": 243793920,
+              "heapTotal": 118587392,
+              "heapUsed": 40859008,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "undone": {
+              "rss": 305414144,
+              "heapTotal": 173637632,
+              "heapUsed": 30503632,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "redone": {
+              "rss": 340623360,
+              "heapTotal": 185434112,
+              "heapUsed": 41017752,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "pruned": {
+              "rss": 340164608,
+              "heapTotal": 171425792,
+              "heapUsed": 34624096,
+              "external": 9608445,
+              "arrayBuffers": 143635
+            },
+            "commitHeapAndBuffersDelta": 18753016,
+            "undoHeapAndBuffersDelta": 8397640,
+            "redoHeapAndBuffersDelta": 18911760,
+            "releasedByHistoryEviction": 6393656
+          },
+          "processMaxRssBytes": 349323264
+        }
+      ]
+    },
+    {
+      "id": "heartland-v1",
+      "passes": [
+        {
+          "pass": 1,
+          "id": "heartland-v1",
+          "backgroundGoldenMatched": true,
+          "backgroundContentHash": "8e74ac9e2d0525f03cb14691b04d9c8ece1843376140ea7f2158f7eb8e52027f",
+          "backgroundUnchanged": true,
+          "backgroundStorage": {
+            "partitionSize": 32,
+            "paletteEntries": 6,
+            "occupiedCells": 24025200,
+            "partitions": 35021,
+            "typedArrayBytes": 123985920,
+            "layers": [
+              {
+                "layerId": "terrain",
+                "occupiedCells": 23950356,
+                "partitions": 32150,
+                "densePartitions": 30270,
+                "sparsePartitions": 1880,
+                "typedArrayBytes": 123985920
+              },
+              {
+                "layerId": "buildings",
+                "occupiedCells": 57024,
+                "partitions": 1584,
+                "densePartitions": 0,
+                "sparsePartitions": 1584,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "furniture",
+                "occupiedCells": 3564,
+                "partitions": 891,
+                "densePartitions": 0,
+                "sparsePartitions": 891,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "canopy",
+                "occupiedCells": 14256,
+                "partitions": 396,
+                "densePartitions": 0,
+                "sparsePartitions": 396,
+                "typedArrayBytes": 0
+              }
+            ]
+          },
+          "editedCells": 318400,
+          "overwrittenCells": 160000,
+          "inputRuns": 40000,
+          "notifications": [
+            {
+              "direction": "commit",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "undo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "redo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            }
+          ],
+          "retainedHistory": {
+            "revision": 1,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 29329292,
+            "undoLabel": "large sparse edit",
+            "redoLabel": null
+          },
+          "prunedHistory": {
+            "revision": 2,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 648,
+            "undoLabel": "evict",
+            "redoLabel": null
+          },
+          "timing": {
+            "commit": {
+              "ms": 130.22125000000005,
+              "afterOperation": {
+                "rss": 449200128,
+                "heapTotal": 214712320,
+                "heapUsed": 130000832,
+                "external": 133594365,
+                "arrayBuffers": 124129555
+              }
+            },
+            "undo": {
+              "ms": 122.50345799999968,
+              "afterOperation": {
+                "rss": 485752832,
+                "heapTotal": 232538112,
+                "heapUsed": 145035344,
+                "external": 133594365,
+                "arrayBuffers": 124129555
+              }
+            },
+            "redo": {
+              "ms": 117.07337499999994,
+              "afterOperation": {
+                "rss": 487669760,
+                "heapTotal": 219234304,
+                "heapUsed": 150914184,
+                "external": 133594365,
+                "arrayBuffers": 124129555
+              }
+            }
+          },
+          "memoryBytes": {
+            "before": {
+              "rss": 329629696,
+              "heapTotal": 108658688,
+              "heapUsed": 39774200,
+              "external": 133600725,
+              "arrayBuffers": 124135955
+            },
+            "committed": {
+              "rss": 433881088,
+              "heapTotal": 201310208,
+              "heapUsed": 58478232,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "undone": {
+              "rss": 479821824,
+              "heapTotal": 190562304,
+              "heapUsed": 48113024,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "redone": {
+              "rss": 481378304,
+              "heapTotal": 201834496,
+              "heapUsed": 58561208,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "pruned": {
+              "rss": 480821248,
+              "heapTotal": 187826176,
+              "heapUsed": 52180352,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "commitHeapAndBuffersDelta": 18697632,
+            "undoHeapAndBuffersDelta": 8332424,
+            "redoHeapAndBuffersDelta": 18780608,
+            "releasedByHistoryEviction": 6380856
+          },
+          "processMaxRssBytes": 490700800
+        },
+        {
+          "pass": 2,
+          "id": "heartland-v1",
+          "backgroundGoldenMatched": true,
+          "backgroundContentHash": "8e74ac9e2d0525f03cb14691b04d9c8ece1843376140ea7f2158f7eb8e52027f",
+          "backgroundUnchanged": true,
+          "backgroundStorage": {
+            "partitionSize": 32,
+            "paletteEntries": 6,
+            "occupiedCells": 24025200,
+            "partitions": 35021,
+            "typedArrayBytes": 123985920,
+            "layers": [
+              {
+                "layerId": "terrain",
+                "occupiedCells": 23950356,
+                "partitions": 32150,
+                "densePartitions": 30270,
+                "sparsePartitions": 1880,
+                "typedArrayBytes": 123985920
+              },
+              {
+                "layerId": "buildings",
+                "occupiedCells": 57024,
+                "partitions": 1584,
+                "densePartitions": 0,
+                "sparsePartitions": 1584,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "furniture",
+                "occupiedCells": 3564,
+                "partitions": 891,
+                "densePartitions": 0,
+                "sparsePartitions": 891,
+                "typedArrayBytes": 0
+              },
+              {
+                "layerId": "canopy",
+                "occupiedCells": 14256,
+                "partitions": 396,
+                "densePartitions": 0,
+                "sparsePartitions": 396,
+                "typedArrayBytes": 0
+              }
+            ]
+          },
+          "editedCells": 318400,
+          "overwrittenCells": 160000,
+          "inputRuns": 40000,
+          "notifications": [
+            {
+              "direction": "commit",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "undo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            },
+            {
+              "direction": "redo",
+              "runs": 79600,
+              "cells": 318400,
+              "layers": [
+                "edit-a",
+                "edit-b"
+              ]
+            }
+          ],
+          "retainedHistory": {
+            "revision": 1,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 29329292,
+            "undoLabel": "large sparse edit",
+            "redoLabel": null
+          },
+          "prunedHistory": {
+            "revision": 2,
+            "savedRevision": 0,
+            "recoveryRevision": null,
+            "dirty": true,
+            "undoSteps": 1,
+            "redoSteps": 0,
+            "retainedBytes": 648,
+            "undoLabel": "evict",
+            "redoLabel": null
+          },
+          "timing": {
+            "commit": {
+              "ms": 142.670791,
+              "afterOperation": {
+                "rss": 450412544,
+                "heapTotal": 212140032,
+                "heapUsed": 86655952,
+                "external": 133594365,
+                "arrayBuffers": 124129555
+              }
+            },
+            "undo": {
+              "ms": 121.05637499999966,
+              "afterOperation": {
+                "rss": 475529216,
+                "heapTotal": 231866368,
+                "heapUsed": 141187392,
+                "external": 133594365,
+                "arrayBuffers": 124129555
+              }
+            },
+            "redo": {
+              "ms": 119.63900000000012,
+              "afterOperation": {
+                "rss": 478347264,
+                "heapTotal": 219234304,
+                "heapUsed": 150538120,
+                "external": 133594365,
+                "arrayBuffers": 124129555
+              }
+            }
+          },
+          "memoryBytes": {
+            "before": {
+              "rss": 327778304,
+              "heapTotal": 176029696,
+              "heapUsed": 39776720,
+              "external": 133600725,
+              "arrayBuffers": 124135955
+            },
+            "committed": {
+              "rss": 446431232,
+              "heapTotal": 198426624,
+              "heapUsed": 58482504,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "undone": {
+              "rss": 469516288,
+              "heapTotal": 188465152,
+              "heapUsed": 48117896,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "redone": {
+              "rss": 472481792,
+              "heapTotal": 200261632,
+              "heapUsed": 58566392,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "pruned": {
+              "rss": 472170496,
+              "heapTotal": 187564032,
+              "heapUsed": 52184848,
+              "external": 133594365,
+              "arrayBuffers": 124129555
+            },
+            "commitHeapAndBuffersDelta": 18699384,
+            "undoHeapAndBuffersDelta": 8334776,
+            "redoHeapAndBuffersDelta": 18783272,
+            "releasedByHistoryEviction": 6381544
+          },
+          "processMaxRssBytes": 480165888
+        }
+      ]
+    }
+  ]
+}

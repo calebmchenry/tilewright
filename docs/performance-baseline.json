@@ -1,0 +1,433 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-18T18:58:18.169Z",
+  "scope": "Fixture generation + validation + occupancy counting + SHA-256 only; no editor performance measured.",
+  "buildMode": "Node native TypeScript stripping, unbundled, no renderer, --expose-gc",
+  "method": "Two sequential full generations per fixture; GC before/after each; performance.now wall time; process.memoryUsage snapshots; process-wide cumulative maxRSS (not per-fixture peak).",
+  "inputsSha256": {
+    ".nvmrc": "584f19ccde29925286e32f566a2aa06c89efb4e2eb2bb2fc9ea5d56e2d190ac4",
+    "package.json": "b3c8aa516082f2c9c6cf52012ee5db84fe291a3169365d79f4124f01ab29be14",
+    "package-lock.json": "54acb86baa19877731ea3afdaa439712c696bbd91e6c27b9ade3dc71a632cc4a",
+    "tsconfig.domain.json": "0b1e916cc9344aa48b0f4a34267c8e0a944790f9db2b960b8212ab0c75cc5c46",
+    "src/domain/coordinates.ts": "186cc3293555b5bd153f40a018c993a91ac92ab1a2c59219d3886dded8032b17",
+    "tests/fixtures/maps.ts": "fc4a5576552bce3491d0b09fe2e13848af9aa314fa441fdf5ad35f8e15b0ca5a",
+    "tests/fixtures/inspect.ts": "60577c000437fca722183f52ff1e5aeb82835437e7121b8e776b42195bddc856",
+    "tests/fixtures/expected.json": "264bef125e7a84d86d3a538f91f4b04f8643bd510a681706fa62eaf926f8abe8",
+    "scripts/fixture-baseline.ts": "28ead22f1aa7d473c51262a56b4254b825e832dc3e01453961e7601937e1c774"
+  },
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v24.22.3",
+    "cpu": "Apple M1 Pro",
+    "logicalCpus": 8,
+    "totalMemoryBytes": 17179869184,
+    "model": "MacBookPro18,3",
+    "macOS": "15.8.1",
+    "macOSBuild": "24H32"
+  },
+  "measurements": [
+    {
+      "id": "frontier-v1",
+      "equivalent": true,
+      "matchesGolden": true,
+      "passes": [
+        {
+          "pass": 1,
+          "elapsedMs": 254.16424999999998,
+          "memoryBytes": {
+            "before": {
+              "rss": 94519296,
+              "heapTotal": 14630912,
+              "heapUsed": 9298344,
+              "external": 9183753,
+              "arrayBuffers": 143635
+            },
+            "after": {
+              "rss": 104136704,
+              "heapTotal": 14893056,
+              "heapUsed": 10162880,
+              "external": 9190157,
+              "arrayBuffers": 150035
+            },
+            "retained": {
+              "rss": 104054784,
+              "heapTotal": 14630912,
+              "heapUsed": 9387368,
+              "external": 9190157,
+              "arrayBuffers": 143635
+            }
+          },
+          "processMaxRssBytes": 104185856,
+          "content": {
+            "version": 1,
+            "id": "frontier-v1",
+            "seed": 439041101,
+            "terrainPercent": 18,
+            "bounds": {
+              "minX": 0,
+              "minY": 0,
+              "maxX": 6400,
+              "maxY": 6400
+            },
+            "layers": [
+              "terrain",
+              "buildings",
+              "furniture",
+              "canopy"
+            ],
+            "palette": [
+              {
+                "key": "grass",
+                "rgba": "#629653ff",
+                "meaning": "Grass"
+              },
+              {
+                "key": "water",
+                "rgba": "#417aabff",
+                "meaning": "Water"
+              },
+              {
+                "key": "stone",
+                "rgba": "#8d939cff",
+                "meaning": "Stone building"
+              },
+              {
+                "key": "wood",
+                "rgba": "#a7754cff",
+                "meaning": "Wood building"
+              },
+              {
+                "key": "ink",
+                "rgba": "#000000ff",
+                "meaning": null
+              },
+              {
+                "key": "leaves",
+                "rgba": "#285c39ff",
+                "meaning": "Tree canopy"
+              }
+            ],
+            "runCount": 138222,
+            "occupiedByLayer": [
+              6545856,
+              57024,
+              3564,
+              14256
+            ],
+            "occupiedLayerCells": 6620700,
+            "uniqueOccupiedPositions": 6545856,
+            "emptyPositions": 34414144,
+            "overlappingPositions": 64944,
+            "positionsByDepth": [
+              34414144,
+              6480912,
+              55440,
+              9108,
+              396
+            ],
+            "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+          }
+        },
+        {
+          "pass": 2,
+          "elapsedMs": 235.980458,
+          "memoryBytes": {
+            "before": {
+              "rss": 104153088,
+              "heapTotal": 14630912,
+              "heapUsed": 9388360,
+              "external": 9183757,
+              "arrayBuffers": 143635
+            },
+            "after": {
+              "rss": 105971712,
+              "heapTotal": 14893056,
+              "heapUsed": 10612088,
+              "external": 9190157,
+              "arrayBuffers": 150035
+            },
+            "retained": {
+              "rss": 106020864,
+              "heapTotal": 14893056,
+              "heapUsed": 9391232,
+              "external": 9190157,
+              "arrayBuffers": 143635
+            }
+          },
+          "processMaxRssBytes": 106020864,
+          "content": {
+            "version": 1,
+            "id": "frontier-v1",
+            "seed": 439041101,
+            "terrainPercent": 18,
+            "bounds": {
+              "minX": 0,
+              "minY": 0,
+              "maxX": 6400,
+              "maxY": 6400
+            },
+            "layers": [
+              "terrain",
+              "buildings",
+              "furniture",
+              "canopy"
+            ],
+            "palette": [
+              {
+                "key": "grass",
+                "rgba": "#629653ff",
+                "meaning": "Grass"
+              },
+              {
+                "key": "water",
+                "rgba": "#417aabff",
+                "meaning": "Water"
+              },
+              {
+                "key": "stone",
+                "rgba": "#8d939cff",
+                "meaning": "Stone building"
+              },
+              {
+                "key": "wood",
+                "rgba": "#a7754cff",
+                "meaning": "Wood building"
+              },
+              {
+                "key": "ink",
+                "rgba": "#000000ff",
+                "meaning": null
+              },
+              {
+                "key": "leaves",
+                "rgba": "#285c39ff",
+                "meaning": "Tree canopy"
+              }
+            ],
+            "runCount": 138222,
+            "occupiedByLayer": [
+              6545856,
+              57024,
+              3564,
+              14256
+            ],
+            "occupiedLayerCells": 6620700,
+            "uniqueOccupiedPositions": 6545856,
+            "emptyPositions": 34414144,
+            "overlappingPositions": 64944,
+            "positionsByDepth": [
+              34414144,
+              6480912,
+              55440,
+              9108,
+              396
+            ],
+            "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+          }
+        }
+      ]
+    },
+    {
+      "id": "heartland-v1",
+      "equivalent": true,
+      "matchesGolden": true,
+      "passes": [
+        {
+          "pass": 1,
+          "elapsedMs": 302.51970800000004,
+          "memoryBytes": {
+            "before": {
+              "rss": 106086400,
+              "heapTotal": 14630912,
+              "heapUsed": 9423128,
+              "external": 9215229,
+              "arrayBuffers": 143635
+            },
+            "after": {
+              "rss": 106168320,
+              "heapTotal": 14630912,
+              "heapUsed": 10456128,
+              "external": 9221629,
+              "arrayBuffers": 150035
+            },
+            "retained": {
+              "rss": 106233856,
+              "heapTotal": 14893056,
+              "heapUsed": 9430664,
+              "external": 9221629,
+              "arrayBuffers": 143635
+            }
+          },
+          "processMaxRssBytes": 106233856,
+          "content": {
+            "version": 1,
+            "id": "heartland-v1",
+            "seed": 1584361601,
+            "terrainPercent": 82,
+            "bounds": {
+              "minX": 0,
+              "minY": 0,
+              "maxX": 6400,
+              "maxY": 6400
+            },
+            "layers": [
+              "terrain",
+              "buildings",
+              "furniture",
+              "canopy"
+            ],
+            "palette": [
+              {
+                "key": "grass",
+                "rgba": "#629653ff",
+                "meaning": "Grass"
+              },
+              {
+                "key": "water",
+                "rgba": "#417aabff",
+                "meaning": "Water"
+              },
+              {
+                "key": "stone",
+                "rgba": "#8d939cff",
+                "meaning": "Stone building"
+              },
+              {
+                "key": "wood",
+                "rgba": "#a7754cff",
+                "meaning": "Wood building"
+              },
+              {
+                "key": "ink",
+                "rgba": "#000000ff",
+                "meaning": null
+              },
+              {
+                "key": "leaves",
+                "rgba": "#285c39ff",
+                "meaning": "Tree canopy"
+              }
+            ],
+            "runCount": 500802,
+            "occupiedByLayer": [
+              23950356,
+              57024,
+              3564,
+              14256
+            ],
+            "occupiedLayerCells": 24025200,
+            "uniqueOccupiedPositions": 23950356,
+            "emptyPositions": 17009644,
+            "overlappingPositions": 64944,
+            "positionsByDepth": [
+              17009644,
+              23885412,
+              55440,
+              9108,
+              396
+            ],
+            "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+          }
+        },
+        {
+          "pass": 2,
+          "elapsedMs": 296.35929199999987,
+          "memoryBytes": {
+            "before": {
+              "rss": 106233856,
+              "heapTotal": 14893056,
+              "heapUsed": 9437248,
+              "external": 9215229,
+              "arrayBuffers": 143635
+            },
+            "after": {
+              "rss": 106561536,
+              "heapTotal": 14893056,
+              "heapUsed": 10727504,
+              "external": 9221629,
+              "arrayBuffers": 150035
+            },
+            "retained": {
+              "rss": 106561536,
+              "heapTotal": 14893056,
+              "heapUsed": 9438504,
+              "external": 9221629,
+              "arrayBuffers": 143635
+            }
+          },
+          "processMaxRssBytes": 106561536,
+          "content": {
+            "version": 1,
+            "id": "heartland-v1",
+            "seed": 1584361601,
+            "terrainPercent": 82,
+            "bounds": {
+              "minX": 0,
+              "minY": 0,
+              "maxX": 6400,
+              "maxY": 6400
+            },
+            "layers": [
+              "terrain",
+              "buildings",
+              "furniture",
+              "canopy"
+            ],
+            "palette": [
+              {
+                "key": "grass",
+                "rgba": "#629653ff",
+                "meaning": "Grass"
+              },
+              {
+                "key": "water",
+                "rgba": "#417aabff",
+                "meaning": "Water"
+              },
+              {
+                "key": "stone",
+                "rgba": "#8d939cff",
+                "meaning": "Stone building"
+              },
+              {
+                "key": "wood",
+                "rgba": "#a7754cff",
+                "meaning": "Wood building"
+              },
+              {
+                "key": "ink",
+                "rgba": "#000000ff",
+                "meaning": null
+              },
+              {
+                "key": "leaves",
+                "rgba": "#285c39ff",
+                "meaning": "Tree canopy"
+              }
+            ],
+            "runCount": 500802,
+            "occupiedByLayer": [
+              23950356,
+              57024,
+              3564,
+              14256
+            ],
+            "occupiedLayerCells": 24025200,
+            "uniqueOccupiedPositions": 23950356,
+            "emptyPositions": 17009644,
+            "overlappingPositions": 64944,
+            "positionsByDepth": [
+              17009644,
+              23885412,
+              55440,
+              9108,
+              396
+            ],
+            "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+          }
+        }
+      ]
+    }
+  ]
+}
