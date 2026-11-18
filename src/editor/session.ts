@@ -1,7 +1,13 @@
 import { MapDocument, type MutationResult } from "../domain/document.ts";
 import { CommandHistory } from "../domain/history.ts";
 import type { DocumentCommand } from "../domain/commands.ts";
-import { layerId, type LayerId } from "../domain/values.ts";
+import {
+  layerId,
+  rawColor,
+  type LayerId,
+  type TileValue,
+} from "../domain/values.ts";
+import { normalizePaintColor, type ColorInput } from "../domain/colors.ts";
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import {
@@ -98,7 +104,7 @@ export class EditorSession {
   readonly canvasSize = new Store<ViewSize>(
     Object.freeze({ width: 1, height: 1 }),
   );
-  readonly color = new Store("#91baa1");
+  readonly color = new Store(normalizePaintColor("#91baa1")!);
   readonly viewport = new Store<Viewport>(
     Object.freeze({ x: 0, y: 0, zoom: 1 }),
   );
@@ -370,14 +376,23 @@ export class EditorSession {
     }
     this.activeLayer.set(id);
   }
-  setColor(color: string): boolean {
-    if (!/^#[0-9a-f]{6}$/i.test(color)) {
-      this.report("Enter a color as #RRGGBB, for example #91BAA1.", "error");
+  setColor(input: ColorInput): boolean {
+    if (this.#closed) return false;
+    const color = normalizePaintColor(input);
+    if (!color) {
+      this.report(
+        "Enter #RGB or #RRGGBB, or RGB whole numbers from 0 to 255. Colors must be fully opaque.",
+        "error",
+      );
       return false;
     }
-    this.color.set(color.toLowerCase());
-    this.report(`Current color: ${color.toUpperCase()}`);
+    this.color.set(color);
+    this.report(`Current color: ${color.slice(0, 7).toUpperCase()}`);
     return true;
+  }
+  /** Raw paint is independent of registry matches; erasers write null instead. */
+  currentPaint(): TileValue {
+    return rawColor(this.color.getSnapshot());
   }
   setCanvasSize(width: number, height: number): void {
     const previous = this.canvasSize.getSnapshot();

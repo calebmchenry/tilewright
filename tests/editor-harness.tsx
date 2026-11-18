@@ -16,19 +16,22 @@ import type { CanvasInvalidation } from "../src/editor/invalidation";
 import "../src/styles.css";
 import { populatedDocument } from "./fixtures/populated";
 import { gridDocument } from "./fixtures/grid";
+import { colorsDocument } from "./fixtures/colors";
 
 const fixture = new URLSearchParams(location.search).get("fixture");
 const session = new EditorSession(
-  fixture === "grid"
-    ? gridDocument()
-    : fixture
-      ? populatedDocument(fixture === "heartland" ? 1 : 0)
-      : new MapDocument({
-          layers: [
-            { id: layerId("terrain"), name: "Terrain" },
-            { id: layerId("buildings"), name: "Buildings" },
-          ],
-        }),
+  fixture === "colors"
+    ? colorsDocument()
+    : fixture === "grid"
+      ? gridDocument()
+      : fixture
+        ? populatedDocument(fixture === "heartland" ? 1 : 0)
+        : new MapDocument({
+            layers: [
+              { id: layerId("terrain"), name: "Terrain" },
+              { id: layerId("buildings"), name: "Buildings" },
+            ],
+          }),
 );
 const renders: Record<string, number> = {};
 const invalidations: CanvasInvalidation[] = [];

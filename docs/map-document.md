@@ -57,6 +57,10 @@ A `Cell` is exactly one of:
   up by color equality. Registry resolution/recoloring and missing-reference import
   policy await registry/codecs tickets; this model can hold unresolved identities.
 
+The [TW-014 authoring controls](color-selection.md) choose opaque sRGB colors and
+normalize them to this same raw RGBA representation. The lower-level model keeps
+its existing alpha support and distinct `null` empty value.
+
 Layer visibility/compositing is not baked into stored content. `addLayer`,
 `renameLayer`, and `reorderLayers` preserve all existing IDs and cells. The current
 model requires at least one layer; transactional removal is available through

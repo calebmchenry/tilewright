@@ -196,6 +196,34 @@ form > button {
   height: 12px;
   border: 1px solid #a0abba;
 }
+.rgb-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0;
+  margin: 16px 0 0;
+  border: 0;
+  min-width: 0;
+}
+.rgb-fields legend {
+  margin-bottom: 8px;
+  color: #acbacb;
+  font-size: 12px;
+}
+.rgb-fields input {
+  padding: 7px 5px;
+}
+.color-association {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.color-match {
+  overflow-wrap: anywhere;
+}
+input[aria-invalid="true"] {
+  border-color: #f2b8af;
+}
 .layer-list {
   display: grid;
   gap: 5px;

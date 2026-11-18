@@ -9,6 +9,12 @@ import { gridScale } from "./renderer/grid";
 import { CanvasControls } from "./CanvasControls";
 import type { EditorWorkspace } from "./editor/workspace";
 import { LayerPanel } from "./LayerPanel";
+import {
+  parseRgbFields,
+  rgbChannels,
+  type ColorInput,
+  type PaintColor,
+} from "./domain/colors";
 export { LayerPanel } from "./LayerPanel";
 
 type Props = { session: EditorSession };
@@ -100,8 +106,30 @@ export function ToolPanel({ session }: Props) {
 export function ColorPanel({ session }: Props) {
   const color = useStore(session.color);
   const entries = useStore(session.registry);
-  const [draft, setDraft] = useState(color);
-  useEffect(() => setDraft(color), [color]);
+  const [draft, setDraft] = useState(color.slice(0, 7));
+  const [rgbDraft, setRgbDraft] = useState(() =>
+    rgbChannels(color).map(String),
+  );
+  const [hexError, setHexError] = useState(false);
+  const [rgbError, setRgbError] = useState(false);
+  const id = useId();
+  const matches = entries.filter(
+    ([, entry]) =>
+      typeof entry.rgba === "string" && entry.rgba.toLowerCase() === color,
+  );
+  function syncDrafts(next: PaintColor) {
+    setDraft(next.slice(0, 7));
+    setRgbDraft(rgbChannels(next).map(String));
+    setHexError(false);
+    setRgbError(false);
+  }
+  useEffect(() => syncDrafts(color), [color]);
+  function apply(input: ColorInput) {
+    if (!session.setColor(input)) return false;
+    // Reset even if the canonical value did not change (e.g. #ABC -> #aabbcc).
+    syncDrafts(session.color.getSnapshot());
+    return true;
+  }
   return (
     <section className="panel" aria-label="Color controls">
       <h2>
@@ -110,15 +138,15 @@ export function ColorPanel({ session }: Props) {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (session.setColor(draft)) setDraft(session.color.getSnapshot());
+          setHexError(!apply(draft));
         }}
       >
         <div className="color-row">
           <input
             type="color"
             aria-label="Current color"
-            value={color}
-            onChange={(event) => session.setColor(event.target.value)}
+            value={color.slice(0, 7)}
+            onChange={(event) => apply(event.target.value)}
           />
           <label>
             Hex color
@@ -126,16 +154,82 @@ export function ColorPanel({ session }: Props) {
               aria-label="Hex color"
               value={draft}
               spellCheck={false}
+              autoComplete="off"
+              aria-invalid={hexError}
+              aria-describedby={hexError ? `${id}-hex-error` : undefined}
               onChange={(event) => setDraft(event.target.value)}
             />
           </label>
         </div>
         <button type="submit">Apply color</button>
+        {hexError && (
+          <p className="form-feedback" id={`${id}-hex-error`}>
+            Use #RGB or #RRGGBB. Alpha, if included, must be F or FF (fully
+            opaque).
+          </p>
+        )}
       </form>
-      <div className="current-color">
-        <i style={{ background: color }} />
-        {color.toUpperCase()}
-      </div>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          const next = parseRgbFields(rgbDraft);
+          if (next) apply(next);
+          else {
+            setRgbError(true);
+            session.report(
+              "Enter Red, Green and Blue as whole numbers from 0 to 255.",
+              "error",
+            );
+          }
+        }}
+      >
+        <fieldset
+          className="rgb-fields"
+          aria-describedby={rgbError ? `${id}-rgb-error` : undefined}
+        >
+          <legend>RGB · 0–255</legend>
+          {["Red", "Green", "Blue"].map((channel, index) => (
+            <label key={channel}>
+              {channel}
+              <input
+                aria-label={channel}
+                inputMode="numeric"
+                autoComplete="off"
+                spellCheck={false}
+                value={rgbDraft[index]}
+                aria-invalid={rgbError}
+                aria-describedby={rgbError ? `${id}-rgb-error` : undefined}
+                onChange={(event) =>
+                  setRgbDraft(
+                    rgbDraft.map((value, at) =>
+                      at === index ? event.target.value : value,
+                    ),
+                  )
+                }
+              />
+            </label>
+          ))}
+        </fieldset>
+        <button type="submit">Apply RGB</button>
+        {rgbError && (
+          <p className="form-feedback" id={`${id}-rgb-error`}>
+            Each channel must be a whole number from 0 to 255.
+          </p>
+        )}
+      </form>
+      <output className="current-color" aria-label="Selected color">
+        <i style={{ background: color }} aria-hidden="true" />
+        {color.slice(0, 7).toUpperCase()}
+      </output>
+      <p className="hint">Opaque sRGB · Erasing reveals lower layers.</p>
+      <p className="color-association" data-testid="color-association">
+        Raw color · Not linked to a named entry.
+      </p>
+      <p className="hint color-match" data-testid="color-match">
+        {matches.length
+          ? `Named ${matches.length === 1 ? "match" : "matches"}: ${matches.map(([id, entry]) => (typeof entry.name === "string" ? entry.name : id)).join(", ")}`
+          : "Unregistered color · No named match."}
+      </p>
       <h3>
         Named colors <span>{entries.length}</span>
       </h3>

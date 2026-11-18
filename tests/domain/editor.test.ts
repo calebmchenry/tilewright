@@ -126,11 +126,11 @@ test("transient state never mutates the map or creates history", () => {
   editor.setZoom(2);
   editor.focus.set("text");
   editor.pointer.set({ x: 2, y: 3 });
-  assert.equal(editor.color.getSnapshot(), "#abcdef");
+  assert.equal(editor.color.getSnapshot(), "#abcdefff");
   assert.equal(editor.document.version, version);
   assert.equal(editor.history.state.undoSteps, 0);
   assert.equal(editor.setColor("invalid"), false);
-  assert.equal(editor.color.getSnapshot(), "#abcdef");
+  assert.equal(editor.color.getSnapshot(), "#abcdefff");
   editor.setZoom(NaN);
   assert.equal(editor.viewport.getSnapshot().zoom, 2);
   editor.dispose();

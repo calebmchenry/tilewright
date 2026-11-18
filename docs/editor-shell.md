@@ -81,8 +81,10 @@ rectangle display seam.
 
 Drawing, selection, named color/area editing and local saving
 are explicitly unavailable until their existing tickets. Save never acknowledges
-a checkpoint without native I/O. The current color control uses opaque #RRGGBB;
-it is a tool preference, not a conversion of persisted raw/registered paint.
+a checkpoint without native I/O. TW-014 adds [validated hex/RGB color selection](color-selection.md)
+with opaque sRGB `#rrggbbff` state, synchronized picker/fields, and explicit raw
+paint versus named-match feedback. It is a tool preference, not a conversion of
+persisted raw/registered paint.
 
 `src/editor/focus.ts` classifies the actual event target as canvas, panel, text or
 outside. Inputs, textarea, selects, contenteditable descendants and textbox roles
