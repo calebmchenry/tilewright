@@ -4,9 +4,10 @@ Decision record for [TW-015](../.wrk/wrk-e811af32.md), following
 [INTENT.md](../INTENT.md#map-use-and-meaning). These are **implementation
 decisions**, not additional confirmed user requirements. They define the contract
 for [TW-016](../.wrk/wrk-230b4c1d.md) registry editing and
-[TW-017](../.wrk/wrk-8110dbc9.md) recoloring. This ticket does not implement those
-features. Existing primitives permit opaque registry metadata and unresolved
-references; they do not yet enforce this complete contract.
+[TW-017](../.wrk/wrk-8110dbc9.md) recoloring. TW-015 established the contract;
+TW-016 now provides the [authoring implementation](#tw-016-implementation)
+and executable validation below. Generic metadata primitives still permit opaque
+records and unresolved references; authoring uses the validated feature commands.
 
 The intent requires freeform raw paint, unique named colors, and associations
 that survive color changes across all layers. The policy is: **link by stable ID,
@@ -227,8 +228,8 @@ Reset the walkthrough fixture for each independent case unless a step is named.
 For every rejected/no-op case, compare the complete invariants in the atomicity
 section and assert zero document notifications. For every effective operation,
 assert one undo step/event, exact affected values/IDs, undo to the before snapshot,
-and redo to the after snapshot. These are future executable cases, not passing
-registry-feature tests in TW-015.
+and redo to the after snapshot. These were future executable cases in TW-015. TW-016 coverage is recorded
+[below](#tw-016-implementation); TW-017-specific integration remains its next ticket.
 
 | Case | Setup and action                                                                                                       | Required result                                                                                                                                       | Owner           |
 | ---- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
@@ -258,7 +259,8 @@ collision rejection. TW-017 verifies cross-layer recoloring, active swatches,
 detail/overview invalidation and latency on populated maps. Existing generic
 commands, color normalization, history, and rendering tests establish the
 integration baseline only. Do not treat those tests as implementation of the
-new feature rules or introduce production registry behavior in this ticket.
+new feature rules. TW-015 introduced no production registry behavior; TW-016
+implements its owned cases below.
 
 ## Scope and rationale
 
@@ -276,3 +278,67 @@ remain decisions for [TW-043](../.wrk/wrk-eeabc6ef.md). A raw tile remains unnam
 in the editor even when its bytes match an entry; this does not choose its export
 encoding. Performance refinement remains TW-049/TW-050 under AGENTS.md; correctness
 and atomicity still require validation in the implementation tickets.
+
+## TW-016 implementation
+
+`src/domain/registry.ts` implements this contract over the existing generic
+commands. `RegistryCommands.prepare(request, expectedVersion?, signal?)` validates
+an add/edit/adopt/remove request, creates a fresh UUID for additions, and returns
+an immutable preview with the entry, document version, matching cell count, and
+layer count. Commands are private to that controller and preview; forged,
+canceled, reused, foreign, and stale previews cannot commit. `cancel(plan)` drops
+staged work without notifications. Dropping a preview is also inert.
+
+`commit(plan)` executes one atomic history transaction. Add/adopt and detach/remove
+use occupied runs from every layer, preserving exact inverse values through the
+existing history journal. Edits retain extra metadata fields. Equivalent name/color
+edits and zero-match adoption are no-ops. Duplicate colors identify their owners;
+malformed targets, ambiguous relevant ownership, invalid IDs/input and duplicate
+generated IDs reject. Generic commands remain the loading/test seam, not an
+alternative authoring API or an import-repair policy.
+
+`EditorSession.registryCommands` prepares previews; `commitRegistry(plan)` reports
+failures and selects a successfully added entry. `selectRegisteredColor(id)` and
+`selectedRegistryId` implement transient ID selection. `color` tracks its resolved
+swatch, and `currentPaint()` returns the selected registered reference or raw
+bytes directly. Removing/undoing a selected entry falls back to its last resolved
+raw color; restoration never reselects it. Arbitrary color Apply always selects
+raw paint, even at the same shade. Future drawing tools consume `currentPaint()`;
+this ticket does not add pencil gestures.
+
+`src/RegistryControls.tsx` supplies rows with name, swatch, ID in the tooltip, and
+Edit/Adopt/Remove actions. Register starts with adoption unchecked. Add/edit dialogs
+share opaque hex, RGB and native-picker validation with raw authoring. A collision
+shows its owner and explicit Choose/Adopt actions. Existing adoption and populated
+removal show exact counts and require confirmation; Cancel has initial focus.
+Unused removal is immediate. All dialogs isolate map shortcuts, support Escape,
+and require **Refresh preview** if the document changes. Drafts never edit content.
+
+Only open dialogs subscribe to history to detect stale previews. Closed registry
+controls do not scan tiles or rerender for ordinary tile edits. Persistent events
+still carry changed registry IDs and exact spans. `src/editor/invalidation.ts`
+filters name-only changes from tile invalidation while leaving metadata/history
+notifications intact. Recolor uses the existing detail/overview invalidation path;
+TW-017 owns broader offscreen/populated recolor and latency validation.
+
+Validation lives in `tests/domain/registry.test.ts` and `tests/registry.spec.ts`.
+The shared `tests/fixtures/registry.ts` constructs Mountain and Stone wall through
+feature commands, then supplies the two-layer eight-cell walkthrough. Domain
+cases cover R01–R07, R10–R19, including full content/history/checkpoint snapshots,
+exact associations, targeted events, cancellation, malformed/ambiguous input,
+stale previews, history capacity rollback, raw/registered paint selection and
+observer errors. Basic recolor checks exercise the R08/R09 behavior needed by
+Edit; R20's dedicated populated integration remains TW-017. Browser cases cover
+all four dialogs, collision actions, RGB validation, focus/shortcuts, refreshed
+counts, duplicate names and the 640 × 452 layout. WebGL tests at DPR 1/2 adopt
+3,136 green cells on two layers and compare pixels before/after removal and
+undo/redo in detail and overview, including hidden/covered content.
+
+Planning and commit are synchronous, with signal checks during occupied-run
+planning. This is not an asynchronous worker or a UI latency guarantee. Draft
+changes may rescan occupied runs; staged spans and the existing transaction
+journal require transient memory. History-capacity rejection remains atomic.
+No new timing or memory budget pass is claimed; large-edit refinement remains
+TW-050 and rendering/presentation refinement remains TW-049 under AGENTS.md.
+Actual commands, results and native smoke observations are recorded in
+[the implementation ticket](../.wrk/wrk-230b4c1d.md).

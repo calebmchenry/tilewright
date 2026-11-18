@@ -593,3 +593,74 @@ footer {
 .removal-description {
   overflow-wrap: anywhere;
 }
+
+.registry-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.registry-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.registry-choice span {
+  min-width: 0;
+}
+.registry-swatch {
+  display: inline-block;
+  vertical-align: middle;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid #95a4b3;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+.registry-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+.registry-actions button {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  padding: 5px 2px;
+}
+.registry-dialog form {
+  display: grid;
+  gap: 12px;
+}
+.registry-dialog h2,
+.registry-dialog p {
+  margin: 0;
+}
+.registry-color-input {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+}
+.registry-preview,
+.registry-collision {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: #171f2a;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.registry-preview p {
+  font-size: 12px;
+}
+.registry-collision > div {
+  display: grid;
+  gap: 8px;
+}
+.registry-dialog .dialog-actions {
+  margin-top: 0;
+}

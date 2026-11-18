@@ -43,12 +43,15 @@ tiles even at alpha zero; this ticket does not rewrite or discard them.
 
 `EditorSession.color` holds the validated canonical color outside the document
 and history. `setColor` accepts hex or a numeric RGB tuple; `currentPaint()`
-returns an immutable raw tile value for command construction. Selecting colors
+returns an immutable raw tile value for command construction when raw paint is
+selected. TW-016 also supports explicit registered selection by ID, as described
+in the [registry implementation](registry-decisions.md#tw-016-implementation). Selecting colors
 does not allocate tile storage, add undo steps, discard redo, or alter saved
 revisions. A new session starts with `#91baa1ff`.
 
 The Color panel displays the current swatch and exact hex value. It explicitly
-labels the selection **Raw color · Not linked to a named entry** and shows either
+labels raw selection **Raw color · Not linked to a named entry** (or the selected
+named entry with TW-016) and shows either
 **Unregistered color · No named match** or the names of exact matching entries.
 Matching uses the existing registry `rgba` convention (eight digits, case
 insensitive), and updates on registry changes and undo/redo. Multiple matches
@@ -59,8 +62,8 @@ An equal RGB value does not attach raw paint to an entry or recolor the selected
 raw value when that entry changes. Existing registered tiles keep their IDs.
 The [TW-015 registry decisions](registry-decisions.md) specify explicit adoption,
 collision rejection, and future-stroke identity; TW-016 implements registry
-editing/selection. This TW-014 panel makes the current lack of an association
-explicit; matching alone does not opt into those later behaviors. Pencil/eraser gestures remain
+editing/selection. Matching alone never opts into registration or adoption;
+select a named row to paint with its ID. Pencil/eraser gestures remain
 their drawing-tool tickets; the selected-paint and erasure command seams are
 validated here.
 

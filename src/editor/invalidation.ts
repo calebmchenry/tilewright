@@ -43,7 +43,9 @@ export function canvasInvalidation(change: DocumentChange): CanvasInvalidation {
         bounds = true;
         break;
       case "registry":
-        registryIds.add(part.id);
+        // Names are metadata UI only; retain all registry events in document history.
+        if (!part.before || !part.after || part.before.rgba !== part.after.rgba)
+          registryIds.add(part.id);
         break;
       case "annotation":
         annotationIds.add(part.id);

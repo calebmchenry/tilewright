@@ -26,17 +26,17 @@ command/action entry points; tools can build domain commands outside React.
 `useSyncExternalStore`. Values are immutable snapshots. The session subscribes to
 model changes once and only refreshes the summaries named by their change kinds:
 
-| Change                  | React subscriptions                         | Canvas invalidation                                                 |
-| ----------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
-| Tile span               | History controls, dirty indicator, feedback | Exact layer/world rectangles                                        |
-| Layer name              | Layer panel/readout and history             | None; names do not affect composition                               |
-| Layer membership/order  | Layer panel/readout and history             | Composition; removed active layer falls back to top remaining layer |
-| Bounds                  | Dimension/pointer readouts and history      | Map boundary                                                        |
-| Registry record         | Color panel and history                     | Changed registry identities, including uses across layers           |
-| Annotation record       | Named-area panel and history                | Changed annotation identities                                       |
-| Pointer/focus           | Compact readout only                        | None                                                                |
-| Color/tool/active layer | Corresponding controls/readouts             | No persistent document change                                       |
-| Zoom                    | Zoom control                                | Resize the shell surface with the same CSS transform                |
+| Change                  | React subscriptions                         | Canvas invalidation                                                   |
+| ----------------------- | ------------------------------------------- | --------------------------------------------------------------------- |
+| Tile span               | History controls, dirty indicator, feedback | Exact layer/world rectangles                                          |
+| Layer name              | Layer panel/readout and history             | None; names do not affect composition                                 |
+| Layer membership/order  | Layer panel/readout and history             | Composition; removed active layer falls back to top remaining layer   |
+| Bounds                  | Dimension/pointer readouts and history      | Map boundary                                                          |
+| Registry record         | Color panel and history                     | Changed color identities across layers; name-only edits do not redraw |
+| Annotation record       | Named-area panel and history                | Changed annotation identities                                         |
+| Pointer/focus           | Compact readout only                        | None                                                                  |
+| Color/tool/active layer | Corresponding controls/readouts             | No persistent document change                                         |
+| Zoom                    | Zoom control                                | Resize the shell surface with the same CSS transform                  |
 
 `App` has no document revision/state subscription. It never enumerates tiles or
 creates tile React elements. Action controls select just their relevant history
@@ -79,12 +79,14 @@ The transient rectangle store updates its readout and renderer overlay, without
 document/history notifications. Future selection tools can use the same validated
 rectangle display seam.
 
-Drawing, selection, named color/area editing and local saving
+Drawing, selection, named area editing and local saving
 are explicitly unavailable until their existing tickets. Save never acknowledges
 a checkpoint without native I/O. TW-014 adds [validated hex/RGB color selection](color-selection.md)
 with opaque sRGB `#rrggbbff` state, synchronized picker/fields, and explicit raw
 paint versus named-match feedback. It is a tool preference, not a conversion of
-persisted raw/registered paint.
+persisted raw/registered paint. TW-016 adds [named registry controls](registry-decisions.md#tw-016-implementation),
+explicit adoption, safe removal, and registered paint selection. Registry records
+use validated names and opaque colors at this feature boundary.
 
 `src/editor/focus.ts` classifies the actual event target as canvas, panel, text or
 outside. Inputs, textarea, selects, contenteditable descendants and textbox roles

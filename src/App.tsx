@@ -9,6 +9,7 @@ import { gridScale } from "./renderer/grid";
 import { CanvasControls } from "./CanvasControls";
 import type { EditorWorkspace } from "./editor/workspace";
 import { LayerPanel } from "./LayerPanel";
+import { RegistryControls } from "./RegistryControls";
 import {
   parseRgbFields,
   rgbChannels,
@@ -105,7 +106,9 @@ export function ToolPanel({ session }: Props) {
 
 export function ColorPanel({ session }: Props) {
   const color = useStore(session.color);
+  const selected = useStore(session.selectedRegistryId);
   const entries = useStore(session.registry);
+  const selectedEntry = entries.find(([id]) => id === selected)?.[1];
   const [draft, setDraft] = useState(color.slice(0, 7));
   const [rgbDraft, setRgbDraft] = useState(() =>
     rgbChannels(color).map(String),
@@ -223,27 +226,16 @@ export function ColorPanel({ session }: Props) {
       </output>
       <p className="hint">Opaque sRGB · Erasing reveals lower layers.</p>
       <p className="color-association" data-testid="color-association">
-        Raw color · Not linked to a named entry.
+        {selectedEntry
+          ? `Named color · ${selectedEntry.name}`
+          : "Raw color · Not linked to a named entry."}
       </p>
       <p className="hint color-match" data-testid="color-match">
         {matches.length
           ? `Named ${matches.length === 1 ? "match" : "matches"}: ${matches.map(([id, entry]) => (typeof entry.name === "string" ? entry.name : id)).join(", ")}`
           : "Unregistered color · No named match."}
       </p>
-      <h3>
-        Named colors <span>{entries.length}</span>
-      </h3>
-      {entries.length ? (
-        <ul className="record-list">
-          {entries.map(([id, entry]) => (
-            <li key={id}>{typeof entry.name === "string" ? entry.name : id}</li>
-          ))}
-        </ul>
-      ) : (
-        <p className="hint">No named colors in this map.</p>
-      )}
-      <ActionButton session={session} action="register-color" />
-      <p className="hint">Named color editing is not available yet.</p>
+      <RegistryControls session={session} />
     </section>
   );
 }

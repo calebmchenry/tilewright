@@ -4,10 +4,21 @@ import type { DocumentCommand } from "../domain/commands.ts";
 import {
   layerId,
   rawColor,
+  registeredColor,
   type LayerId,
+  type RegistryId,
   type TileValue,
 } from "../domain/values.ts";
-import { normalizePaintColor, type ColorInput } from "../domain/colors.ts";
+import {
+  normalizePaintColor,
+  type ColorInput,
+  type PaintColor,
+} from "../domain/colors.ts";
+import {
+  RegistryCommands,
+  registryEntry,
+  type RegistryPlan,
+} from "../domain/registry.ts";
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import {
@@ -45,7 +56,6 @@ export type ActionId =
   | "fit-map"
   | "eyedropper"
   | "add-layer"
-  | "register-color"
   | "add-annotation";
 export interface ActionState {
   readonly label: string;
@@ -79,10 +89,6 @@ const unavailable: Partial<Record<ActionId, ActionState>> = {
     label: "Eyedropper",
     reason: "Color sampling is not available yet.",
   },
-  "register-color": {
-    label: "Register color",
-    reason: "Named color editing is not available yet.",
-  },
   "add-annotation": {
     label: "Add area",
     reason: "Named area editing is not available yet.",
@@ -93,6 +99,7 @@ const unavailable: Partial<Record<ActionId, ActionState>> = {
 export class EditorSession {
   readonly document: MapDocument;
   readonly history: CommandHistory;
+  readonly registryCommands: RegistryCommands;
   readonly layers;
   readonly bounds;
   readonly registry;
@@ -105,6 +112,7 @@ export class EditorSession {
     Object.freeze({ width: 1, height: 1 }),
   );
   readonly color = new Store(normalizePaintColor("#91baa1")!);
+  readonly selectedRegistryId = new Store<RegistryId | null>(null);
   readonly viewport = new Store<Viewport>(
     Object.freeze({ x: 0, y: 0, zoom: 1 }),
   );
@@ -122,6 +130,7 @@ export class EditorSession {
   constructor(document = new MapDocument()) {
     this.document = document;
     this.history = new CommandHistory(document);
+    this.registryCommands = new RegistryCommands(this.history);
     this.layers = new Store(document.layers);
     this.bounds = new Store(document.bounds);
     this.registry = new Store(document.registryEntries);
@@ -159,7 +168,16 @@ export class EditorSession {
             this.rectangle.set(null);
         });
       if (kinds.has("registry"))
-        updates.push(() => this.registry.set(document.registryEntries));
+        updates.push(
+          () => this.registry.set(document.registryEntries),
+          () => {
+            const id = this.selectedRegistryId.getSnapshot();
+            if (!id) return;
+            if (!document.getRegistryEntry(id))
+              this.selectedRegistryId.set(null);
+            else this.color.set(registryEntry(document, id).rgba);
+          },
+        );
       if (kinds.has("annotation"))
         updates.push(() => this.annotations.set(document.annotations));
       const errors: unknown[] = [];
@@ -386,13 +404,56 @@ export class EditorSession {
       );
       return false;
     }
-    this.color.set(color);
+    this.#selectPaint(null, color);
     this.report(`Current color: ${color.slice(0, 7).toUpperCase()}`);
     return true;
   }
-  /** Raw paint is independent of registry matches; erasers write null instead. */
+  #selectPaint(id: RegistryId | null, color: PaintColor): void {
+    const errors: unknown[] = [];
+    for (const update of [
+      () => this.selectedRegistryId.set(id),
+      () => this.color.set(color),
+    ])
+      try {
+        update();
+      } catch (error) {
+        errors.push(error);
+      }
+    if (errors.length)
+      throw new AggregateError(errors, "Paint selection view failed.");
+  }
+  selectRegisteredColor(id: RegistryId): boolean {
+    if (this.#closed) return false;
+    try {
+      const entry = registryEntry(this.document, id);
+      this.#selectPaint(id, entry.rgba);
+      this.report(`Current named color: ${entry.name}`);
+      return true;
+    } catch (error) {
+      this.reportError(error, "Select named color");
+      return false;
+    }
+  }
+  commitRegistry(plan: RegistryPlan): boolean {
+    return this.#run("Named color", () => {
+      const result = this.registryCommands.commit(plan);
+      if (plan.kind === "add" && result.change) {
+        try {
+          this.#selectPaint(plan.id, plan.entry.rgba);
+        } catch (error) {
+          return {
+            ...result,
+            observerErrors: [...result.observerErrors, error],
+          };
+        }
+      }
+      return result;
+    });
+  }
+  /** Tools consume identity directly. Equal RGB never implicitly registers paint. */
   currentPaint(): TileValue {
-    return rawColor(this.color.getSnapshot());
+    const id = this.selectedRegistryId.getSnapshot();
+    return id ? registeredColor(id) : rawColor(this.color.getSnapshot());
   }
   setCanvasSize(width: number, height: number): void {
     const previous = this.canvasSize.getSnapshot();

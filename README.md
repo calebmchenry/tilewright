@@ -25,7 +25,8 @@ Arbitrary hex/RGB colors, named-color matches, and the distinct empty-cell state
 are documented in [color selection](docs/color-selection.md).
 
 Stable named-color identity, explicit raw-tile adoption, collision rejection, and
-safe removal are specified in [registry decisions](docs/registry-decisions.md).
+safe removal, controls, and command APIs are documented in
+[registry decisions and implementation](docs/registry-decisions.md).
 
 The pure TypeScript map API, storage choices, and change-notification contract are
 documented in [the sparse map document](docs/map-document.md).

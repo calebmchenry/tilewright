@@ -17,22 +17,26 @@ import "../src/styles.css";
 import { populatedDocument } from "./fixtures/populated";
 import { gridDocument } from "./fixtures/grid";
 import { colorsDocument } from "./fixtures/colors";
+import { registryDocument, buildings } from "./fixtures/registry";
 
 const fixture = new URLSearchParams(location.search).get("fixture");
 const session = new EditorSession(
-  fixture === "colors"
-    ? colorsDocument()
-    : fixture === "grid"
-      ? gridDocument()
-      : fixture
-        ? populatedDocument(fixture === "heartland" ? 1 : 0)
-        : new MapDocument({
-            layers: [
-              { id: layerId("terrain"), name: "Terrain" },
-              { id: layerId("buildings"), name: "Buildings" },
-            ],
-          }),
+  fixture === "registry"
+    ? registryDocument()
+    : fixture === "colors"
+      ? colorsDocument()
+      : fixture === "grid"
+        ? gridDocument()
+        : fixture
+          ? populatedDocument(fixture === "heartland" ? 1 : 0)
+          : new MapDocument({
+              layers: [
+                { id: layerId("terrain"), name: "Terrain" },
+                { id: layerId("buildings"), name: "Buildings" },
+              ],
+            }),
 );
+if (fixture === "registry") session.setLayerVisible(buildings, false);
 const renders: Record<string, number> = {};
 const invalidations: CanvasInvalidation[] = [];
 const unbind = bindDocument(session, (change) => invalidations.push(change));
