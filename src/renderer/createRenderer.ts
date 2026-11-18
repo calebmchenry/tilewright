@@ -7,6 +7,7 @@ import type { CanvasInvalidation } from "../editor/invalidation";
 import { TileScene } from "./tileScene";
 import { MapDocument } from "../domain/document";
 import { CANVAS_INSET, TILE_PIXELS } from "../editor/viewport";
+import { gridLayout, type GridBand } from "./grid";
 
 export interface CanvasRenderer {
   resize(): void;
@@ -72,6 +73,10 @@ export async function createRenderer(
     stage.addChild(preview);
     tiles = new TileScene(session?.document ?? new MapDocument());
     stage.addChild(tiles.container);
+    const grid = new Graphics();
+    stage.addChild(grid);
+    const rectangle = new Graphics();
+    stage.addChild(rectangle);
     const resize = () => {
       if (destroyed || !renderer) return;
       const { width, height } = host.getBoundingClientRect();
@@ -100,9 +105,30 @@ export async function createRenderer(
           (bounds.maxX - bounds.minX) * scale,
           (bounds.maxY - bounds.minY) * scale,
         )
-        .fill("#1d2732")
-        .stroke({ color: "#586d80", width: 1 });
+        .fill("#1d2732");
       tiles!.sync(view, width, height, session?.hiddenLayers.getSnapshot());
+      const layout = gridLayout(bounds, view, { width, height }, resolution);
+      grid.clear();
+      const draw = (bands: GridBand[], color: string, alpha: number) => {
+        for (const band of bands)
+          grid.rect(band.x, band.y, band.width, band.height);
+        if (bands.length) grid.fill({ color, alpha });
+      };
+      draw(layout.tiles, "#c5d6e6", layout.tileAlpha);
+      draw(layout.chunks, "#96c9d9", 0.65);
+      draw(layout.edges, "#a4b7c9", 0.8);
+      rectangle.clear();
+      const measured = session?.rectangle.getSnapshot();
+      if (measured) {
+        rectangle
+          .rect(
+            CANVAS_INSET + (measured.minX - view.x) * scale,
+            CANVAS_INSET + (measured.minY - view.y) * scale,
+            (measured.maxX - measured.minX) * scale,
+            (measured.maxY - measured.minY) * scale,
+          )
+          .stroke({ color: "#f5cf7d", width: 2 });
+      }
       renderer.render(stage);
       renders++;
     };

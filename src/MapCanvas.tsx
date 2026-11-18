@@ -53,8 +53,9 @@ export function MapCanvas({ session }: { session: EditorSession }) {
       <p className="sr-only" id="canvas-help">
         Scroll to pan. Pinch or Cmd/Ctrl-scroll to zoom. Space-drag or
         middle-drag to pan. H selects Pan; I selects Inspect. F fits the map; 0
-        resets to 100%; plus/minus zoom; arrows pan. Drawing tools are not
-        available yet.
+        resets to 100%; plus/minus zoom; arrows pan. Drag with Inspect to
+        measure a rectangle; Escape clears it. Drawing tools are not available
+        yet.
       </p>
       {status === "ready" && !editable && (
         <p

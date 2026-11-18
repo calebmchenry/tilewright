@@ -56,7 +56,8 @@ than silently choosing a different port. Stop the command with Ctrl-C.
 
 The [editor shell](editor-shell.md) now integrates the document/history controller,
 targeted panels, focus routing, and Retina surface. The [tile renderer](tile-renderer.md) draws visible sparse tiles in layer order.
-A fresh document is empty, so its canvas shows only the map background/boundary.
+A fresh document is empty; its canvas shows the map background, boundary and
+[tile/chunk grid](grid-and-scale.md).
 
 The frontend-only command and browser tests are development tooling, not a
 standalone browser distribution. [Testing and performance](performance.md)

@@ -13,7 +13,7 @@ A replacement document must have a new session; never write around its history.
 
 `src/editor/session.ts` owns the document and history, plus separate transient
 stores for active tool/layer, current color, viewport, pointer, focus, renderer
-readiness and feedback. React component drafts (layer name, hex input and area
+readiness, rectangle measurement and feedback. React component drafts (layer name, hex input and area
 search) stay local to their panel. None of these values are copied into document
 content, commands, saved revisions or recovery data. Persisting editor preferences
 remains a future file-format decision. `execute` and `perform` are the shared
@@ -68,6 +68,11 @@ layer renaming, color selection/hex validation, annotation filtering, undo/redo
 and the zoom selector work. New maps retain the existing default of one `Layer 1`
 in a 256 × 256 map. Named metadata lists use a string `name` if present, otherwise
 the stable ID; the shell does not invent registry/annotation schemas.
+
+TW-009 adds [tile/chunk grids and Inspect rectangle measurement](grid-and-scale.md).
+The transient rectangle store updates its readout and renderer overlay, without
+document/history notifications. Future selection tools can use the same validated
+rectangle display seam.
 
 Drawing, selection, layer creation, named color/area editing and local saving
 are explicitly unavailable until their existing tickets. Save never acknowledges

@@ -1,4 +1,6 @@
 import type { EditorSession } from "./session";
+import { containsTile, type Bounds } from "../domain/coordinates";
+import { rectangleBetween } from "./measurement";
 import {
   canEditTiles,
   OVERVIEW_MESSAGE,
@@ -17,6 +19,8 @@ export function bindNavigation(
   let space = false;
   let lastPointer: Point | null = null;
   let drag: { id: number; x: number; y: number } | null = null;
+  let measure: { id: number; start: Point; previous: Bounds | null } | null =
+    null;
   let gesture: { view: Viewport; anchor: Point } | null = null;
   const ready = () => session.canvasState.getSnapshot() === "ready";
   const local = (point: Point): Point => {
@@ -58,15 +62,34 @@ export function bindNavigation(
       host.releasePointerCapture(id);
     cursor();
   };
+  const finishMeasure = (cancel: boolean) => {
+    const current = measure;
+    measure = null;
+    if (!current) return;
+    if (cancel) {
+      const previous = current.previous,
+        bounds = session.document.bounds;
+      session.setRectangle(
+        previous &&
+          containsTile(bounds, previous.minX, previous.minY) &&
+          containsTile(bounds, previous.maxX - 1, previous.maxY - 1)
+          ? previous
+          : null,
+      );
+    }
+    if (host.hasPointerCapture(current.id))
+      host.releasePointerCapture(current.id);
+  };
   const reset = () => {
     space = false;
     gesture = null;
     lastPointer = null;
     finishDrag();
+    finishMeasure(true);
     updatePointer();
   };
   const down = (event: PointerEvent) => {
-    if (!ready() || drag || !event.isPrimary) return;
+    if (!ready() || drag || measure || !event.isPrimary) return;
     host.focus({ preventScroll: true });
     lastPointer = { x: event.clientX, y: event.clientY };
     if (
@@ -83,6 +106,24 @@ export function bindNavigation(
       !canEditTiles(session.viewport.getSnapshot())
     )
       session.report(OVERVIEW_MESSAGE);
+    else if (
+      event.button === 0 &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.ctrlKey
+    ) {
+      const start = session.editableTileAt(local(lastPointer));
+      if (start) {
+        event.preventDefault();
+        measure = {
+          id: event.pointerId,
+          start,
+          previous: session.rectangle.getSnapshot(),
+        };
+        session.setRectangle(rectangleBetween(start, start));
+        host.setPointerCapture(event.pointerId);
+      }
+    }
     updatePointer();
   };
   const move = (event: PointerEvent) => {
@@ -91,14 +132,19 @@ export function bindNavigation(
       session.pan(event.clientX - drag.x, event.clientY - drag.y);
       drag = { ...drag, x: event.clientX, y: event.clientY };
     }
+    if (measure?.id === event.pointerId) {
+      const end = session.editableTileAt(local(lastPointer));
+      if (end) session.setRectangle(rectangleBetween(measure.start, end));
+    }
     updatePointer();
   };
   const up = (event: PointerEvent) => {
     if (drag?.id === event.pointerId) finishDrag();
+    if (measure?.id === event.pointerId) finishMeasure(false);
     updatePointer();
   };
   const leave = () => {
-    if (!drag) {
+    if (!drag && !measure) {
       lastPointer = null;
       updatePointer();
     }
@@ -106,7 +152,7 @@ export function bindNavigation(
   const wheel = (event: WheelEvent) => {
     if (!ready()) return;
     event.preventDefault();
-    if (gesture || drag) return;
+    if (gesture || drag || measure) return;
     lastPointer = { x: event.clientX, y: event.clientY };
     const units =
       event.deltaMode === 1
@@ -146,6 +192,7 @@ export function bindNavigation(
     } else if (event.key === "Escape") {
       event.preventDefault();
       reset();
+      session.setRectangle(null);
     }
   };
   const keyUp = (event: KeyboardEvent) => {
@@ -159,6 +206,7 @@ export function bindNavigation(
     if (!ready()) return;
     event.preventDefault();
     finishDrag();
+    finishMeasure(true);
     const input = event as GestureInput;
     const point = { x: input.clientX, y: input.clientY };
     if (![point.x, point.y].every(Number.isFinite)) return;
@@ -179,6 +227,7 @@ export function bindNavigation(
   };
   const cancel = () => {
     finishDrag();
+    finishMeasure(true);
     lastPointer = null;
     updatePointer();
   };
@@ -188,7 +237,14 @@ export function bindNavigation(
     ["pointerup", up as EventListener],
     ["pointerleave", leave],
     ["pointercancel", cancel],
-    ["lostpointercapture", up as EventListener],
+    [
+      "lostpointercapture",
+      () => {
+        // Releasing a completed drag also emits this event. Keep its cursor readout.
+        if (drag || measure) cancel();
+        else updatePointer();
+      },
+    ],
     ["wheel", wheel as EventListener],
     ["keydown", keyDown as EventListener],
     ["blur", reset],
@@ -201,9 +257,16 @@ export function bindNavigation(
   window.addEventListener("keyup", keyUp);
   window.addEventListener("blur", reset);
   const stops = [
-    session.viewport.subscribe(updatePointer),
+    session.viewport.subscribe(() => {
+      finishMeasure(true);
+      updatePointer();
+    }),
     session.canvasSize.subscribe(updatePointer),
-    session.activeTool.subscribe(cursor),
+    session.bounds.subscribe(() => finishMeasure(true)),
+    session.activeTool.subscribe(() => {
+      finishMeasure(true);
+      cursor();
+    }),
     session.canvasState.subscribe(() => {
       if (!ready()) reset();
     }),

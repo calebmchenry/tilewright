@@ -17,7 +17,7 @@ bounds, adds history, or changes the saved revision.
 | Middle-button drag                               | Grab and move the map                                                      |
 | Space + primary-button drag                      | Temporarily grab the map without switching tools                           |
 | Pan button / H, then primary-button drag         | Persistent Pan tool                                                        |
-| Inspect button / I                               | Inspect tile coordinates                                                   |
+| Inspect button / I                               | Inspect tile coordinates; drag to measure a rectangle                      |
 | Fit map button / F                               | Center all fixed document bounds in the canvas                             |
 | + / =, - / _                                     | Multiply/divide zoom by 1.25 about canvas center                           |
 | 0                                                | 100% about canvas center                                                   |
@@ -94,6 +94,8 @@ tiles (8 px per tile minimum).” Tile tool controls expose that reason, and the
 shared `EditorSession.editableTileAt` returns null. Out-of-bounds coordinates
 also return null instead of being clamped to an edge cell. Inspect and navigation
 remain usable; clicking in overview reports the reason without any document edit.
+At detail scale, Inspect now supports [rectangle measurement](grid-and-scale.md)
+without selecting or changing tile content.
 At the threshold the gate permits picking. Drawing tools themselves remain their
 later tickets; they must use this gate when implementing pointer edits. Undo,
 metadata changes and document commands remain independent of camera scale.

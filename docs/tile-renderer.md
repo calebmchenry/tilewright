@@ -122,8 +122,9 @@ needed.
 Raw counters distinguish owned RGBA buffer bytes from total process/driver memory.
 CDP heap samples and browser submission timings are not native WKWebView memory,
 presented-frame latency, or passing results for all provisional editor budgets.
-TW-008 adds [navigation input and camera math](navigation.md). Grid overlays and
-distant overview caches remain later work.
+TW-008 adds [navigation input and camera math](navigation.md). TW-009 adds
+[tile/chunk overlays and scale readouts](grid-and-scale.md); distant overview
+caches remain later work.
 The [recorded renderer baseline](renderer-baseline.json) retains fixture IDs/hashes,
 source hashes, all submission-time samples, live resource maxima and memory samples.
 Actual native launch observations and the final acceptance audit are recorded in WRK.

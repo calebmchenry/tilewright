@@ -3,7 +3,11 @@ import { CommandHistory } from "../domain/history.ts";
 import type { DocumentCommand } from "../domain/commands.ts";
 import type { LayerId } from "../domain/values.ts";
 import { Store } from "./store.ts";
-import { containsTile } from "../domain/coordinates.ts";
+import {
+  assertBounds,
+  containsTile,
+  type Bounds,
+} from "../domain/coordinates.ts";
 import {
   canEditTiles,
   clampZoom,
@@ -103,6 +107,8 @@ export class EditorSession {
   );
   readonly focus = new Store<FocusOwner>("outside");
   readonly pointer = new Store<Readonly<{ x: number; y: number }> | null>(null);
+  // A display/measurement rectangle, not a tile payload or an editable selection.
+  readonly rectangle = new Store<Bounds | null>(null);
   readonly feedback = new Store<Feedback>(
     Object.freeze({ kind: "info", message: "Ready to inspect your map." }),
   );
@@ -143,7 +149,12 @@ export class EditorSession {
           this.layers.set(document.layers);
         });
       if (kinds.has("bounds"))
-        updates.push(() => this.bounds.set(document.bounds));
+        updates.push(() => {
+          this.bounds.set(document.bounds);
+          const rectangle = this.rectangle.getSnapshot();
+          if (rectangle && !this.#containsRectangle(rectangle))
+            this.rectangle.set(null);
+        });
       if (kinds.has("registry"))
         updates.push(() => this.registry.set(document.registryEntries));
       if (kinds.has("annotation"))
@@ -293,6 +304,33 @@ export class EditorSession {
       (width !== previous.width || height !== previous.height)
     )
       this.canvasSize.set(Object.freeze({ width, height }));
+  }
+  #containsRectangle(bounds: Bounds): boolean {
+    return (
+      containsTile(this.document.bounds, bounds.minX, bounds.minY) &&
+      containsTile(this.document.bounds, bounds.maxX - 1, bounds.maxY - 1)
+    );
+  }
+  /** Shared readout seam for Inspect and future rectangle/selection tools. */
+  setRectangle(bounds: Bounds | null): void {
+    if (this.#closed) return;
+    if (bounds) {
+      assertBounds(bounds);
+      if (!this.#containsRectangle(bounds))
+        throw new RangeError("Rectangle must be inside the map.");
+    }
+    const previous = this.rectangle.getSnapshot();
+    if (
+      previous === bounds ||
+      (previous &&
+        bounds &&
+        previous.minX === bounds.minX &&
+        previous.minY === bounds.minY &&
+        previous.maxX === bounds.maxX &&
+        previous.maxY === bounds.maxY)
+    )
+      return;
+    this.rectangle.set(bounds ? Object.freeze({ ...bounds }) : null);
   }
   #setView(view: Viewport): void {
     if (this.#closed) return;

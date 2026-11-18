@@ -4,6 +4,8 @@ import { focusOwner } from "./editor/focus";
 import { type ActionId, type EditorSession } from "./editor/session";
 import { canEditTiles } from "./editor/viewport";
 import { useStore, useStoreField } from "./editor/useStore";
+import { VISUAL_CHUNK_SIZE, visualChunkAt } from "./domain/coordinates";
+import { gridScale } from "./renderer/grid";
 
 type Props = { session: EditorSession };
 
@@ -84,7 +86,8 @@ export function ToolPanel({ session }: Props) {
       </div>
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
-        H: Pan · I: Inspect · F: Fit map. Drawing tools are not available yet.
+        H: Pan · I: Inspect · F: Fit map. Drag with Inspect to measure a
+        rectangle; Escape clears it. Drawing tools are not available yet.
       </p>
     </section>
   );
@@ -296,8 +299,12 @@ export function ViewControls({ session }: Props) {
   const bounds = useStore(session.bounds);
   return (
     <div className="workspace-toolbar">
-      <span>
+      <span className="map-dimensions" data-testid="map-dimensions">
         {bounds.maxX - bounds.minX} × {bounds.maxY - bounds.minY} tiles
+        <small>
+          {(bounds.maxX - bounds.minX) / VISUAL_CHUNK_SIZE} ×{" "}
+          {(bounds.maxY - bounds.minY) / VISUAL_CHUNK_SIZE} chunks
+        </small>
       </span>
       <ActionButton session={session} action="fit-map" />
       <label>
@@ -327,6 +334,10 @@ function Readout({ session }: Props) {
   const layer = useStore(session.activeLayer),
     layers = useStore(session.layers);
   const bounds = useStore(session.bounds);
+  const rectangle = useStore(session.rectangle);
+  const view = useStore(session.viewport);
+  const scale = gridScale(view);
+  const chunk = pointer ? visualChunkAt(pointer.x, pointer.y) : null;
   const inside =
     pointer &&
     pointer.x >= bounds.minX &&
@@ -340,6 +351,16 @@ function Readout({ session }: Props) {
           ? `Tile ${pointer.x}, ${pointer.y}${inside ? "" : " · Outside map"}`
           : "Tile —, —"}
       </span>
+      <span data-testid="chunk-readout">
+        {chunk
+          ? `Chunk ${chunk.chunkX}, ${chunk.chunkY} · Local ${chunk.localX}, ${chunk.localY}`
+          : "Chunk —, —"}
+      </span>
+      <span data-testid="rectangle-readout">
+        {rectangle
+          ? `Rectangle ${rectangle.maxX - rectangle.minX} × ${rectangle.maxY - rectangle.minY} tiles`
+          : "Rectangle —"}
+      </span>
       <span>
         Layer: {layers.find((item) => item.id === layer)?.name ?? "—"}
       </span>
@@ -351,6 +372,12 @@ function Readout({ session }: Props) {
             : focus === "panel"
               ? "Panel controls"
               : "Workspace inactive"}
+      </span>
+      <span className="grid-scale" data-testid="grid-scale">
+        1 chunk = 64 × 64 tiles · {scale.tileAlpha > 0 ? "Tile grid · " : ""}
+        {scale.chunkStride === 1
+          ? "64-tile chunk lines"
+          : `Grid every ${scale.chunkStride} chunks (${64 * scale.chunkStride} tiles)`}
       </span>
     </div>
   );

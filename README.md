@@ -30,6 +30,9 @@ documented in [the tile renderer](docs/tile-renderer.md).
 Camera math, mouse/trackpad/keyboard controls and overview editing availability
 are documented in [map navigation](docs/navigation.md).
 
+Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
+in [grids and scale](docs/grid-and-scale.md).
+
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).
 

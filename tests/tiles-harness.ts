@@ -13,6 +13,7 @@ import {
 } from "../src/domain/values";
 import { CANVAS_INSET, TILE_PIXELS } from "../src/editor/viewport";
 import { populatedDocument } from "./fixtures/populated";
+import { gridDocument } from "./fixtures/grid";
 
 const host = document.getElementById("tiles")!;
 let renderer: CanvasRenderer;
@@ -81,16 +82,18 @@ function dispose() {
   session?.dispose();
 }
 async function load(
-  kind: "small" | "empty" | "frontier" | "heartland" = "small",
+  kind: "small" | "empty" | "frontier" | "heartland" | "grid" = "small",
 ) {
   dispose();
   queries = [];
   const document =
-    kind === "small"
-      ? small()
-      : kind === "empty"
-        ? new MapDocument()
-        : populatedDocument(kind === "frontier" ? 0 : 1);
+    kind === "grid"
+      ? gridDocument()
+      : kind === "small"
+        ? small()
+        : kind === "empty"
+          ? new MapDocument()
+          : populatedDocument(kind === "frontier" ? 0 : 1);
   // Record bounded queries, not pixels or model objects. Clear between measurements.
   const original = document.iterateRuns.bind(document);
   document.iterateRuns = (id, bounds) => {
@@ -103,6 +106,7 @@ async function load(
     bindDocument(session, (change) => renderer.invalidate(change)),
     session.viewport.subscribe(() => renderer.resize()),
     session.hiddenLayers.subscribe(() => renderer.resize()),
+    session.rectangle.subscribe(() => renderer.resize()),
   ];
   renderer.resize();
   return renderer.snapshot();
@@ -188,6 +192,24 @@ const probe = {
   },
   hide(id: string, hidden: boolean) {
     session.setLayerVisible(layerId(id), !hidden);
+  },
+  sampleScreen(points: [number, number][]) {
+    renderer.resize();
+    const canvas = host.querySelector("canvas")!;
+    const gl = canvas.getContext("webgl2")!;
+    return points.map(([x, y]) => {
+      const pixel = new Uint8Array(4);
+      gl.readPixels(
+        Math.floor(x * devicePixelRatio),
+        canvas.height - 1 - Math.floor(y * devicePixelRatio),
+        1,
+        1,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        pixel,
+      );
+      return [...pixel];
+    });
   },
   sample(points: [number, number][]) {
     renderer.resize();

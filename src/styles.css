@@ -254,6 +254,11 @@ form > button {
   display: flex;
   align-items: center;
 }
+.map-dimensions small {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+}
 .workspace-toolbar select {
   padding: 4px 6px;
 }
@@ -321,7 +326,8 @@ footer {
 }
 .readout {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 6px 18px;
   padding: 8px 16px;
   border-bottom: 1px solid #293544;
 }
@@ -335,8 +341,13 @@ footer {
   min-width: 138px;
   font-family: ui-monospace, monospace;
 }
-.readout > span:last-child {
+.readout > [data-testid="focus-readout"] {
   margin-left: auto;
+}
+.readout > .grid-scale {
+  flex-basis: 100%;
+  white-space: normal;
+  color: #96c9d9;
 }
 .feedback {
   padding: 7px 16px;
