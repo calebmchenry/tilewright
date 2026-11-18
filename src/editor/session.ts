@@ -1,7 +1,7 @@
 import { MapDocument, type MutationResult } from "../domain/document.ts";
 import { CommandHistory } from "../domain/history.ts";
 import type { DocumentCommand } from "../domain/commands.ts";
-import type { LayerId } from "../domain/values.ts";
+import { layerId, type LayerId } from "../domain/values.ts";
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import {
@@ -72,10 +72,6 @@ const unavailable: Partial<Record<ActionId, ActionState>> = {
   eyedropper: {
     label: "Eyedropper",
     reason: "Color sampling is not available yet.",
-  },
-  "add-layer": {
-    label: "Add layer",
-    reason: "Creating layers is not available yet.",
   },
   "register-color": {
     label: "Register color",
@@ -205,6 +201,7 @@ export class EditorSession {
     );
   }
   action(id: ActionId): ActionState {
+    if (id === "add-layer") return { label: "Add layer", reason: null };
     if (
       [
         "pencil",
@@ -245,6 +242,7 @@ export class EditorSession {
       this.report(state.reason);
       return false;
     }
+    if (id === "add-layer") return this.addLayer();
     if (id === "inspect" || id === "pan") {
       this.activeTool.set(id);
       this.report(
@@ -264,6 +262,80 @@ export class EditorSession {
   }
   execute(label: string, commands: Iterable<DocumentCommand>): boolean {
     return this.#run(label, () => this.history.execute(label, commands));
+  }
+  /** New identities never depend on names/order or reuse an abandoned redo ID. */
+  addLayer(): boolean {
+    return this.#run("Add layer", () => {
+      const layers = this.document.layers;
+      let number = 1;
+      while (layers.some((layer) => layer.name === `Layer ${number}`)) number++;
+      const id = layerId(`layer-${crypto.randomUUID()}`);
+      const result = this.history.execute("Add layer", [
+        {
+          kind: "add-layer",
+          layer: { id, name: `Layer ${number}` },
+          index:
+            layers.findIndex(
+              (layer) => layer.id === this.activeLayer.getSnapshot(),
+            ) + 1,
+        },
+      ]);
+      try {
+        this.activeLayer.set(id);
+      } catch (error) {
+        return { ...result, observerErrors: [...result.observerErrors, error] };
+      }
+      return result;
+    });
+  }
+  renameLayer(id: LayerId, name: string): boolean {
+    return this.execute("Rename layer", [
+      { kind: "rename-layer", id, name: name.trim() },
+    ]);
+  }
+  moveLayer(id: LayerId, direction: "up" | "down"): boolean {
+    return this.#run("Reorder layers", () => {
+      const ids = this.document.layers.map((layer) => layer.id);
+      const from = ids.indexOf(id);
+      if (from < 0) throw new RangeError(`Unknown layer: ${id}`);
+      const to = from + (direction === "up" ? 1 : -1);
+      if (to >= 0 && to < ids.length)
+        [ids[from], ids[to]] = [ids[to], ids[from]];
+      return this.history.execute("Reorder layers", [
+        { kind: "reorder-layers", ids },
+      ]);
+    });
+  }
+  layerHasContent(id: LayerId): boolean {
+    // Only inspect the first occupied run, never materialize all layer content.
+    return !this.document.iterateRuns(id).next().done;
+  }
+  removeLayer(id: LayerId, confirmedPopulated = false): boolean {
+    return this.#run("Remove layer", () => {
+      if (this.document.layers.length === 1)
+        throw new RangeError("Keep at least one layer in the map.");
+      if (this.layerHasContent(id) && !confirmedPopulated)
+        throw new Error(
+          "This layer contains tiles. Confirm removal first; Undo can restore it.",
+        );
+      return this.history.execute("Remove layer", [
+        { kind: "remove-layer", id },
+      ]);
+    });
+  }
+  /** Drawing/selection tools target visible chosen IDs; Inspect is layer-independent. */
+  editableLayerIds(
+    ids: readonly LayerId[] = [this.activeLayer.getSnapshot()],
+  ): readonly LayerId[] {
+    if (this.#closed) return Object.freeze([]);
+    const hidden = this.hiddenLayers.getSnapshot();
+    return Object.freeze(
+      [...new Set(ids)].filter(
+        (id) =>
+          this.document.layers.some((layer) => layer.id === id) &&
+          !hidden.includes(id),
+      ),
+    );
   }
   growCanvas(counts: GrowthCounts): boolean {
     return this.#run("Grow canvas", () =>

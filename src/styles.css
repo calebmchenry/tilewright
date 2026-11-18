@@ -536,3 +536,32 @@ footer {
     margin-top: 12px;
   }
 }
+
+.layer-order {
+  margin: 0 0 8px;
+  color: #99a8ba;
+  font-size: 11px;
+}
+.layer-badges {
+  display: grid;
+  gap: 2px;
+  margin-left: auto;
+}
+.layer-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.layer-actions button {
+  width: 100%;
+  height: 100%;
+  padding: 7px 4px;
+  font-size: 11px;
+}
+.layer-visibility {
+  margin-top: 12px;
+}
+.removal-description {
+  overflow-wrap: anywhere;
+}

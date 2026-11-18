@@ -8,6 +8,8 @@ import { VISUAL_CHUNK_SIZE, visualChunkAt } from "./domain/coordinates";
 import { gridScale } from "./renderer/grid";
 import { CanvasControls } from "./CanvasControls";
 import type { EditorWorkspace } from "./editor/workspace";
+import { LayerPanel } from "./LayerPanel";
+export { LayerPanel } from "./LayerPanel";
 
 type Props = { session: EditorSession };
 
@@ -148,105 +150,6 @@ export function ColorPanel({ session }: Props) {
       )}
       <ActionButton session={session} action="register-color" />
       <p className="hint">Named color editing is not available yet.</p>
-    </section>
-  );
-}
-
-function LayerName({
-  session,
-  id,
-  name,
-}: Props & {
-  id: ReturnType<EditorSession["activeLayer"]["getSnapshot"]>;
-  name: string;
-}) {
-  const [draft, setDraft] = useState(name);
-  useEffect(() => setDraft(name), [name]);
-  return (
-    <form
-      className="layer-name"
-      onSubmit={(event) => {
-        event.preventDefault();
-        session.execute("Rename layer", [
-          { kind: "rename-layer", id, name: draft.trim() },
-        ]);
-      }}
-    >
-      <label>
-        Layer name
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-        />
-      </label>
-      <button
-        type="submit"
-        disabled={!draft.trim() || draft.trim() === name}
-        title={
-          !draft.trim()
-            ? "Enter a layer name."
-            : draft.trim() === name
-              ? "Change the name to rename this layer."
-              : "Rename active layer"
-        }
-      >
-        Rename
-      </button>
-    </form>
-  );
-}
-
-export function LayerPanel({ session }: Props) {
-  const layers = useStore(session.layers);
-  const active = useStore(session.activeLayer);
-  const layer = layers.find((item) => item.id === active);
-  const hidden = useStore(session.hiddenLayers);
-  return (
-    <section className="panel" aria-label="Layers">
-      <h2>
-        Layers <span className="panel-value">{layers.length}</span>
-      </h2>
-      <div className="layer-list" role="group" aria-label="Active layer">
-        {[...layers].reverse().map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            aria-pressed={item.id === active}
-            onClick={() => session.selectLayer(item.id)}
-          >
-            <span className="layer-symbol" aria-hidden="true">
-              ▱
-            </span>
-            <span>{item.name}</span>
-            {item.id === active && <small>Active</small>}
-          </button>
-        ))}
-      </div>
-      {layer && (
-        <>
-          <label className="layer-visibility">
-            <input
-              type="checkbox"
-              checked={!hidden.includes(layer.id)}
-              onChange={(event) =>
-                session.setLayerVisible(layer.id, event.target.checked)
-              }
-            />
-            Show active layer
-          </label>
-          <LayerName
-            key={layer.id}
-            session={session}
-            id={layer.id}
-            name={layer.name}
-          />
-        </>
-      )}
-      <ActionButton session={session} action="add-layer" />
-      <p className="hint">
-        Top layers appear above lower layers. Creating layers is not available
-        yet.
-      </p>
     </section>
   );
 }

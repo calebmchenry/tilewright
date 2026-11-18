@@ -55,6 +55,8 @@ It renders sparse chunk textures in document layer order and invalidates only af
 visible caches. The former origin marker has been removed. The active layer's
 visibility is a transient session store with a **Show active layer** checkbox;
 hiding releases its render cache without changing document content or history.
+TW-013 completes [layer management](layers.md), including safe removal, last-layer
+protection, stack controls, and the visible-layer editing-target policy.
 
 ## Controls and focus
 
@@ -67,7 +69,7 @@ disabled attribute, a reason in their accessible description and hover title, an
 visible explanatory panel text. Undo/redo reasons follow history availability.
 
 Inspect is the current tool and reports world tile coordinates. Layer selection,
-layer renaming, color selection/hex validation, annotation filtering, undo/redo
+layer creation/renaming/reordering/removal, color selection/hex validation, annotation filtering, undo/redo
 and the zoom selector work. New maps retain the existing default of one `Layer 1`
 in a 256 × 256 map. Named metadata lists use a string `name` if present, otherwise
 the stable ID; the shell does not invent registry/annotation schemas.
@@ -77,7 +79,7 @@ The transient rectangle store updates its readout and renderer overlay, without
 document/history notifications. Future selection tools can use the same validated
 rectangle display seam.
 
-Drawing, selection, layer creation, named color/area editing and local saving
+Drawing, selection, named color/area editing and local saving
 are explicitly unavailable until their existing tickets. Save never acknowledges
 a checkpoint without native I/O. The current color control uses opaque #RRGGBB;
 it is a tool preference, not a conversion of persisted raw/registered paint.

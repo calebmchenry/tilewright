@@ -65,8 +65,8 @@ The active layer's **Show active layer** checkbox uses that seam. Hiding release
 its renderer cache, leaves underlying model content untouched, and adds no history
 entry. Showing queries fresh content, including intervening hidden edits or registry
 changes. Removed layer IDs are dropped from the preference; undoing removal shows
-the restored layer. Persistent layer settings and broader layer-management UX remain
-later tickets. A replacement document requires a new session as already specified
+the restored layer. TW-013 supplies [layer-management controls and editing-target policy](layers.md);
+persisted view preferences remain a later file-format decision. A replacement document requires a new session as already specified
 by the editor/history ownership contract.
 
 ## Incremental updates and disposal

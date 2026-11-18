@@ -18,6 +18,9 @@ are in [the foundation decisions](docs/foundation-decisions.md).
 New Map dimensions, validation, and undoable growth controls are documented in
 [map creation and growth](docs/canvas-creation.md).
 
+Layer controls, safe removal, visibility, and editing-target policy are documented
+in [layer management](docs/layers.md).
+
 The pure TypeScript map API, storage choices, and change-notification contract are
 documented in [the sparse map document](docs/map-document.md).
 
