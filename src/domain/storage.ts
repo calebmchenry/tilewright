@@ -81,6 +81,31 @@ export class TilePartition {
       : (this.#cells.get(index) ?? 0);
   }
 
+  /** Internal bounded row scan; choose representation once, resolve no paint. */
+  *runs(
+    start: number,
+    end: number,
+  ): Generator<{ offset: number; length: number; token: number }> {
+    const cells = this.#cells;
+    if (cells instanceof Uint32Array) {
+      for (let offset = start; offset < end;) {
+        const token = cells[offset];
+        let next = offset + 1;
+        while (next < end && cells[next] === token) next++;
+        if (token) yield { offset, length: next - offset, token };
+        offset = next;
+      }
+    } else {
+      for (let offset = start; offset < end;) {
+        const token = cells.get(offset) ?? 0;
+        let next = offset + 1;
+        while (next < end && (cells.get(next) ?? 0) === token) next++;
+        if (token) yield { offset, length: next - offset, token };
+        offset = next;
+      }
+    }
+  }
+
   set(index: number, token: number): void {
     const previous = this.get(index);
     if (previous === token) return;

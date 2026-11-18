@@ -170,8 +170,16 @@ silently stand in for the release baseline.
 
 Apply these budgets to **both fixtures**, preserving all four layers and underlying
 content. There are no timing assertions in unit tests. These are future release
-gates, currently **not measured**, and should be attached to the implementing
-tickets when their instrumentation is available. One successful run is not a gate.
+gates. TW-011 records partial native measurements and unresolved failures in
+[native performance](native-performance.md); the gate is not passed. Attach the
+remaining scenarios to implementing tickets as their instrumentation becomes
+available. One successful run is not a gate.
+
+The user's 2026-11-18 delivery decision accepts TW-011 as a working baseline and
+defers performance refinement to TW-049 (rendering/presentation) and TW-050
+(large edits/history/memory). Performance overruns or missing performance evidence
+alone must not block intervening feature tickets. Keep correctness checks and
+record limitations; these numerical budgets remain future targets.
 
 Use a fresh document per scenario. Warm up for 5 seconds, then record 60 seconds of
 navigation three times. Report p50/p95/p99 and maximum per run with nearest-rank
@@ -242,11 +250,18 @@ and memory in [model-baseline.json](model-baseline.json); this does not establis
 an editor memory/performance budget. The shell tests measure state isolation, sizing, focus, behavior and cleanup.
 TW-007 additionally measures detailed populated-map rendering, culling, live GPU
 resource counts and browser heap during repeated pan sweeps; see the
-[tile renderer validation](tile-renderer.md#validation). Overview, native memory,
-file I/O and complete editor performance budgets remain unmeasured.
+[tile renderer validation](tile-renderer.md#validation). That earlier report did
+not measure overview, native memory, file I/O or complete editor budgets.
 
 TW-010 adds [incremental overview caching](overview-rendering.md) and retains
 [browser overview measurements](overview-baseline.json) for both complete maps.
 These include cold refresh, warm rAF/submission proxies, edit/undo/redo refresh,
-cache payload and post-GC heap. They do not replace TW-011's native release gate
+cache payload and post-GC heap. They do not replace the deferred native release gate
 or establish the whole-app physical-memory/presentation budgets above.
+
+TW-011 adds a separate [native release benchmark](native-performance.md) using
+the same document, command/history, and renderer code. Its JavaScript timing
+proxies do not by themselves pass the presented-frame or input-to-paint gates.
+The retained native measurements identify bulk-command task overruns and missing
+presentation evidence. TW-011 is complete as an accepted baseline; those findings
+are deferred to TW-049/TW-050 without claiming a performance pass.

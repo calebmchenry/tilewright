@@ -29,6 +29,11 @@ The loop stops on a failed Codex call or a ticket that was not marked done. It
 also exits with an error if no tickets are ready but unfinished tickets remain.
 Canceled tickets are treated as closed. Done tickets are skipped.
 
+The current delivery priority in `AGENTS.md` accepts TW-011's working baseline
+and defers performance refinement to TW-049/TW-050. Feature tickets still require
+functional validation, but performance budget misses or missing performance
+measurements alone do not block them. The runner's completion checks still apply.
+
 ## Monitor progress
 
 Progress appears in the terminal and is appended to `.wrk-runs/monitor.log`.

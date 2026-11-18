@@ -53,3 +53,23 @@ Record the implementation/decision location and actual validation evidence in th
 ## Next step
 
 Completing this ticket unlocks [TW-050: Meet final large-edit and undo memory/latency budgets](wrk-e61b329b.md).
+
+## Deferred TW-011 work — user decision, 2026-11-18
+
+The user accepted the early baseline to prioritize feature development and
+explicitly deferred performance refinement. TW-011 closes under that revised
+scope; its original performance gate has not passed. This ticket retains its
+existing late-backlog dependency and owns the following follow-up:
+
+- Obtain valid presented-frame and input-to-display timing with input-ID
+  correlation at fixed 60 Hz in the complete native editor. Earlier Instruments
+  captures returned impossible multi-year lifetimes or no frame events; rAF and
+  submission timing remain proxies. Diagnose the capture setup or use calibrated
+  external capture, then repeat the documented protocol.
+- Repeat populated-fixture stress navigation and visual/input correctness in the
+  complete editor; inspect long-session renderer/cache resource growth.
+- Use `docs/native-performance.md`, `docs/native-performance-baseline.json` and
+  the compressed native performance/presentation samples as the retained baseline.
+  Preserve invalid/occluded diagnostic runs as explicitly invalid evidence.
+- Coordinate large-edit/history memory and scheduling work with TW-050. Do not
+  require this follow-up before intervening feature tickets can complete.

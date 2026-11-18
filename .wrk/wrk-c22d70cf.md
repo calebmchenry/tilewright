@@ -52,7 +52,7 @@ Record the implementation/decision location and actual validation evidence in th
 
 ## Next step
 
-Completing this ticket unlocks [TW-011: Pass the early populated-map rendering and architecture performance gate](wrk-02942808.md).
+Completing this ticket unlocks [TW-011: Record the early populated-map rendering baseline](wrk-02942808.md).
 
 ## Execution — 2026-11-18
 

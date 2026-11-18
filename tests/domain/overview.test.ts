@@ -270,3 +270,72 @@ test("LRU byte and entry caps bound retained cache across unbounded panning", ()
   h.cache.destroy();
   assert.equal(h.cache.snapshot().entries, 0);
 });
+
+test("span rasterization matches a per-cell oracle across clipped bins and alpha overlaps", () => {
+  const bounds = { minX: 3, minY: 5, maxX: 251, maxY: 29 };
+  const document = new MapDocument({
+    bounds,
+    layers: [
+      { id: bottom, name: "Bottom" },
+      { id: top, name: "Top" },
+    ],
+  });
+  const palette = [
+    "#123456ff",
+    "#ff000000",
+    "#00ffff80",
+    "#01020301",
+    "#000000ff",
+  ];
+  for (const [li, id] of [bottom, top].entries())
+    for (let y = bounds.minY; y < bounds.maxY; y++)
+      for (let x = bounds.minX; x < bounds.maxX;) {
+        const length = Math.min(
+          1 + ((x * 13 + y * 7 + li * 3) % 37),
+          bounds.maxX - x,
+        );
+        if ((x + y + li) % 3)
+          document.writeBatch([
+            {
+              layerId: id,
+              x,
+              y,
+              length,
+              value: rawColor(palette[(x + y + li) % palette.length]),
+            },
+          ]);
+        x += length;
+      }
+  for (const step of [1, 2, 4, 8, 16]) {
+    const r = { ...region(0, step), bounds };
+    const actual = finish(rasterizeOverview(document, r, []))!;
+    const sums = new Float64Array(actual.length),
+      counts = new Uint32Array(actual.length / 4);
+    for (let y = bounds.minY; y < bounds.maxY; y++)
+      for (let x = bounds.minX; x < bounds.maxX; x++) {
+        const pixel = [0, 0, 0, 0];
+        for (const id of [bottom, top]) {
+          const cell = document.getCell(id, x, y);
+          if (!cell || cell.kind !== "raw") continue;
+          const color = [1, 3, 5, 7].map((i) =>
+            parseInt(cell.rgba.slice(i, i + 2), 16),
+          );
+          const alpha = color[3] / 255;
+          for (let c = 0; c < 4; c++)
+            pixel[c] = Math.round(
+              (c === 3 ? color[c] : Math.round(color[c] * alpha)) +
+                pixel[c] * (1 - alpha),
+            );
+        }
+        const bin = Math.floor(y / step) * r.pixels + Math.floor(x / step);
+        counts[bin]++;
+        for (let c = 0; c < 4; c++) sums[bin * 4 + c] += pixel[c];
+      }
+    const oracle = Uint8Array.from(sums, (sum, i) =>
+      counts[Math.floor(i / 4)]
+        ? Math.round(sum / counts[Math.floor(i / 4)])
+        : 0,
+    );
+    assert.deepEqual(actual, oracle, `step ${step}`);
+  }
+});

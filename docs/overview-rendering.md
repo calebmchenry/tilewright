@@ -22,7 +22,10 @@ visible images together need at most **16 MiB** of RGBA payload. On the measured
 have ready metadata without a texture. No per-tile display objects or per-layer
 full-map textures are created.
 
-`rasterizeOverview` reads bounded runs from the actual document. It combines
+`rasterizeOverview` reads bounded runs from the actual document. TW-011 uses
+packed fills for opaque spans and integrates identical composite spans directly
+into downsampling bins; partially transparent paint retains per-cell source-over.
+The independent per-cell oracle checks clipped bins and mixed alpha. It combines
 visible layers bottom to top at each source tile using premultiplied source-over,
 then box-averages those composite pixels. Averaging layers independently would
 incorrectly reveal lower colors through disjoint upper-layer holes. Missing
@@ -39,8 +42,8 @@ cache or exported as tiles.
 ## Scheduling and invalidation
 
 `OverviewCache` schedules a single requestAnimationFrame while work is pending.
-Each slice allows **4 ms**, checked after each bounded **256 × 16 tile block**,
-and at most 64 work units. A block completes all document iterators before
+Each slice allows **6 ms**, checked after each bounded **256 × 16 tile block**,
+and at most 1,024 work units. A block completes all document iterators before
 returning; no live iterator crosses an event-loop yield. This is a cooperative
 budget, not a hard real-time guarantee: one block, texture upload, rendering,
 GC, or a busy browser may exceed it. There is no idle rendering ticker.
@@ -114,6 +117,14 @@ source hashes and environment; WRK records the acceptance audit and validation.
 Frame intervals from rAF and CPU render-submission durations are **browser
 proxies**, not native presented-frame latency. Exact RGBA accounting and CDP heap
 are not a WKWebView process-group physical footprint. The native release gate,
-longer repeated navigation protocol and provisional budgets remain TW-011; this
+longer repeated navigation protocol and provisional budgets are deferred to
+TW-049/TW-050 under the user's 2026-11-18 delivery decision; this
 measurement does not claim they passed. Run build, full tests, format check and
 the packaged desktop build before completing this ticket.
+
+TW-011 native measurement tooling and gate status are recorded in
+[native performance](native-performance.md). The 6 ms slice replaces 4 ms to use
+more of a 60 Hz frame for cold generation; the bounded block still controls
+cooperative overshoot. The 1,024-unit fallback avoids an artificial 64-block
+ceiling when the work finishes before the clock budget. Neither is a presentation
+latency guarantee.

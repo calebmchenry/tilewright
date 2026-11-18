@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tilewright native performance</title>
+    <style>
+      body {
+        margin: 16px;
+        background: #151b25;
+        color: #e1e6ef;
+        font: 14px system-ui;
+      }
+      #map {
+        width: 1024px;
+        height: 640px;
+        position: relative;
+      }
+      #status {
+        height: 40px;
+      }
+      .map-refresh {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        background: #151b25;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status" role="status">Preparing native benchmark…</div>
+    <div id="map"></div>
+    <script type="module" src="./native-performance.ts"></script>
+  </body>
+</html>

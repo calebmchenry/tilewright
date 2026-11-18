@@ -10,7 +10,7 @@ export const OVERVIEW_THRESHOLD = 2; // CSS pixels/tile; editing has its own gat
 export const OVERVIEW_BYTES = 32 * 1024 * 1024; // CPU, plus equal GPU payload.
 export const OVERVIEW_ENTRIES = 512;
 export const OVERVIEW_TTL = 30_000;
-export const OVERVIEW_SLICE_MS = 4;
+export const OVERVIEW_SLICE_MS = 6;
 export interface OverviewRegion extends VisibleChunk {
   readonly size: number;
   readonly step: number;
@@ -74,6 +74,7 @@ export function* rasterizeOverview(
   const layers = document.layers.filter(({ id }) => !hidden.includes(id));
   const sums = new Float64Array(region.pixels ** 2 * 4);
   const block = new Uint8Array(256 * 16 * 4);
+  const packed = new Uint32Array(block.buffer);
   let occupied = false;
   for (let y = region.bounds.minY; y < region.bounds.maxY; y += 16) {
     for (let x = region.bounds.minX; x < region.bounds.maxX; x += 256) {
@@ -87,24 +88,33 @@ export function* rasterizeOverview(
       block.fill(0);
       // Only block-local colors: an arbitrarily varied map cannot grow a palette cache.
       for (const { id } of layers) {
-        const colors = new Map<string, Rgba>();
+        const colors = new Map<string, { rgba: Rgba; packed: number }>();
         for (const run of document.iterateRuns(id, bounds)) {
           occupied = true;
           const key = cellKey(run.value);
           let color = colors.get(key);
           if (!color) {
             const [r, g, b, a] = resolveColor(document, run.value);
-            color = [
+            const rgba: Rgba = [
               Math.round((r * a) / 255),
               Math.round((g * a) / 255),
               Math.round((b * a) / 255),
               a,
             ];
+            color = {
+              rgba,
+              packed: new Uint32Array(Uint8Array.from(rgba).buffer)[0],
+            };
             colors.set(key, color);
           }
-          const [r, g, b, a] = color;
+          const [r, g, b, a] = color.rgba;
           const inverse = 1 - a / 255;
           let offset = ((run.y - y) * width + run.x - x) * 4;
+          if (a === 255) {
+            packed.fill(color.packed, offset / 4, offset / 4 + run.length);
+            continue;
+          }
+          if (a === 0) continue;
           for (let i = 0; i < run.length; i++, offset += 4) {
             block[offset] = Math.round(r + block[offset] * inverse);
             block[offset + 1] = Math.round(g + block[offset + 1] * inverse);
@@ -113,12 +123,29 @@ export function* rasterizeOverview(
           }
         }
       }
-      let offset = 0;
       for (let py = y; py < bounds.maxY; py++) {
         const row = Math.floor((py - region.y) / region.step) * region.pixels;
-        for (let px = x; px < bounds.maxX; px++, offset += 4) {
-          const dest = (row + Math.floor((px - region.x) / region.step)) * 4;
-          for (let c = 0; c < 4; c++) sums[dest + c] += block[offset + c];
+        const base = (py - y) * width;
+        for (let px = x; px < bounds.maxX;) {
+          const offset = base + px - x;
+          const value = packed[offset];
+          let end = px + 1;
+          while (end < bounds.maxX && packed[base + end - x] === value) end++;
+          if (value === 0) {
+            px = end;
+            continue;
+          }
+          // Integrate equal composite spans into bins. This is the same exact
+          // box average as per-cell accumulation, including clipped edge bins.
+          const rgba = block.subarray(offset * 4, offset * 4 + 4);
+          while (px < end) {
+            const column = Math.floor((px - region.x) / region.step);
+            const until = Math.min(end, region.x + (column + 1) * region.step);
+            const dest = (row + column) * 4;
+            for (let c = 0; c < 4; c++)
+              sums[dest + c] += rgba[c] * (until - px);
+            px = until;
+          }
         }
       }
       yield;
@@ -272,7 +299,7 @@ export class OverviewCache {
     const start = this.#hooks.now();
     let published = false;
     // Work-budget yield plus a unit cap for deterministic clocks and cheap empty blocks.
-    for (let units = 0; units < 64; units++) {
+    for (let units = 0; units < 1024; units++) {
       if (this.#job && this.#job.version !== this.#document.version)
         this.#abort();
       if (!this.#job) {

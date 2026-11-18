@@ -53,3 +53,23 @@ Record the implementation/decision location and actual validation evidence in th
 ## Next step
 
 Completing this ticket unlocks [TW-051: Meet large-project save, load, recovery, and export budgets](wrk-7eef1f66.md).
+
+## Deferred TW-011 work — user decision, 2026-11-18
+
+The user accepted the early baseline to prioritize feature development and
+explicitly deferred performance refinement. TW-011 closes under that revised
+scope; its original performance gate has not passed. This ticket retains its
+existing late-backlog dependency and owns the following follow-up:
+
+- Revise large-command scheduling/acknowledgement and remeasure. The 1024²
+  synchronous path reached 118 ms against a 50 ms main-thread budget; heartland
+  also exceeded the 100 ms acknowledgement/completion target.
+- Isolate 20-cycle edit/undo memory-growth cases. The earlier 155.11 / 100.27 MiB
+  retained growth followed 20 trials of each of three sizes (60 total), so it
+  cannot establish the 100 MiB / 20-cycle target. Investigate retained history
+  and allocator capacity, then remeasure with process-group/shared accounting.
+- Preserve transaction atomicity, exact undo/redo and data integrity while
+  improving responsiveness. Coordinate real presentation timing with TW-049.
+- Reuse `docs/native-performance.md`, its baseline JSON and compressed raw
+  samples. These findings are future refinement work, not prerequisites for
+  intervening feature tickets.

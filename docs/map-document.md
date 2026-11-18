@@ -133,6 +133,9 @@ runs into individual occupied cells. Both support contained half-open query
 rectangles, including zero-area empty queries. Out-of-bounds/invalid queries throw.
 Enumeration probes the smaller of the query partition lattice and the allocated
 partition index, sorts matching partitions, then scans only intersecting rows.
+TW-011 scans contiguous internal token spans and resolves paint once per run,
+choosing the sparse/dense representation once per bounded row instead of per cell.
+Tokens remain internal; ordering, immutable results and mutation guards are unchanged.
 Small windows therefore avoid scanning the whole-map index; full-map sparse
 queries avoid walking empty coordinates. This TW-007 refinement is documented
 with the [tile renderer](tile-renderer.md).

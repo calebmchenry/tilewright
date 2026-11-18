@@ -85,7 +85,7 @@ wrk list --ready --label v1
 8. [TW-008: Implement pan, anchored zoom, fit-to-map, and coordinate conversion](wrk-58cdb442.md)
 9. [TW-009: Add tile grids, emphasized 64-tile chunk boundaries, and scale readouts](wrk-bba25a4a.md)
 10. [TW-010: Implement cached overview rendering and coherent cache invalidation](wrk-c22d70cf.md)
-11. [TW-011: Pass the early populated-map rendering and architecture performance gate](wrk-02942808.md)
+11. [TW-011: Record the early populated-map rendering baseline](wrk-02942808.md)
 12. [TW-012: Add fixed-size map creation and explicit canvas growth](wrk-20574578.md)
 
 ### Painting

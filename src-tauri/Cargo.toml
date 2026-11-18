@@ -6,6 +6,9 @@ edition = "2021"
 rust-version = "1.90"
 publish = false
 
+[features]
+performance = []
+
 [build-dependencies]
 tauri-build = { version = "=2.7.6", features = [] }
 

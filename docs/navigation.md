@@ -104,7 +104,8 @@ TW-010 now uses [cached composite regions](overview-rendering.md) below 2 CSS
 pixels per tile. Cold images rebuild incrementally with a refresh indicator;
 warm navigation reuses images. It retains these camera/input contracts and the
 separate editing threshold. Actual measurements and their limits are recorded
-with that implementation; the native performance gate remains TW-011.
+with that implementation. TW-011's baseline is accepted for feature development;
+the native performance gate is deferred to TW-049/TW-050.
 
 ## Validation
 

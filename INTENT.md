@@ -188,6 +188,13 @@ cached overview images for distant zoom levels. Validate this approach at the
 target map scale early; selecting a rendering library alone does not establish
 the performance target.
 
+Delivery priority update — 2026-11-18: accept the measured TW-011 baseline and
+continue building features despite current performance limitations. Performance
+budget enforcement and missing presentation/memory measurements are deferred to
+the later refinement tickets TW-049 and TW-050. The early spike is evidence for
+future work, not a prerequisite performance pass for further feature development.
+Correctness and data integrity remain required; the budgets remain future targets.
+
 Tauri is the chosen delivery mechanism. A standalone browser release is not a
 current delivery requirement.
 

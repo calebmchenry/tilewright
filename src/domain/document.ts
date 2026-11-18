@@ -684,30 +684,39 @@ export class MapDocument {
           maxY = Math.min(SIZE, window.maxY - originY);
         for (let localY = minY; localY < maxY; localY++) {
           let pending: PendingRun | undefined;
+          let pendingToken = 0;
           for (let p = first; p < last; p++) {
             const part = partitions[p],
               originX = part.x * SIZE;
             const minX = Math.max(0, window.minX - originX),
               maxX = Math.min(SIZE, window.maxX - originX);
-            for (let localX = minX; localX < maxX; localX++) {
-              const value = this.#palette.value(
-                part.get(localY * SIZE + localX),
-              );
-              if (value === null) continue;
-              const x = originX + localX,
+            for (const { offset, length, token } of part.runs(
+              localY * SIZE + minX,
+              localY * SIZE + maxX,
+            )) {
+              const x = originX + (offset - localY * SIZE),
                 y = originY + localY;
               if (
                 pending &&
                 pending.x + pending.length === x &&
-                equalCells(pending.value, value)
+                pendingToken === token
               ) {
-                pending.length++;
+                pending.length += length;
               } else {
                 if (pending) {
                   yield Object.freeze(pending);
                   this.#unchanged(version);
                 }
-                pending = { layerId: layer.id, x, y, length: 1, value };
+                // Interned tokens are unique for equal paint while live. Resolve
+                // paint once per run, rather than once per occupied tile.
+                pendingToken = token;
+                pending = {
+                  layerId: layer.id,
+                  x,
+                  y,
+                  length,
+                  value: this.#palette.value(token)!,
+                };
               }
             }
           }
