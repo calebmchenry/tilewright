@@ -60,6 +60,9 @@ A `Cell` is exactly one of:
 The [TW-014 authoring controls](color-selection.md) choose opaque sRGB colors and
 normalize them to this same raw RGBA representation. The lower-level model keeps
 its existing alpha support and distinct `null` empty value.
+The [TW-015 registry contract](registry-decisions.md) defines stable identity,
+explicit raw adoption, collision rejection, and appearance-preserving removal for
+the TW-016/TW-017 feature commands; the generic metadata seam does not enforce it.
 
 Layer visibility/compositing is not baked into stored content. `addLayer`,
 `renameLayer`, and `reorderLayers` preserve all existing IDs and cells. The current

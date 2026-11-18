@@ -57,9 +57,10 @@ name displays its ID, as in the existing metadata list.
 
 An equal RGB value does not attach raw paint to an entry or recolor the selected
 raw value when that entry changes. Existing registered tiles keep their IDs.
-TW-015 owns adoption, collision and future-stroke identity decisions; TW-016 owns
-registry editing/selection. This panel makes the current lack of an association
-explicit without deciding those later behaviors. Pencil/eraser gestures remain
+The [TW-015 registry decisions](registry-decisions.md) specify explicit adoption,
+collision rejection, and future-stroke identity; TW-016 implements registry
+editing/selection. This TW-014 panel makes the current lack of an association
+explicit; matching alone does not opt into those later behaviors. Pencil/eraser gestures remain
 their drawing-tool tickets; the selected-paint and erasure command seams are
 validated here.
 
