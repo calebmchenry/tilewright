@@ -244,3 +244,9 @@ TW-007 additionally measures detailed populated-map rendering, culling, live GPU
 resource counts and browser heap during repeated pan sweeps; see the
 [tile renderer validation](tile-renderer.md#validation). Overview, native memory,
 file I/O and complete editor performance budgets remain unmeasured.
+
+TW-010 adds [incremental overview caching](overview-rendering.md) and retains
+[browser overview measurements](overview-baseline.json) for both complete maps.
+These include cold refresh, warm rAF/submission proxies, edit/undo/redo refresh,
+cache payload and post-GC heap. They do not replace TW-011's native release gate
+or establish the whole-app physical-memory/presentation budgets above.

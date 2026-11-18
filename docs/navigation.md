@@ -100,11 +100,11 @@ At the threshold the gate permits picking. Drawing tools themselves remain their
 later tickets; they must use this gate when implementing pointer edits. Undo,
 metadata changes and document commands remain independent of camera scale.
 
-TW-008 exposes full-map navigation through the existing sparse tile renderer.
-It does not implement TW-010's overview caches or claim its frame/memory budgets.
-At full-map fit, the existing renderer necessarily queries all visible render
-chunks. The target-scale tests load actual populated, overlapping layers; future
-overview caching should retain the same camera/input contracts.
+TW-010 now uses [cached composite regions](overview-rendering.md) below 2 CSS
+pixels per tile. Cold images rebuild incrementally with a refresh indicator;
+warm navigation reuses images. It retains these camera/input contracts and the
+separate editing threshold. Actual measurements and their limits are recorded
+with that implementation; the native performance gate remains TW-011.
 
 ## Validation
 

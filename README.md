@@ -27,6 +27,9 @@ are documented in [the editor shell](docs/editor-shell.md).
 Visible sparse WebGL tiles, color lookup, composition, and cache lifetime are
 documented in [the tile renderer](docs/tile-renderer.md).
 
+Distant composite images, incremental rebuilds and bounded cache lifetime are
+documented in [overview rendering](docs/overview-rendering.md).
+
 Camera math, mouse/trackpad/keyboard controls and overview editing availability
 are documented in [map navigation](docs/navigation.md).
 

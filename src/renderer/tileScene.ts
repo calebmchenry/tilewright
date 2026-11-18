@@ -3,6 +3,8 @@ import type { MapDocument } from "../domain/document";
 import type { LayerId, RegistryId } from "../domain/values";
 import type { CanvasInvalidation } from "../editor/invalidation";
 import { CANVAS_INSET, TILE_PIXELS, type Viewport } from "../editor/viewport";
+import { OverviewScene } from "./overviewScene";
+import { OVERVIEW_THRESHOLD } from "./overview";
 import {
   CHUNK_BYTES,
   RENDER_CHUNK_SIZE,
@@ -21,7 +23,7 @@ type Chunk = {
 };
 type Layer = { container: Container; chunks: Map<string, Chunk> };
 
-/** Disposable GPU projection. No ticker, offscreen cache, or authoritative tiles. */
+/** Disposable GPU projection; authoritative tiles stay in the document. */
 export class TileScene {
   readonly container = new Container();
   #document: MapDocument;
@@ -32,9 +34,17 @@ export class TileScene {
   #released = 0;
   #runs = 0;
   #destroyed = false;
+  #overview: OverviewScene;
+  #mode: "detail" | "overview" = "detail";
 
-  constructor(document: MapDocument) {
+  constructor(
+    document: MapDocument,
+    changed: () => void,
+    error: (error: unknown) => void,
+  ) {
     this.#document = document;
+    this.#overview = new OverviewScene(document, changed, error);
+    this.container.addChild(this.#overview.container);
   }
 
   sync(
@@ -42,8 +52,24 @@ export class TileScene {
     width: number,
     height: number,
     hidden: readonly LayerId[] = [],
+    density = 1,
   ): void {
     if (this.#destroyed) return;
+    this.#mode =
+      TILE_PIXELS * view.zoom < OVERVIEW_THRESHOLD ? "overview" : "detail";
+    this.#overview.sync(
+      view,
+      width,
+      height,
+      hidden,
+      density,
+      this.#mode === "overview",
+    );
+    if (this.#mode === "overview") {
+      for (const layer of this.#layers.values()) this.#dropLayer(layer);
+      this.#layers.clear();
+      return;
+    }
     const regions = visibleChunks(this.#document.bounds, view, width, height);
     const keys = new Set(regions.map((region) => region.key));
     const order = this.#document.layers.filter(
@@ -89,6 +115,8 @@ export class TileScene {
 
   invalidate(change: CanvasInvalidation): boolean {
     if (this.#destroyed) return false;
+    const overviewChanged = this.#overview.invalidate(change);
+    if (this.#mode === "overview") return overviewChanged;
     if (change.bounds) {
       for (const layer of this.#layers.values()) {
         for (const chunk of layer.chunks.values()) this.#release(chunk);
@@ -166,6 +194,8 @@ export class TileScene {
         cells += chunk.cells;
       }
     return {
+      mode: this.#mode,
+      overview: this.#overview.snapshot(),
       layers: this.#layers.size,
       chunks,
       textures,
@@ -185,6 +215,7 @@ export class TileScene {
     this.#destroyed = true;
     for (const layer of this.#layers.values()) this.#dropLayer(layer);
     this.#layers.clear();
+    this.#overview.destroy();
     this.container.destroy();
   }
 }

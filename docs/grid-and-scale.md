@@ -28,8 +28,8 @@ The 32-tile texture partitions are independent of the visual lattice.
 
 These are visual defaults, not additional product requirements. The overlay
 has no event target, ticker, tile texture, or persisted state. Renderer teardown
-destroys its Graphics resources with the stage. Overview tile caching remains
-TW-010; bounded grid generation does not establish whole-editor performance.
+destroys its Graphics resources with the stage. TW-010 adds separate
+[overview images](overview-rendering.md); grids are never baked into them.
 
 ## Readouts and rectangle measurement
 

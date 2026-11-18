@@ -29,6 +29,7 @@ export function visibleChunks(
   view: Viewport,
   width: number,
   height: number,
+  size = RENDER_CHUNK_SIZE,
 ): VisibleChunk[] {
   if (
     ![view.x, view.y, view.zoom, width, height].every(Number.isFinite) ||
@@ -48,7 +49,6 @@ export function visibleChunks(
     Math.ceil(view.y + (height - CANVAS_INSET) / scale),
   );
   if (minX >= maxX || minY >= maxY) return [];
-  const size = RENDER_CHUNK_SIZE;
   const result: VisibleChunk[] = [];
   for (
     let cy = Math.floor(minY / size);

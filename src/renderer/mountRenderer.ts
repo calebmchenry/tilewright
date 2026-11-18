@@ -56,7 +56,11 @@ export function mountRenderer(
     renderer = undefined;
   };
 
-  void createRenderer(host, session)
+  void createRenderer(host, session, (error) => {
+    if (disposed) return;
+    dispose();
+    onError(error);
+  })
     .then((created) => {
       if (disposed) {
         created.destroy();

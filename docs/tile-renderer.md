@@ -32,8 +32,8 @@ For a W × H CSS-pixel viewport at Z zoom (24Z pixels per tile), an upper bound 
 cached slots is `(ceil(W / (24Z × 32)) + 1) × (ceil(H / (24Z × 32)) + 1)` per shown
 layer. Bounds clipping and empty chunks reduce texture counts further. This bounds
 resources by the view, not by cumulative panning history. Layer count and distant
-zoom still increase that bound. TW-010 owns cached overview rendering and its
-separate budget; this ticket does not claim full-map overview performance.
+zoom still increase that bound. TW-010 now switches to [bounded composite overview images](overview-rendering.md)
+below 2 CSS pixels per tile; the detail cache is released at that scale.
 
 Panning within cached chunk coverage repositions sprites without querying tiles or
 uploading textures. Camera-relative positions keep large world coordinates out of
@@ -124,7 +124,7 @@ CDP heap samples and browser submission timings are not native WKWebView memory,
 presented-frame latency, or passing results for all provisional editor budgets.
 TW-008 adds [navigation input and camera math](navigation.md). TW-009 adds
 [tile/chunk overlays and scale readouts](grid-and-scale.md); distant overview
-caches remain later work.
+caches are described in [overview rendering](overview-rendering.md).
 The [recorded renderer baseline](renderer-baseline.json) retains fixture IDs/hashes,
 source hashes, all submission-time samples, live resource maxima and memory samples.
 Actual native launch observations and the final acceptance audit are recorded in WRK.

@@ -20,9 +20,18 @@ export interface CanvasRenderer {
 export async function createRenderer(
   host: HTMLElement,
   session?: EditorSession,
+  onError: (error: unknown) => void = (error) => {
+    throw error;
+  },
 ): Promise<CanvasRenderer> {
   const canvas = document.createElement("canvas");
   canvas.setAttribute("aria-label", "Map workspace preview");
+  const progress = document.createElement("span");
+  progress.className = "map-refresh";
+  progress.setAttribute("role", "status");
+  progress.setAttribute("aria-label", "Map refresh");
+  progress.textContent = "Refreshing map…";
+  progress.hidden = true;
   // Acquire WebGL explicitly so unsupported hardware fails before Pixi creates
   // event systems. Neither WebGPU nor Canvas2D is a fallback for this editor.
   const options = { alpha: false, antialias: false, stencil: true };
@@ -45,6 +54,7 @@ export async function createRenderer(
     } finally {
       context.getExtension("WEBGL_lose_context")?.loseContext();
       canvas.remove();
+      progress.remove();
     }
   };
 
@@ -71,7 +81,11 @@ export async function createRenderer(
     // Background below ordered tile layers.
     const preview = new Graphics();
     stage.addChild(preview);
-    tiles = new TileScene(session?.document ?? new MapDocument());
+    tiles = new TileScene(
+      session?.document ?? new MapDocument(),
+      () => resize(),
+      onError,
+    );
     stage.addChild(tiles.container);
     const grid = new Graphics();
     stage.addChild(grid);
@@ -106,7 +120,16 @@ export async function createRenderer(
           (bounds.maxY - bounds.minY) * scale,
         )
         .fill("#1d2732");
-      tiles!.sync(view, width, height, session?.hiddenLayers.getSnapshot());
+      tiles!.sync(
+        view,
+        width,
+        height,
+        session?.hiddenLayers.getSnapshot(),
+        resolution,
+      );
+      const pending = tiles!.snapshot().overview.pending > 0;
+      canvas.setAttribute("aria-busy", String(pending));
+      progress.hidden = !pending;
       const layout = gridLayout(bounds, view, { width, height }, resolution);
       grid.clear();
       const draw = (bands: GridBand[], color: string, alpha: number) => {
@@ -137,7 +160,7 @@ export async function createRenderer(
     return {
       resize() {
         if (destroyed) return;
-        if (canvas.parentNode !== host) host.appendChild(canvas);
+        if (canvas.parentNode !== host) host.append(canvas, progress);
         resize();
       },
       invalidate(change) {

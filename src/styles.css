@@ -442,3 +442,15 @@ footer {
   font-size: 12px;
   pointer-events: none;
 }
+
+.map-refresh {
+  position: absolute;
+  bottom: 48px;
+  left: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #151b25e6;
+  color: #c5d6e6;
+  font-size: 12px;
+  pointer-events: none;
+}

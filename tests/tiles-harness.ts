@@ -14,6 +14,7 @@ import {
 import { CANVAS_INSET, TILE_PIXELS } from "../src/editor/viewport";
 import { populatedDocument } from "./fixtures/populated";
 import { gridDocument } from "./fixtures/grid";
+import { overviewDocument } from "./fixtures/overview";
 
 const host = document.getElementById("tiles")!;
 let renderer: CanvasRenderer;
@@ -82,18 +83,26 @@ function dispose() {
   session?.dispose();
 }
 async function load(
-  kind: "small" | "empty" | "frontier" | "heartland" | "grid" = "small",
+  kind:
+    | "small"
+    | "empty"
+    | "frontier"
+    | "heartland"
+    | "grid"
+    | "overview" = "small",
 ) {
   dispose();
   queries = [];
   const document =
-    kind === "grid"
-      ? gridDocument()
-      : kind === "small"
-        ? small()
-        : kind === "empty"
-          ? new MapDocument()
-          : populatedDocument(kind === "frontier" ? 0 : 1);
+    kind === "overview"
+      ? overviewDocument()
+      : kind === "grid"
+        ? gridDocument()
+        : kind === "small"
+          ? small()
+          : kind === "empty"
+            ? new MapDocument()
+            : populatedDocument(kind === "frontier" ? 0 : 1);
   // Record bounded queries, not pixels or model objects. Clear between measurements.
   const original = document.iterateRuns.bind(document);
   document.iterateRuns = (id, bounds) => {
