@@ -106,6 +106,11 @@ feedback. [Startup recovery review](docs/recovery-policy.md#discovery-and-restor
 offers validated checkpoints, safe restoration as unsaved copies and selected
 recovery discard while preserving explicit project files.
 
+The [whole-map agent format](docs/agent-export-format.md) defines a separate public
+JSON schema with resolved color meanings, complete ordered layers, raw-color
+policy and independent named areas. It includes a readable example and measured
+fixture encoding sizes; the application exporter follows in TW-044.
+
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).
 

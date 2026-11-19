@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "scope": "TW-043 fixture-only schema size estimate; not production export, timing, peak memory or I/O evidence.",
+  "node": "v24.22.3",
+  "inputsSha256": {
+    "src/domain/agent-export-format.ts": "1976712ac6b13ec3f827612f14cb01ea62dccba1cff78d35fcf5b850efcb40a8",
+    "scripts/agent-export-size.ts": "2f164b8655e084314177dd257e69fa178405b308cd262b2076507af8d6d099ba",
+    "docs/examples/agent-map-v1.json": "aa02d015f99e2fbbd6ae9e79b0481265d007449279e6ae3afea4cc594728c8be",
+    "tests/fixtures/maps.ts": "fc4a5576552bce3491d0b09fe2e13848af9aa314fa441fdf5ad35f8e15b0ca5a",
+    "tests/fixtures/inspect.ts": "60577c000437fca722183f52ff1e5aeb82835437e7121b8e776b42195bddc856",
+    "tests/fixtures/expected.json": "264bef125e7a84d86d3a538f91f4b04f8643bd510a681706fa62eaf926f8abe8"
+  },
+  "example": {
+    "canonicalUtf8Bytes": 1133,
+    "canonicalSha256": "587bcfbd3100fe9d437cb430750d9f1a7a0db1e8ff4a4e9be7b6379393ba5380",
+    "occupiedByLayer": [14, 4],
+    "interpretationVerified": true
+  },
+  "measurements": [
+    {
+      "fixture": "frontier-v1",
+      "seed": 439041101,
+      "fixtureContentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617",
+      "occupiedByLayer": [6545856, 57024, 3564, 14256],
+      "occupiedLayerCells": 6620700,
+      "overlappingPositions": 64944,
+      "sourceRuns": 138222,
+      "exportRuns": 123870,
+      "colors": 6,
+      "addedAreas": 2,
+      "areaBytes": 431,
+      "canonicalUtf8Bytes": 2064469,
+      "canonicalSha256": "2de82126a3288f3c354ed90c01475ebde2ed2e301694512a426065342124680d",
+      "decodedContentMatchesGolden": true
+    },
+    {
+      "fixture": "heartland-v1",
+      "seed": 1584361601,
+      "fixtureContentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33",
+      "occupiedByLayer": [23950356, 57024, 3564, 14256],
+      "occupiedLayerCells": 24025200,
+      "overlappingPositions": 64944,
+      "sourceRuns": 500802,
+      "exportRuns": 470490,
+      "colors": 6,
+      "addedAreas": 2,
+      "areaBytes": 431,
+      "canonicalUtf8Bytes": 7838205,
+      "canonicalSha256": "793d4201f0171053b7f320a1371e65287b6f73e8d9afbd5560e1630cc22bd496",
+      "decodedContentMatchesGolden": true
+    }
+  ]
+}

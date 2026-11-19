@@ -1,0 +1,66 @@
+{
+  "format": "tilewright-agent-map",
+  "version": 1,
+  "bounds": { "minX": -1, "minY": -1, "maxX": 5, "maxY": 4 },
+  "colors": [
+    { "kind": "raw", "rgba": "#000000ff", "meaning": null },
+    { "kind": "raw", "rgba": "#629653ff", "meaning": null },
+    { "kind": "raw", "rgba": "#ffffff00", "meaning": null },
+    {
+      "kind": "registered",
+      "registryId": "grass",
+      "rgba": "#629653ff",
+      "meaning": "Grass"
+    },
+    {
+      "kind": "registered",
+      "registryId": "stone",
+      "rgba": "#8d939cff",
+      "meaning": "Stone wall"
+    },
+    {
+      "kind": "registered",
+      "registryId": "water",
+      "rgba": "#417aabff",
+      "meaning": "Water"
+    }
+  ],
+  "layers": [
+    {
+      "id": "terrain",
+      "name": "Terrain",
+      "runs": [
+        [-1, -1, 1, 2],
+        [0, 0, 4, 3],
+        [0, 1, 4, 3],
+        [0, 2, 4, 3],
+        [4, 2, 1, 1]
+      ]
+    },
+    {
+      "id": "buildings",
+      "name": "Buildings",
+      "runs": [
+        [1, 0, 2, 4],
+        [1, 1, 1, 0],
+        [2, 1, 1, 4]
+      ]
+    }
+  ],
+  "areas": [
+    {
+      "id": "house",
+      "name": "Blacksmith’s house",
+      "description": "Stone walls around an unlabeled black work tile. Terrain remains underneath.",
+      "tier": "detail",
+      "bounds": { "minX": 1, "minY": 0, "maxX": 3, "maxY": 2 }
+    },
+    {
+      "id": "village",
+      "name": "Starting village",
+      "description": "The house and its surroundings. The eastern green tile has no assigned meaning.\nWater is registered for future use.",
+      "tier": "locality",
+      "bounds": { "minX": 0, "minY": 0, "maxX": 5, "maxY": 3 }
+    }
+  ]
+}
