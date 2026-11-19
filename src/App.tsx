@@ -83,6 +83,7 @@ function DocumentStatus({ session }: Props) {
 export function ToolPanel({ session }: Props) {
   const tool = useStore(session.activeTool);
   const pencilSize = useStore(session.pencilSize);
+  const rectangleMode = useStore(session.rectangleMode);
   return (
     <section className="panel tools" aria-label="Tools">
       <h2>
@@ -123,11 +124,34 @@ export function ToolPanel({ session }: Props) {
           </select>
         </label>
       )}
+      {tool === "rectangle" && (
+        <label>
+          Rectangle style
+          <select
+            aria-label="Rectangle style"
+            value={rectangleMode}
+            onChange={(event) =>
+              session.setRectangleMode(
+                event.target.value === "outline" ? "outline" : "filled",
+              )
+            }
+          >
+            <option value="filled">Filled</option>
+            <option value="outline">Outline</option>
+          </select>
+        </label>
+      )}
+      {(tool === "line" || tool === "rectangle") && (
+        <p className="hint">
+          Both endpoint tiles included. Lines and outlines are one tile thick;
+          brush size does not apply.
+        </p>
+      )}
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
-        B: Pencil · E: Eraser · D: Eyedropper · [ / ]: Brush size · H: Pan · I:
-        Inspect · F: Fit map. Drag with Inspect to measure a rectangle; Escape
-        clears it.{" "}
+        B: Pencil · E: Eraser · D: Eyedropper · L: Line · R: Rectangle · [ / ]:
+        Brush size · H: Pan · I: Inspect · F: Fit map. Drag with Inspect to
+        measure a rectangle; Escape clears it.{" "}
         {session.drawing.tool(tool)
           ? "Drag to preview; release to apply; Escape cancels drawing."
           : tool === "eyedropper"

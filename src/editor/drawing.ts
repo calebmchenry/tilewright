@@ -128,6 +128,7 @@ export class DrawingController {
         session.color,
         session.selectedRegistryId,
         session.pencilSize,
+        session.rectangleMode,
       ].map((store) => store.subscribe(cancel)),
     ];
   }

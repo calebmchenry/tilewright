@@ -4,8 +4,8 @@ TW-018 supplies the shared drawing pipeline, following [INTENT.md](../INTENT.md)
 [coordinates](foundation-decisions.md), [navigation](navigation.md), and
 [history](command-history.md). These are implementation decisions. Tool algorithms,
 sizes and shortcuts are supplied by feature modules. TW-019 installs the pencil;
-TW-020 adds the eraser and eyedropper described below. The other unfinished drawing
-tools remain unavailable.
+TW-020 adds the eraser and eyedropper; TW-021 adds lines and filled/outlined
+rectangles. The other unfinished drawing tools remain unavailable.
 Test-only adapters also exercise the real controller and canvas.
 
 ## Adjustable pencil (TW-019)
@@ -122,6 +122,56 @@ redo, no-ops/cancellation, stack/hidden/empty/outside/readiness cases and sampli
 followed by painting and recoloring. `tests/eraser-sampling.spec.ts` covers shipping
 controls and pointer routing, red previews and exact visible undo/redo at DPR 1/2,
 underlying-layer reveal, and registered versus raw painting after sampling.
+
+## Lines and rectangles (TW-021)
+
+`src/editor/shapes.ts` supplies endpoint-based shapes through the shared drawing
+controller. These are implementation choices within INTENT.md's drawing scope.
+
+**Line** (canvas shortcut **L**) includes both pointed tiles. It uses the same
+exact nearest-cell, 8-connected integer rasterization as a size-one pencil:
+diagonal neighbors may meet at corners, and canonical major-axis ordering with
+half-ties toward the positive minor coordinate makes reverse drags identical.
+Horizontal/vertical lines include every cell between endpoints; a click paints
+one cell. Clipping retains the original line phase, not rounded clipped endpoints.
+
+**Rectangle** (canvas shortcut **R**) has a **Rectangle style** selector:
+**Filled** (the default) or **Outline**. Both endpoint tiles are included, in any
+drag direction. `(67,67)` to `(60,60)` covers `[60,68)²`: 64 cells when filled,
+28 perimeter cells when outlined. Outline thickness is exactly **one tile**,
+inside that footprint. A one-cell width or height is a solid line in either mode;
+a click paints one cell, with no duplicate corners. Pencil/Eraser brush size does
+**not** affect any shape. There is no angle/square constraint or thickness control.
+
+Every motion replaces the pending shape from the original anchor to the current
+endpoint; the traversed pointer path leaves no paint trail. Release uses its own
+final endpoint and commits one **Line** or **Rectangle** undo step. The overlay
+shows exactly the cells to be written, using the shared translucent affected-cell
+preview above all layers. It does not promise the final composited color where
+higher layers obscure the active target. No hover stamp is shown for shapes.
+
+The gesture captures the selected raw bytes or registered identity, active visible
+layer, fixed bounds and rectangle style. Registered shapes follow later recolors;
+raw paint with matching bytes stays raw. Undo restores overwritten raw/registered
+values and emptiness exactly. All other layers, metadata and bounds are preserved.
+Shapes may cross any storage/visual chunks and begin outside the map. Candidate
+cells are intersected with fixed bounds before staging. An outline is clipped
+from its **original perimeter**: off-map sides do not become artificial borders
+on the map edge, and an outline surrounding the entire map can paint nothing.
+Iteration skips remote rows/columns, including safe-integer outside endpoints.
+
+Rectangle style is transient session state, retained across tool switches and
+reset to Filled by New Map. Changing it cancels a pending gesture and preserves
+history/redo. The standard Escape, capture, navigation, context-change and overview
+gates apply. Same-color and outside-only gestures are no-ops. Existing per-cell
+preview staging and synchronous history limits remain; performance refinement
+belongs to TW-049/TW-050, with no new latency or memory budget claimed.
+
+`tests/domain/shapes.test.ts` compares exact cell sets, all octants/directions,
+thin/8×8 footprints, clipping versus unclipped geometry, huge endpoints, preview
+replacement, raw/registered identity, cross-chunk layer isolation and exact
+undo/redo. `tests/shapes.spec.ts` exercises the shipping controls and pointer path,
+terrain/house drawing, release endpoints, cancellation and DPR 1/2 canvas pixels.
 
 ## Tool contract and data ownership
 

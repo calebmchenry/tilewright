@@ -34,6 +34,8 @@ test("shell displays state, explains unavailable actions, and keeps native text 
   await expect(
     page.getByRole("button", { name: "Eyedropper", exact: true }),
   ).toBeEnabled();
+  for (const name of ["Line", "Rectangle"])
+    await expect(page.getByRole("button", { name, exact: true })).toBeEnabled();
   await expect(
     page.getByRole("button", { name: "Fill", exact: true }),
   ).toHaveAccessibleDescription("Flood fill is not available yet.");

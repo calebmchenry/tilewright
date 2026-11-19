@@ -23,6 +23,7 @@ import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import { DrawingController, type DrawingToolId } from "./drawing.ts";
 import { assertPencilSize, eraserTool, pencilTool } from "./pencil.ts";
+import { lineTool, rectangleTool, type RectangleMode } from "./shapes.ts";
 import { sampleVisibleCell } from "./sampling.ts";
 import {
   assertBounds,
@@ -121,6 +122,7 @@ export class EditorSession {
   readonly selectedRegistryId = new Store<RegistryId | null>(null);
   /** Shared square-brush size for Pencil and Eraser; kept outside document history. */
   readonly pencilSize = new Store(1);
+  readonly rectangleMode = new Store<RectangleMode>("filled");
   readonly viewport = new Store<Viewport>(
     Object.freeze({ x: 0, y: 0, zoom: 1 }),
   );
@@ -213,6 +215,11 @@ export class EditorSession {
     this.drawing.register(
       "eraser",
       eraserTool(() => this.pencilSize.getSnapshot()),
+    );
+    this.drawing.register("line", lineTool);
+    this.drawing.register(
+      "rectangle",
+      rectangleTool(() => this.rectangleMode.getSnapshot()),
     );
   }
   dispose(): void {
@@ -474,6 +481,15 @@ export class EditorSession {
       return false;
     }
   }
+  setRectangleMode(mode: RectangleMode): boolean {
+    if (this.#closed) return false;
+    if (mode !== "filled" && mode !== "outline") {
+      this.report("Choose a filled or outlined rectangle.", "error");
+      return false;
+    }
+    this.rectangleMode.set(mode);
+    return true;
+  }
   #selectPaint(id: RegistryId | null, color: PaintColor): void {
     const errors: unknown[] = [];
     for (const update of [
@@ -663,6 +679,8 @@ export class EditorSession {
         b: "pencil",
         e: "eraser",
         d: "eyedropper",
+        l: "line",
+        r: "rectangle",
       };
       if (toolKeys[key]) this.perform(toolKeys[key]);
       else if (

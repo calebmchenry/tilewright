@@ -55,9 +55,11 @@ export function MapCanvas({ session }: { session: EditorSession }) {
       <p className="sr-only" id="canvas-help">
         Scroll to pan. Pinch or Cmd/Ctrl-scroll to zoom. Space-drag or
         middle-drag to pan. B selects Pencil; E selects Eraser; brackets change
-        their shared size. D selects Eyedropper. H selects Pan; I selects
-        Inspect. F fits the map; 0 resets to 100%; plus/minus zoom; arrows pan.
-        Drag with Inspect to measure a rectangle; Escape clears it.{" "}
+        their shared size. D selects Eyedropper. L selects Line; R selects
+        Rectangle. Shapes include both endpoints; lines and outlines are one
+        tile thick. H selects Pan; I selects Inspect. F fits the map; 0 resets
+        to 100%; plus/minus zoom; arrows pan. Drag with Inspect to measure a
+        rectangle; Escape clears it.{" "}
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
           : tool === "eyedropper"
