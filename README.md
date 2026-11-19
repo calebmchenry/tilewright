@@ -74,7 +74,9 @@ covers fixed-seed full undo/redo, both house-move scopes and large-selection pro
 [Named areas](docs/named-area-decisions.md#authoring-implementation-tw-030) support
 independent descriptions, three author-selected tiers, numeric or drawn rectangle
 bounds, selected/draft overlays, and explicit Apply/Cancel/Delete with undo/redo.
-The same record specifies planned zoom-dependent labels and overlap policy.
+[Zoom-dependent labels](docs/named-area-decisions.md#label-rendering-implementation-tw-031)
+show one tier at a time, with deterministic overlap suppression, readable Pixi text,
+and a selected-area exception. Labels stay fixed during tile transformations.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).

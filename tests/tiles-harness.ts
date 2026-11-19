@@ -19,6 +19,7 @@ import { colorsDocument } from "./fixtures/colors";
 import { recolorDocument } from "./fixtures/recolor";
 
 import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
+import { areaDocument, annotatePopulatedMap } from "./fixtures/areas";
 
 const host = document.getElementById("tiles")!;
 let renderer: CanvasRenderer;
@@ -89,6 +90,7 @@ function dispose() {
 async function load(
   kind:
     | "small"
+    | "areas"
     | "drawing"
     | "empty"
     | "frontier"
@@ -97,25 +99,29 @@ async function load(
     | "colors"
     | "recolor"
     | "overview" = "small",
+  annotations = false,
 ) {
   dispose();
   queries = [];
   const document =
-    kind === "drawing"
-      ? drawingDocument()
-      : kind === "recolor"
-        ? recolorDocument()
-        : kind === "colors"
-          ? colorsDocument()
-          : kind === "overview"
-            ? overviewDocument()
-            : kind === "grid"
-              ? gridDocument()
-              : kind === "small"
-                ? small()
-                : kind === "empty"
-                  ? new MapDocument()
-                  : populatedDocument(kind === "frontier" ? 0 : 1);
+    kind === "areas"
+      ? areaDocument()
+      : kind === "drawing"
+        ? drawingDocument()
+        : kind === "recolor"
+          ? recolorDocument()
+          : kind === "colors"
+            ? colorsDocument()
+            : kind === "overview"
+              ? overviewDocument()
+              : kind === "grid"
+                ? gridDocument()
+                : kind === "small"
+                  ? small()
+                  : kind === "empty"
+                    ? new MapDocument()
+                    : populatedDocument(kind === "frontier" ? 0 : 1);
+  if (annotations) annotatePopulatedMap(document);
   // Record bounded queries, not pixels or model objects. Clear between measurements.
   const original = document.iterateRuns.bind(document);
   document.iterateRuns = (id, bounds) => {
@@ -138,6 +144,13 @@ async function load(
     session.hiddenLayers.subscribe(() => renderer.resize()),
     session.rectangle.subscribe(() => renderer.resize()),
     session.drawing.preview.subscribe(() => renderer.resize()),
+    ...[
+      session.areas.selected,
+      session.areas.draft,
+      session.areas.preview,
+      session.selection.state,
+      session.selection.preview,
+    ].map((store) => store.subscribe(() => renderer.resize())),
   ];
   renderer.resize();
   return renderer.snapshot();
@@ -149,6 +162,7 @@ const probe = {
     return session;
   },
   stats: () => renderer.snapshot(),
+  areaAt: (x: number, y: number) => renderer.areaAt({ x, y }),
   disposed: () => lastDisposed,
   queries: () => queries,
   resetQueries: () => {

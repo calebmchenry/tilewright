@@ -3,8 +3,8 @@
 Decision record for [TW-029](../.wrk/wrk-353fa9ca.md), subordinate to
 [INTENT.md](../INTENT.md#named-areas-and-labels). These are implementation choices
 for TW-030–TW-032, not additional confirmed product requirements.
-TW-030 authoring and bounds overlays now ship as documented below; zoom-dependent
-labels and browsing/focus remain TW-031/TW-032. They extend the
+TW-030 authoring and TW-031 zoom-dependent labels now ship as documented below;
+browsing/focus remains TW-032. They extend the
 [coordinate](foundation-decisions.md), [camera](navigation.md),
 [history](command-history.md), and [selection](selection-decisions.md) contracts.
 TW-033 and TW-043 still own the complete, separate project and export schemas.
@@ -340,7 +340,7 @@ corner marks distinguish selected/draft areas from cyan tile selection and gold
 Inspect measurement. Draft geometry substitutes for the selected outline; invalid
 numeric geometry draws no outline. Outlines have no fill, remain visible at all
 zooms and clip actual edges to the viewport without inventing boundary edges.
-There are no normal-tier labels or collision handling yet; those remain TW-031.
+TW-031 adds normal-tier labels and collision handling as documented below.
 
 Tool/area switches, Undo/Redo, document mutations and session replacement discard
 unapplied drafts. Camera/size/readiness changes, pointer cancellation, capture loss,
@@ -384,3 +384,71 @@ No project/agent codec or performance guarantee is introduced. Draft updates and
 annotation-list filtering are synchronous; no large-annotation benchmark is claimed.
 Rendering/presentation refinement remains TW-049 and edit/history/memory work
 remains TW-050 under AGENTS.md.
+
+## Label rendering implementation (TW-031)
+
+`src/renderer/areaLabels.ts` implements the exact CSS-pixel ranges, true rectangle
+centers, viewport/anchor culling, four-pixel inset, grapheme ellipsis and deterministic
+selected-first/ASCII-ID collision rule above. It has no DOM or Pixi dependency.
+There is no fade, tier fallback or inferred hierarchy. Selection is the only tier
+exception. Empty/invalid draft names or geometry suppress the old selected label;
+the valid draft/gesture replaces its geometry. Cancel restores the saved label.
+Descriptions are never drawn, and visibility never changes document data.
+
+`src/renderer/areaLabelScene.ts` draws Pixi Text over dark rounded backgrounds
+above the existing grid, drawing, tile-selection and purple area outlines. It uses
+500-weight system sans-serif at 13/15/17 CSS px, with the specified line height and
+padding. Selected labels retain their authored tier's text size and add a purple
+border. Names are plain text, including angle brackets; no markup styles or remote
+fonts are enabled. DPR changes regenerate text resolution without changing CSS
+geometry, eligible tiers or world anchors.
+
+The scene retains measurements only for the current visible candidates and Pixi
+objects only for accepted labels. Camera changes reposition retained objects;
+unchanged text does not rasterize again. Annotation IDs request a collision relayout
+because changing one box can reveal or suppress neighbors. Only changed text/style
+is updated, and unchanged backgrounds/objects are reused. Description-only edits
+change no visual. Tile edits/transforms do not relayout labels or alter their bounds;
+annotation edits do not invalidate completed tile/overview images. As in the existing
+overview contract, an in-progress image job can restart on any document version.
+
+Culled/deleted labels destroy their Text and Graphics objects. After rendering,
+`TexturePool.clear(true)` releases Pixi's **idle** pooled textures, including those
+returned by text replacement/destruction; live textures stay owned by their users.
+This prevents idle GPU resources accumulating across pans, names or DPR changes.
+Session replacement/disposal clears candidate measurements, label objects, styles,
+subscriptions and GPU context. Pixi's own bounded 1,000-entry text-metrics LRU and
+small shared font/canvas infrastructure remain library caches, not live map labels.
+
+`createRenderer.ts` integrates labels with overlay drawing, invalidation, hit tests
+and numeric/resource snapshots. `mountRenderer.ts` supplies the live renderer to
+`MapCanvas.tsx`, which passes hit testing into the existing single navigation router.
+Clicking a visible label selects its area only with the Area tool active and no
+Draw/Redraw gesture armed, including in overview. Space/middle-button navigation
+retains priority. Pencil, eraser, selection and other tools receive their ordinary
+input through labels; the selected purple area and cyan tile selection can coexist.
+The Areas panel remains the route to labels hidden by tier, viewport or overlap.
+
+Validation locations:
+
+- `tests/domain/area-labels.test.ts`: exact thresholds in both directions, Fit,
+  no fallback, selection/draft substitution, true centers, edge placement, tiny
+  hosts, Unicode truncation, stable collisions and exactly four-pixel separation.
+- `tests/area-labels.spec.ts`: screenshots at every tier and immediately below,
+  at and above both thresholds at DPR 1/2; real WebGL text pixel readback; selected
+  exception/overlap; plain Unicode long names; viewport culling; density changes;
+  draft cancellation; targeted updates; actual move/rotation undo/redo; overview
+  hit tests and drawing/selection input through labels; teardown.
+- `tests/area-labels-scale.spec.ts`, `tests/fixtures/areas.ts`: 1,089 named areas
+  (891 houses, 99 villages, 99 regions) on each complete populated reference map.
+  Three 120-step navigation passes per map retain CPU submission samples, GPU
+  counts and post-GC heap, validate tier/resource/data invariants, then replace
+  documents three times and verify teardown. JSON reports include source hashes,
+  fixture golden data and environment. Screenshots show detail/locality/region.
+
+Actual results are recorded in [TW-031](../.wrk/wrk-dfb3bfaf.md). Navigation currently
+scans the annotation metadata and collision-checks accepted boxes synchronously;
+there is no spatial annotation index or native presentation/physical-memory claim.
+The measurements are Chromium CPU submission proxies. Refinement remains TW-049,
+with history/memory refinement in TW-050 under AGENTS.md. Browsing/focus is TW-032;
+project/export codecs remain their own tickets.

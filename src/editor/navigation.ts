@@ -2,6 +2,7 @@ import type { EditorSession } from "./session";
 import { containsTile, type Bounds } from "../domain/coordinates";
 import { rectangleBetween } from "./measurement";
 import { focusOwner } from "./focus";
+import type { AnnotationId } from "../domain/values";
 import {
   canEditTiles,
   OVERVIEW_MESSAGE,
@@ -16,6 +17,7 @@ type GestureInput = Event & { scale: number; clientX: number; clientY: number };
 export function bindNavigation(
   host: HTMLElement,
   session: EditorSession,
+  areaAt: (point: Point) => AnnotationId | null = () => null,
 ): () => void {
   let space = false;
   let lastPointer: Point | null = null;
@@ -171,6 +173,20 @@ export function bindNavigation(
       drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
       host.setPointerCapture(event.pointerId);
       cursor();
+    } else if (
+      event.button === 0 &&
+      !event.altKey &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      session.activeTool.getSnapshot() === "area" &&
+      !session.areas.drawingBounds.getSnapshot()
+    ) {
+      // Labels are selectable even in overview, only in explicit area mode.
+      const id = areaAt(local(lastPointer));
+      if (id) {
+        event.preventDefault();
+        session.areas.select(id);
+      }
     } else if (
       event.button === 0 &&
       !canEditTiles(session.viewport.getSnapshot())

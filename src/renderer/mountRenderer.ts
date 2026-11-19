@@ -6,7 +6,7 @@ import { bindDocument } from "./bindDocument";
 /** Returns cleanup immediately, including while the asynchronous GPU init runs. */
 export function mountRenderer(
   host: HTMLElement,
-  onReady: () => void,
+  onReady: (renderer: CanvasRenderer) => void,
   onError: (error: unknown) => void,
   session?: EditorSession,
 ): () => void {
@@ -103,7 +103,7 @@ export function mountRenderer(
           session.areas.preview,
         ].map((store) => store.subscribe(resize));
       }
-      onReady();
+      onReady(renderer);
     })
     .catch((error: unknown) => {
       if (disposed) return;

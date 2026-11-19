@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { mountRenderer } from "./renderer/mountRenderer";
+import type { CanvasRenderer } from "./renderer/createRenderer";
 import type { EditorSession } from "./editor/session";
 import { bindNavigation } from "./editor/navigation";
 import { canEditTiles, OVERVIEW_MESSAGE } from "./editor/viewport";
@@ -7,6 +8,7 @@ import { useStore, useStoreField } from "./editor/useStore";
 
 export function MapCanvas({ session }: { session: EditorSession }) {
   const host = useRef<HTMLDivElement>(null);
+  const renderer = useRef<CanvasRenderer | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
@@ -17,14 +19,23 @@ export function MapCanvas({ session }: { session: EditorSession }) {
   const tool = useStore(session.activeTool);
   const fill = useStore(session.fill.progress);
   const drawing = !!session.drawing.tool(tool);
-  useEffect(() => bindNavigation(host.current!, session), [session]);
+  useEffect(
+    () =>
+      bindNavigation(
+        host.current!,
+        session,
+        (point) => renderer.current?.areaAt(point) ?? null,
+      ),
+    [session],
+  );
 
   useEffect(() => {
     setStatus("loading");
     session.canvasState.set("loading");
-    return mountRenderer(
+    const dispose = mountRenderer(
       host.current!,
-      () => {
+      (created) => {
+        renderer.current = created;
         setStatus("ready");
         session.canvasState.set("ready");
         session.report(
@@ -32,6 +43,7 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         );
       },
       (error) => {
+        renderer.current = null;
         console.error("Tilewright could not initialize WebGL", error);
         setDetail(error instanceof Error ? error.message : String(error));
         setStatus("error");
@@ -40,6 +52,10 @@ export function MapCanvas({ session }: { session: EditorSession }) {
       },
       session,
     );
+    return () => {
+      renderer.current = null;
+      dispose();
+    };
   }, [attempt, session]);
 
   return (
@@ -65,7 +81,7 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
           : tool === "area"
-            ? "Edit named areas in the Areas panel. Draw bounds explicitly, then Apply. Escape cancels the draft."
+            ? "Click a label to select its area, or edit in the Areas panel. Draw bounds explicitly, then Apply. Escape cancels the draft."
             : tool === "select"
               ? "Drag a rectangle and choose layers; drag inside to move. Arrows nudge one tile, Shift ten. Cmd/Ctrl+C copies, X cuts, V previews paste. For paste, move the pointer or use arrows; click or Enter applies. Rotate and flip in Tile selection; arrows reposition the transform, Enter applies. Escape cancels a preview or deselects."
               : tool === "fill"

@@ -18,6 +18,7 @@ import { populatedDocument } from "./fixtures/populated";
 import { gridDocument } from "./fixtures/grid";
 import { colorsDocument } from "./fixtures/colors";
 import { registryDocument, buildings } from "./fixtures/registry";
+import { areaDocument } from "./fixtures/areas";
 
 import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
 import {
@@ -44,14 +45,16 @@ const session = new EditorSession(
             ? colorsDocument()
             : fixture === "grid"
               ? gridDocument()
-              : fixture
-                ? populatedDocument(fixture === "heartland" ? 1 : 0)
-                : new MapDocument({
-                    layers: [
-                      { id: layerId("terrain"), name: "Terrain" },
-                      { id: layerId("buildings"), name: "Buildings" },
-                    ],
-                  }),
+              : fixture === "areas"
+                ? areaDocument()
+                : fixture
+                  ? populatedDocument(fixture === "heartland" ? 1 : 0)
+                  : new MapDocument({
+                      layers: [
+                        { id: layerId("terrain"), name: "Terrain" },
+                        { id: layerId("buildings"), name: "Buildings" },
+                      ],
+                    }),
 );
 if (fixture === "registry") session.setLayerVisible(buildings, false);
 if (fixture === "selection" || fixture === "selection-move") {

@@ -10,12 +10,18 @@ import { CANVAS_INSET, TILE_PIXELS } from "../editor/viewport";
 import { gridLayout, type GridBand } from "./grid";
 import { areaOutline } from "./areaOutline";
 import { resolveColor } from "./colors";
+import { AreaLabelScene } from "./areaLabelScene";
+import type { Point } from "../editor/viewport";
 
 export interface CanvasRenderer {
   resize(): void;
   invalidate(change: CanvasInvalidation): void;
   destroy(): void;
-  snapshot(): ReturnType<TileScene["snapshot"]> & { renders: number };
+  areaAt(point: Point): ReturnType<AreaLabelScene["areaAt"]>;
+  snapshot(): ReturnType<TileScene["snapshot"]> & {
+    renders: number;
+    labels: ReturnType<AreaLabelScene["snapshot"]>;
+  };
 }
 
 /** Disposable rendering only: no document or editing state lives here. */
@@ -45,11 +51,13 @@ export async function createRenderer(
   const stage = new Container();
   let destroyed = false;
   let tiles: TileScene | undefined;
+  let labels: AreaLabelScene | undefined;
   let renders = 0;
   const destroy = () => {
     if (destroyed) return;
     destroyed = true;
     tiles?.destroy();
+    labels?.destroy();
     stage.destroy({ children: true, context: true });
     try {
       renderer?.destroy({ removeView: true });
@@ -99,6 +107,8 @@ export async function createRenderer(
     stage.addChild(selection);
     const area = new Graphics();
     stage.addChild(area);
+    labels = new AreaLabelScene(session?.document ?? new MapDocument());
+    stage.addChild(labels.container);
     const resize = () => {
       if (destroyed || !renderer) return;
       const { width, height } = host.getBoundingClientRect();
@@ -225,7 +235,19 @@ export async function createRenderer(
             .lineTo(line.x2, line.y2)
             .stroke({ color: "#dda6ff", width: line.corner ? 4 : 2 });
       }
+      labels!.sync(
+        view,
+        { width, height },
+        session
+          ? {
+              id: session.areas.selected.getSnapshot(),
+              area: session.areas.overlayArea(),
+            }
+          : null,
+        resolution,
+      );
       renderer.render(stage);
+      labels!.releaseIdleTextures();
       renders++;
     };
     // The caller decides whether an async initialization is still current.
@@ -238,9 +260,15 @@ export async function createRenderer(
       },
       invalidate(change) {
         const tileChange = tiles?.invalidate(change);
+        labels?.invalidate(change.annotationIds);
         if (tileChange || change.annotationIds.length) resize();
       },
-      snapshot: () => ({ ...tiles!.snapshot(), renders }),
+      areaAt: (point) => labels?.areaAt(point) ?? null,
+      snapshot: () => ({
+        ...tiles!.snapshot(),
+        renders,
+        labels: labels!.snapshot(),
+      }),
       destroy,
     };
   } catch (error) {

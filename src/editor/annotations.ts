@@ -309,4 +309,32 @@ export class AnnotationController {
     for (const stop of this.#stops) stop();
     this.deselect();
   }
+
+  /** The label shares the outline's draft/gesture geometry, without saving it. */
+  overlayArea() {
+    const bounds = this.overlayBounds();
+    if (!bounds) return null;
+    const draft = this.draft.getSnapshot();
+    const id = this.selected.getSnapshot();
+    try {
+      const area = draft
+        ? validateNamedArea(
+            { ...draft, bounds, label: { placement: "center" } },
+            this.#session.document.bounds,
+          )
+        : id
+          ? namedArea(this.#session.document, id)
+          : null;
+      return area
+        ? {
+            id: draft?.id ?? id ?? "",
+            name: area.name,
+            tier: area.tier,
+            bounds,
+          }
+        : null;
+    } catch {
+      return null;
+    }
+  }
 }
