@@ -89,8 +89,11 @@ ordered layers, stable paint identity, complete named areas, persisted preferenc
 validation and compatibility policy, with an annotated example. The
 [snapshot and encoder](docs/project-format.md#snapshot-and-encoder-implementation-tw-034)
 capture one committed revision and emit deterministic UTF-8 bytes, including
-hidden content and persisted layer preferences. Decoding, file I/O and recovery
-implementation follow in the project tickets.
+hidden content and persisted layer preferences. The
+[decoder and safe load boundary](docs/project-format.md#decoder-and-safe-load-implementation-tw-035)
+validate complete projects before replacing the workspace, preserving the active
+session on failure. Native file dialogs, Open/Save UI and recovery follow in the
+project tickets.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).

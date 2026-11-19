@@ -5,7 +5,9 @@ Decision record for [TW-033](../.wrk/wrk-eef53dd9.md), subordinate to
 choices, not additional product requirements. This specifies the contract for
 TW-034 encoding, TW-035 decoding and subsequent native save/open/recovery work.
 The [TW-034 snapshot and encoder](#snapshot-and-encoder-implementation-tw-034)
-now implement the writing side; decoding and native file workflows follow.
+implement the writing side; the [TW-035 decoder and safe load boundary](#decoder-and-safe-load-implementation-tw-035)
+implement validated reconstruction and session replacement. Native file workflows
+follow in subsequent tickets.
 
 ## Container and version
 
@@ -419,7 +421,8 @@ extremes, capacity boundaries, invalid metadata/references, cancellation, previe
 exclusion, preference-only saves and edits during asynchronous encoding (including
 real timer tasks). The [canonical golden bytes](../tests/fixtures/project-v1.canonical.tilewright)
 are an independently sorted/minified copy of the reviewed example, intentionally
-compact. No decoder or native write is implied by these tests.
+compact. These encoder tests do not perform native writes; decoding tests follow
+below.
 
 Both complete populated fixtures encode all four layers, five registry records
 and 1,089 named areas. A test adapter reads **every run from emitted JSON bytes**
@@ -436,3 +439,92 @@ Capture and palette construction remain synchronous; encoded chunks coexist
 temporarily with the final byte buffer. Native I/O, UI presentation and peak
 process memory are unmeasured. These performance limitations remain for TW-050
 (TW-049 for presentation), following AGENTS.md's delivery priority.
+
+## Decoder and safe load implementation (TW-035)
+
+[`decodeProject(bytes, options?)`](../src/domain/project-decoding.ts) accepts a
+`Uint8Array` of UTF-8 project bytes and resolves to a detached `MapDocument` and
+immutable `preferences`. It performs no native I/O or live workspace mutation.
+Options include `signal`, a `yieldControl` scheduling seam (timer tasks by default),
+and stricter `limits` using the same writer ceilings. A decoder result has no
+history or saved/recovery status; those belong to the caller's new session.
+
+The load stages are:
+
+1. Check byte capacity and cancellation, then copy caller-owned bytes before the
+   first await. Strict streaming UTF-8 conversion rejects malformed/truncated
+   sequences and BOMs. Native reads must separately check file size and enforce
+   the ceiling while reading; receiving bytes here does not implement that I/O.
+2. The private [`project-json.ts`](../src/domain/project-json.ts) parser rejects
+   duplicate decoded member names at every depth, invalid/truncated JSON, trailing
+   data and nesting beyond eight containers. Integer tokens are checked for
+   spelling and safe range before Number conversion. Null-prototype objects keep
+   special property names inert; the closed schema subsequently rejects them.
+3. Validate the format/version, every required/unknown field, identities,
+   registry colors/references, palette uniqueness/use, ordered nonoverlapping
+   spans, safe arithmetic, areas and preferences. Aggregate capacities include
+   all hidden/covered layers. Complete this pass before constructing tile storage.
+   Positive unsupported versions report support for v1 only before applying v1
+   shape checks. There are no migrations or partial-repair paths.
+4. Construct a private sparse document with original IDs/layer order, complete
+   metadata and domain paint factories. Write only occupied spans, splitting work
+   into at most 256 writes / 16,384 cells per batch. Empty maximum-size maps have
+   zero partitions and zero typed-array tile bytes. Long spans cannot bypass the
+   occupied-cell ceiling or force allocation from dimensions alone.
+
+UTF-8 conversion and lexical parsing yield around 32 KiB of work; schema loops
+yield between bounded record/run groups, and population yields between batches.
+Check cancellation before and after scheduling, including immediately before
+publishing a result. Errors are `ProjectDecodingError` with `category` and `path`
+(for example `document.layers[1].runs[3]`); lexical errors also identify a character
+offset. Categories are `parse`, `invalid-data`, `unsupported-version`, `capacity`,
+`canceled`, `construction`, and workspace-only `superseded`. Scheduler exceptions
+propagate unchanged. Error strings must be rendered as plain text by future UI.
+
+[`EditorWorkspace.openProject(bytes, { savedPath?, ...decodeOptions })`](../src/editor/workspace.ts)
+is the explicit-project load boundary for the future native Open coordinator.
+It prepares a fresh `EditorSession` with `initiallySaved: true` and restores exact
+active/hidden preferences before publishing session, generation and saved path in
+one store update. The previous session is disposed only after publication. New
+Map clears the path and remains dirty. Paths are outside serialized content.
+New history starts at revision/savedRevision zero, with no undo, redo or recovery
+checkpoint. All other session state resets through the existing constructor,
+with a one-time fit flag for loaded sessions: the camera fits once its canvas
+receives a real size, then subsequent resizing preserves the user's view.
+
+Failed decoding, cancellation or candidate/session construction leaves the current
+session, content, undo/redo/checkpoints, path, dirty state, preferences, selections,
+clipboard and drafts unchanged. A newer load request, New Map, workspace closure,
+intervening content edit/undo, preference change, or saved/recovery acknowledgement
+supersedes pending work. Checks run during scheduling and before publication; a
+stale load cannot overwrite edits made while it runs. Subscriber failures **after**
+installation are returned in `observerErrors` with the successful new session,
+following the model's committed-operation contract. Reentrant replacement during
+publication is rejected. The future Open UI owns unsaved-change confirmation
+before requesting replacement; native dialogs, reads/writes, recovery and Save UI
+are not introduced here.
+
+[`project-decoding.test.ts`](../tests/domain/project-decoding.test.ts) covers the
+reviewed pretty/canonical golden files, all major schema corruptions, required and
+unknown fields, malformed UTF-8/JSON, duplicate keys, integer/depth/resource limits,
+cancellation/faults, Unicode, integer extremes, sparse maximum dimensions and
+recolor identity. Both full populated fixtures reopen with exact snapshot/model
+metadata equality and independent span/count/hash checks. Tests use two hidden
+IDs: frontier is 2,340,633 bytes and 6,620,700 occupied cells; heartland is
+8,114,369 bytes and 24,025,200 cells. The one-byte difference from the TW-034
+measurements is persisted preference text, not map content.
+
+[`project-loading.test.ts`](../tests/domain/project-loading.test.ts) checks
+atomic publication and complete frontier model equality through the workspace,
+clean/dirty failure preservation with redo/recovery/clipboard/drafts, construction
+faults, concurrent edits/replacements, real-timer cancellation, fresh history,
+session reset and observer failures. Actual command results and timing samples
+are in [the TW-035 ticket](../.wrk/wrk-4ccae787.md).
+
+This implementation holds input bytes, decoded text and a parsed graph while
+constructing sparse storage. Copy/join, individual metadata string processing and
+some collection operations remain synchronous. Work batches bound units, not
+wall-clock latency or physical memory; JavaScript OOM is not a recoverable promise.
+Node tests with immediate scheduling measure correctness, not end-to-end native
+Open, first-frame presentation, cold trials or peak physical footprint. Those
+performance measurements/refinements remain TW-050/TW-049 under AGENTS.md.

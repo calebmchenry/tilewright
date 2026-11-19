@@ -45,6 +45,27 @@ export const PROJECT_LIMITS = Object.freeze({
   maxOccupiedCells: 100_000_000,
 });
 export const PROJECT_MAX_DEPTH = 8;
+export class ProjectDecodingError extends Error {
+  readonly category:
+    | "parse"
+    | "invalid-data"
+    | "unsupported-version"
+    | "capacity"
+    | "canceled"
+    | "construction"
+    | "superseded";
+  readonly path: string;
+  constructor(
+    category: ProjectDecodingError["category"],
+    path: string,
+    message: string,
+  ) {
+    super(`${path}: ${message}`);
+    this.name = "ProjectDecodingError";
+    this.category = category;
+    this.path = path;
+  }
+}
 export type ProjectLimits = {
   readonly [K in keyof typeof PROJECT_LIMITS]: number;
 };

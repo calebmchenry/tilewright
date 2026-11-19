@@ -152,10 +152,15 @@ export class EditorSession {
   readonly canvasState = new Store<"loading" | "ready" | "error">("loading");
   #dispose: () => void;
   #closed = false;
+  #fitOnFirstSize: boolean;
 
-  constructor(document = new MapDocument()) {
+  constructor(
+    document = new MapDocument(),
+    options: { initiallySaved?: boolean; fitOnFirstSize?: boolean } = {},
+  ) {
+    this.#fitOnFirstSize = options.fitOnFirstSize ?? false;
     this.document = document;
-    this.history = new CommandHistory(document);
+    this.history = new CommandHistory(document, options);
     this.registryCommands = new RegistryCommands(this.history);
     this.layers = new Store(document.layers);
     this.bounds = new Store(document.bounds);
@@ -661,6 +666,10 @@ export class EditorSession {
       (width !== previous.width || height !== previous.height)
     )
       this.canvasSize.set(Object.freeze({ width, height }));
+    if (this.#fitOnFirstSize && width > 1 && height > 1) {
+      this.#fitOnFirstSize = false;
+      this.fitMap();
+    }
   }
   #containsRectangle(bounds: Bounds): boolean {
     return (
