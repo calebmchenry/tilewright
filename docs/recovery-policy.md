@@ -519,3 +519,55 @@ adds another decode/encode. It is bounded and sequential but is not a measured
 latency or peak-memory pass. Background WKWebView timers may defer validation until
 the window is activated. Performance work remains deferred to TW-049/TW-050 and
 persistence profiling to TW-051 under the project's delivery priority.
+
+## Interruption and failure verification (TW-042)
+
+The deterministic campaign extends the existing tests without changing the save
+or recovery policy. `ProjectFiles` accepts an optional encoder, matching the
+recovery coordinator's existing injection seam; shipping callers use the normal
+encoder. Native fault callbacks now include the pending-directory flush and the
+explicit save's post-rename parent flush. Production callbacks remain no-ops.
+
+Run `npm test`, `npm run build`, `npm run format:check`, and the locked Cargo test
+and Clippy commands in [desktop development](desktop-development.md). Focused
+checks are `node --test tests/domain/recovery.test.ts` and
+`cargo test --locked --manifest-path src-tauri/Cargo.toml`.
+
+| Boundary                                                                                                                         | Executed assertion                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Explicit encode, write and replace failure; first/repeated Save and Save As                                                      | Complete workspace bytes, session/path, dirty/history state, prior recovery bytes and explicit files stay unchanged. Encoding errors never reach the write bridge.                                                                                                                                      |
+| Recovery encode failure after a yield                                                                                            | Previous capture bytes/time and acknowledgement stay intact; uncaptured edits remain dirty and pending; retry captures their complete state.                                                                                                                                                            |
+| Recovery state reservation, payload and metadata partial writes/flushes; state replacement/parent flush; pending-directory flush | Nine injected failure points preserve the complete previous generation and saved file before and after reopening; successful retry advances sequence and retains two complete generations.                                                                                                              |
+| SIGKILL during first and repeated explicit Save                                                                                  | Eight subprocess cases cover partial write, file flush, before rename and after rename. The selected path is absent/old before publication and complete new bytes afterward; safe retry works despite orphan temporary siblings.                                                                        |
+| SIGKILL during recovery and resolution                                                                                           | Seven subprocess cases cover partial state/payload/metadata, pending-directory flush, before/after publication and after a discard marker before cleanup. Restart ignores incomplete work, releases the process lock, discovers the latest complete pair and does not resurrect durably discarded data. |
+| Explicit parent flush failure after rename                                                                                       | First and repeated saves report committed success with a durability warning and expose the complete new bytes.                                                                                                                                                                                          |
+| Completed recovery publication with delayed acknowledgement, concurrent Save As and later edits                                  | Late acknowledgement cannot clean the document; Save As writes only its captured revision, keeps original bytes and older completed recovery, then captures the later edit with the actual saved-byte hash.                                                                                             |
+| Native close fails after successful discard marker                                                                               | The live dirty document remains and recovery recaptures it without requiring another edit.                                                                                                                                                                                                              |
+
+Native campaign code is in `src-tauri/src/persistence_fault_tests.rs` and
+`src-tauri/src/project_files.rs`. It uses real local files and SIGKILL child
+processes; each child is selected with the exact test name and an isolated
+temporary root. Recovery discovery rechecks length/hash and reads the explicit
+source after every checkpoint. Comparisons include every project field. The
+fixture contains overlapping layers, stable recolored registry references,
+independent named areas, negative/grown bounds and active/hidden preferences.
+TypeScript integration assertions live in `tests/domain/recovery.test.ts` and
+complement the existing restore, failed Open, cancellation and semantic decoder
+tests. Substituted native bridges prove coordinator ordering; they do not claim
+to exercise macOS dialogs.
+
+For desktop reproduction, build an isolated-identifier release package from the
+same source and use a fresh temporary project directory. Exercise initial and
+repeated Save, canceled/successful Save As, invalid Open after Discard, and
+Cancel/Save/Discard on close. Keep copies of the actual bytes at each checkpoint.
+After an unsaved recolor and layer edit, wait for a complete recovery generation,
+force-kill that package's process and relaunch. Restore as an unsaved copy, compare
+the newly emitted recovery payload with the pre-crash checkpoint before saving,
+then compare the explicit saved copy too. Repeat for a never-saved map. Normal
+discard must remove only that map's recovery and leave all explicit saves intact.
+
+Actual command results, packaged steps, byte hashes and limitations are recorded
+in [TW-042](../.wrk/wrk-9b478f1c.md). These are process-interruption and local-I/O
+checks, not physical power-loss or performance guarantees. Abrupt exit can lose
+edits after the last complete capture. TW-049/TW-050/TW-051 retain the existing
+performance refinement and profiling scope.

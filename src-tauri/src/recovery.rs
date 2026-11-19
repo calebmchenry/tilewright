@@ -579,6 +579,7 @@ impl RecoveryStore {
             let pending = dir.child(&name, true)?;
             write_synced(&mut pending.file("project.tilewright", true)?, bytes, check)?;
             write_synced(&mut pending.file("metadata.json", true)?, &metadata, check)?;
+            check(Stage::PendingSync)?;
             pending.0.sync_all()
         })();
         if let Err(e) = result {

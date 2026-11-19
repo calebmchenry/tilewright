@@ -7,6 +7,7 @@ use std::{
 pub(crate) enum Stage {
     PartialWrite,
     Sync,
+    PendingSync,
     Rename,
     ParentSync,
     Cleanup,

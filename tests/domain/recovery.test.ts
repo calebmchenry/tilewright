@@ -18,7 +18,7 @@ import { DocumentLifecycle } from "../../src/editor/document-lifecycle.ts";
 import { encodeProjectSnapshot } from "../../src/domain/project.ts";
 import { decodeProject } from "../../src/domain/project-decoding.ts";
 import { exampleProject } from "../fixtures/project.ts";
-import { layerId, rawColor } from "../../src/domain/values.ts";
+import { layerId, rawColor, registryId } from "../../src/domain/values.ts";
 
 const flush = async () => {
   for (let i = 0; i < 6; i++)
@@ -60,7 +60,12 @@ class Clock implements RecoveryClock {
     await flush();
   }
 }
-function harness() {
+function harness(
+  options: {
+    recoveryEncode?: typeof encodeProjectSnapshot;
+    saveEncode?: typeof encodeProjectSnapshot;
+  } = {},
+) {
   const clock = new Clock(),
     workspace = new EditorWorkspace();
   const controls: RecoveryControl[] = [],
@@ -112,11 +117,13 @@ function harness() {
   };
   const recovery = new RecoveryCoordinator(workspace, bridge, {
     clock,
-    encode: (snapshot, options) =>
-      encodeProjectSnapshot(snapshot, {
-        ...options,
-        yieldControl: async () => {},
-      }),
+    encode:
+      options.recoveryEncode ??
+      ((snapshot, options) =>
+        encodeProjectSnapshot(snapshot, {
+          ...options,
+          yieldControl: async () => {},
+        })),
   });
   const disk = new Map<string, Uint8Array>();
   const original = new TextEncoder().encode(
@@ -137,7 +144,9 @@ function harness() {
       return null;
     },
   };
-  const files = new ProjectFiles(workspace, fileBridge, recovery),
+  const files = new ProjectFiles(workspace, fileBridge, recovery, {
+      encode: options.saveEncode,
+    }),
     lifecycle = new DocumentLifecycle(files);
   function edit(name = `Changed ${clock.time}`) {
     const s = workspace.state.getSnapshot().session;
@@ -628,4 +637,220 @@ test("workspace disposal while the final Open marker is pending cannot install t
   release.resolve();
   assert.equal(await opening, false);
   assert.equal(h.workspace.state.getSnapshot(), before);
+});
+
+const fullBytes = (h: ReturnType<typeof harness>) =>
+  encodeProjectSnapshot(
+    h.workspace.state.getSnapshot().session.captureProjectSnapshot(),
+    {
+      yieldControl: async () => {},
+    },
+  );
+
+function recolorAndMove(h: ReturnType<typeof harness>) {
+  const s = h.workspace.state.getSnapshot().session;
+  const areas = s.document.annotations;
+  s.history.execute("Recolor grass and move a building tile", [
+    {
+      kind: "registry",
+      id: registryId("registry-grass"),
+      value: { name: "Grass", rgba: "#127844ff" },
+    },
+    {
+      kind: "tiles",
+      writes: [
+        { layerId: layerId("buildings"), x: 66, y: 64, length: 1, value: null },
+        {
+          layerId: layerId("buildings"),
+          x: 69,
+          y: 64,
+          length: 1,
+          value: rawColor("#629653ff"),
+        },
+      ],
+    },
+  ]);
+  assert.deepEqual(s.document.annotations, areas);
+}
+
+test("recovery encoding faults preserve the last complete bytes/time without claiming uncaptured edits", async () => {
+  let fail = false;
+  const h = harness({
+    recoveryEncode: async (snapshot, options) => {
+      const bytes = await encodeProjectSnapshot(snapshot, {
+        ...options,
+        yieldControl: async () => {},
+      });
+      if (fail) throw new Error("injected encoding failure after yielding");
+      return bytes;
+    },
+  });
+  try {
+    await h.files.open();
+    recolorAndMove(h);
+    const complete = await fullBytes(h);
+    await h.clock.to(2000);
+    const captured = h.recovery.state.getSnapshot().lastCapture;
+    const history = h.workspace.state.getSnapshot().session.history;
+    assert.deepEqual(h.published[0].bytes, complete);
+    fail = true;
+    h.edit("Not captured C");
+    const current = await fullBytes(h);
+    await h.clock.to(7000);
+    assert.equal(h.published.length, 1);
+    assert.deepEqual(h.published[0].bytes, complete);
+    assert.equal(h.recovery.state.getSnapshot().lastCapture, captured);
+    assert.match(h.recovery.state.getSnapshot().error, /encoding failure/);
+    assert.equal(history.state.recoveryRevision, 1);
+    assert.equal(history.state.dirty, true);
+    assert.deepEqual(await fullBytes(h), current);
+    assert.deepEqual(h.disk.get("/maps/source.tilewright"), h.original);
+    fail = false;
+    await h.clock.to(12000);
+    assert.deepEqual(h.published.at(-1)!.bytes, current);
+    assert.equal(history.state.recoveryRevision, 2);
+    assert.equal(history.state.dirty, true);
+  } finally {
+    h.dispose();
+  }
+});
+
+test("first Save, repeated Save and Save As encoding/write/replace failures preserve complete live and recovery states", async () => {
+  for (const saved of [false, true])
+    for (const as of [false, true])
+      for (const fault of ["encode", "write", "replace"]) {
+        let armed = false;
+        const h = harness({
+          saveEncode: async (snapshot, options) => {
+            const bytes = await encodeProjectSnapshot(snapshot, {
+              ...options,
+              yieldControl: async () => {},
+            });
+            if (armed && fault === "encode")
+              throw new Error("injected encode failure");
+            return bytes;
+          },
+        });
+        try {
+          if (saved) {
+            await h.files.open();
+            recolorAndMove(h);
+          } else h.edit("Untitled work");
+          await h.clock.to(2000);
+          const before = h.workspace.state.getSnapshot();
+          const history = before.session.history.state;
+          const bytes = await fullBytes(h);
+          const recovery = h.published.map((r) => r.bytes.slice());
+          const disk = new Map(
+            [...h.disk].map(([path, data]) => [path, data.slice()]),
+          );
+          h.destination("/maps/other.tilewright");
+          let writes = 0;
+          h.fileBridge.write = async () => {
+            writes++;
+            throw new Error(`injected ${fault} failure`);
+          };
+          armed = true;
+          assert.equal(
+            await h.lifecycle.save(as),
+            false,
+            `${saved}/${as}/${fault}`,
+          );
+          assert.equal(writes, fault === "encode" ? 0 : 1);
+          assert.equal(h.workspace.state.getSnapshot(), before);
+          assert.deepEqual(before.session.history.state, history);
+          assert.equal(history.dirty, true);
+          assert.deepEqual(await fullBytes(h), bytes);
+          assert.deepEqual(
+            h.published.map((r) => r.bytes),
+            recovery,
+          );
+          assert.deepEqual(h.disk, disk);
+          assert.match(h.files.state.getSnapshot().message, new RegExp(fault));
+        } finally {
+          h.dispose();
+        }
+      }
+});
+
+test("published recovery with a delayed acknowledgement cannot clean or erase edits made during Save As", async () => {
+  const h = harness();
+  try {
+    await h.files.open();
+    recolorAndMove(h);
+    const b = await fullBytes(h);
+    const commit = h.bridge.commit,
+      release = deferred<void>();
+    h.bridge.commit = async (ticket) => {
+      const result = await commit(ticket);
+      await release.promise;
+      return result;
+    };
+    await h.clock.to(2000);
+    assert.deepEqual(h.published[0].bytes, b); // complete on disk, no acknowledgement yet
+    assert.equal(
+      h.workspace.state.getSnapshot().session.history.state.recoveryRevision,
+      null,
+    );
+    const write = h.fileBridge.write,
+      reached = deferred<void>(),
+      finish = deferred<void>();
+    h.fileBridge.write = async (token, bytes) => {
+      reached.resolve();
+      await finish.promise;
+      return write(token, bytes);
+    };
+    h.destination("/maps/Save As.tilewright");
+    const save = h.lifecycle.save(true);
+    await reached.promise;
+    h.edit("C arrived during Save As");
+    const c = await fullBytes(h);
+    release.resolve();
+    finish.resolve();
+    assert.equal(await save, true);
+    const history = h.workspace.state.getSnapshot().session.history;
+    assert.equal(history.state.savedRevision, 1);
+    assert.equal(history.state.revision, 2);
+    assert.equal(history.state.recoveryRevision, null);
+    assert.equal(history.state.dirty, true);
+    assert.deepEqual(h.disk.get("/maps/source.tilewright"), h.original);
+    assert.deepEqual(h.disk.get("/maps/Save As.tilewright"), b);
+    assert.deepEqual(h.published[0].bytes, b);
+    await h.clock.to(7000);
+    assert.deepEqual(h.published.at(-1)!.bytes, c);
+    assert.equal(
+      h.published.at(-1)!.capture.saved?.byteHash,
+      await projectHash(b),
+    );
+    assert.equal(history.state.recoveryRevision, 2);
+    assert.equal(history.state.dirty, true);
+    assert.deepEqual(await fullBytes(h), c);
+  } finally {
+    h.dispose();
+  }
+});
+
+test("failed native close after discard recaptures unchanged dirty content without needing another edit", async () => {
+  const h = harness();
+  try {
+    await h.files.open();
+    recolorAndMove(h);
+    const bytes = await fullBytes(h);
+    await h.clock.to(2000);
+    const before = h.workspace.state.getSnapshot();
+    const closing = h.lifecycle.close(async () => {
+      throw new Error("native close failed");
+    });
+    h.lifecycle.choose("discard");
+    assert.equal(await closing, false);
+    assert.equal(h.workspace.state.getSnapshot(), before);
+    assert.equal(before.session.history.state.dirty, true);
+    assert.equal(h.published.length, 0); // marker already succeeded
+    await h.clock.to(7000);
+    assert.equal(h.published.length, 1);
+    assert.deepEqual(h.published[0].bytes, bytes);
+    assert.deepEqual(h.disk.get("/maps/source.tilewright"), h.original);
+  } finally {
+    h.dispose();
+  }
 });

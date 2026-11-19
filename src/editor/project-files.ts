@@ -35,6 +35,7 @@ export class ProjectFiles {
   readonly bridge: ProjectFileBridge;
   readonly recovery?: RecoveryCoordinator;
   #closed = false;
+  #encode: typeof encodeProjectSnapshot;
   #busy = false;
   #unsubscribe: () => void;
   #association: { session: EditorSession; file: ProjectFileHandle } | null =
@@ -44,10 +45,12 @@ export class ProjectFiles {
     workspace: EditorWorkspace,
     bridge: ProjectFileBridge,
     recovery?: RecoveryCoordinator,
+    options: { encode?: typeof encodeProjectSnapshot } = {},
   ) {
     this.workspace = workspace;
     this.recovery = recovery;
     this.bridge = bridge;
+    this.#encode = options.encode ?? encodeProjectSnapshot;
     this.#unsubscribe = workspace.state.subscribe(() => {
       if (this.#association?.session !== workspace.state.getSnapshot().session)
         this.#association = null;
@@ -204,7 +207,7 @@ export class ProjectFiles {
       };
       if (signal.aborted)
         throw new Error("The workspace changed. Save the current map again.");
-      const bytes = await encodeProjectSnapshot(snapshot, { signal });
+      const bytes = await this.#encode(snapshot, { signal });
       const warning = await this.bridge.write(file.token, bytes);
       if (
         this.#closed ||

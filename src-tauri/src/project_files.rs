@@ -235,7 +235,7 @@ fn atomic_write(
     temp.persist(path).map_err(|e| e.error)?;
     // Commit already happened. A directory flush failure is a durability warning,
     // never an apparent failed write with an incorrectly unchanged active path.
-    let warning = File::open(parent).and_then(|dir| dir.sync_all()).err().map(|e|
+    let warning = check(Stage::ParentSync).and_then(|_| File::open(parent)).and_then(|dir| dir.sync_all()).err().map(|e|
         format!("The complete project was saved, but directory durability could not be confirmed: {e}. Keep the app open and retry Save before disconnecting the disk."));
     Ok(warning)
 }
@@ -416,5 +416,81 @@ mod tests {
             .unwrap();
         assert_eq!(status.code(), Some(73));
         assert_eq!(read_bounded(&path, MAX_BYTES).unwrap(), OLD);
+    }
+
+    #[test]
+    fn directory_sync_failure_reports_committed_complete_project() {
+        for existing in [false, true] {
+            let dir = tempfile::tempdir().unwrap();
+            let path = dir.path().join("Saved.tilewright");
+            if existing {
+                fs::write(&path, OLD).unwrap();
+            }
+            let warning = atomic_write(&path, NEW, |at| {
+                if at == Stage::ParentSync {
+                    Err(io::Error::other("directory sync fault"))
+                } else {
+                    Ok(())
+                }
+            })
+            .unwrap()
+            .unwrap();
+            assert!(warning.contains("complete project was saved"));
+            assert_eq!(read_bounded(&path, MAX_BYTES).unwrap(), NEW);
+            assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 1);
+        }
+    }
+
+    #[test]
+    fn sigkill_first_and_repeated_save_at_each_atomic_boundary() {
+        use std::os::unix::process::ExitStatusExt;
+        const PATH: &str = "TW042_SAVE_CHILD_PATH";
+        const POINT: &str = "TW042_SAVE_CHILD_POINT";
+        let mut value: serde_json::Value = serde_json::from_slice(NEW).unwrap();
+        value["document"]["registry"][0]["rgba"] = serde_json::json!("#127844ff");
+        let changed = serde_json::to_vec(&value).unwrap();
+        if let Ok(path) = std::env::var(PATH) {
+            let point = std::env::var(POINT).unwrap();
+            atomic_write(std::path::Path::new(&path), &changed, |at| {
+                if format!("{at:?}") == point {
+                    unsafe {
+                        libc::kill(libc::getpid(), libc::SIGKILL);
+                    }
+                    unreachable!("SIGKILL must terminate the child");
+                }
+                Ok(())
+            })
+            .unwrap();
+            panic!("fault point was never reached");
+        }
+        for existing in [false, true] {
+            for stage in [
+                Stage::PartialWrite,
+                Stage::Sync,
+                Stage::Rename,
+                Stage::ParentSync,
+            ] {
+                let dir = tempfile::tempdir().unwrap();
+                let path = dir.path().join("Interrupted.tilewright");
+                if existing {
+                    fs::write(&path, OLD).unwrap();
+                }
+                let status = std::process::Command::new(std::env::current_exe().unwrap())
+                    .args(["--exact", "project_files::tests::sigkill_first_and_repeated_save_at_each_atomic_boundary"])
+                    .env(PATH, &path).env(POINT, format!("{stage:?}"))
+                    .output().unwrap().status;
+                assert_eq!(status.signal(), Some(libc::SIGKILL));
+                if stage == Stage::ParentSync {
+                    assert_eq!(read_bounded(&path, MAX_BYTES).unwrap(), changed);
+                } else if existing {
+                    assert_eq!(read_bounded(&path, MAX_BYTES).unwrap(), OLD);
+                } else {
+                    assert!(!path.exists());
+                }
+                // Orphan siblings are never interpreted as the destination. A retry is safe.
+                atomic_write(&path, &changed, |_| Ok(())).unwrap();
+                assert_eq!(read_bounded(&path, MAX_BYTES).unwrap(), changed);
+            }
+        }
     }
 }

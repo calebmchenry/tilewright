@@ -2,6 +2,10 @@
 use super::*;
 use tauri::ipc::Response;
 
+#[cfg(test)]
+#[path = "persistence_fault_tests.rs"]
+mod fault_tests;
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Generation {
