@@ -270,6 +270,13 @@ function RegistryDialog({
                 stay unchanged.
               </p>
             )}
+            {mode.kind === "edit" && (
+              <p>
+                Changing this color recolors its linked tiles on every layer,
+                including hidden and offscreen tiles. Raw tiles keep their own
+                colors.
+              </p>
+            )}
             {mode.kind === "add" && (
               <p>
                 {adopt

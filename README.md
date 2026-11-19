@@ -27,6 +27,8 @@ are documented in [color selection](docs/color-selection.md).
 Stable named-color identity, explicit raw-tile adoption, collision rejection, and
 safe removal, controls, and command APIs are documented in
 [registry decisions and implementation](docs/registry-decisions.md).
+Cross-layer recoloring, hidden/offscreen cache refresh, and populated-map
+measurements are covered by [recolor integration](docs/registry-decisions.md#tw-017-recolor-integration).
 
 The pure TypeScript map API, storage choices, and change-notification contract are
 documented in [the sparse map document](docs/map-document.md).

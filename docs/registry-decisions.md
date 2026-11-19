@@ -5,8 +5,9 @@ Decision record for [TW-015](../.wrk/wrk-e811af32.md), following
 decisions**, not additional confirmed user requirements. They define the contract
 for [TW-016](../.wrk/wrk-230b4c1d.md) registry editing and
 [TW-017](../.wrk/wrk-8110dbc9.md) recoloring. TW-015 established the contract;
-TW-016 now provides the [authoring implementation](#tw-016-implementation)
-and executable validation below. Generic metadata primitives still permit opaque
+TW-016 provides the [authoring implementation](#tw-016-implementation), and
+TW-017 completes [cross-layer recolor validation](#tw-017-recolor-integration).
+Generic metadata primitives still permit opaque
 records and unresolved references; authoring uses the validated feature commands.
 
 The intent requires freeform raw paint, unique named colors, and associations
@@ -229,7 +230,8 @@ For every rejected/no-op case, compare the complete invariants in the atomicity
 section and assert zero document notifications. For every effective operation,
 assert one undo step/event, exact affected values/IDs, undo to the before snapshot,
 and redo to the after snapshot. These were future executable cases in TW-015. TW-016 coverage is recorded
-[below](#tw-016-implementation); TW-017-specific integration remains its next ticket.
+[below](#tw-016-implementation); TW-017-specific integration is recorded in
+[the recolor section](#tw-017-recolor-integration).
 
 | Case | Setup and action                                                                                                       | Required result                                                                                                                                       | Owner           |
 | ---- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
@@ -319,7 +321,7 @@ controls do not scan tiles or rerender for ordinary tile edits. Persistent event
 still carry changed registry IDs and exact spans. `src/editor/invalidation.ts`
 filters name-only changes from tile invalidation while leaving metadata/history
 notifications intact. Recolor uses the existing detail/overview invalidation path;
-TW-017 owns broader offscreen/populated recolor and latency validation.
+TW-017 verifies broader offscreen/populated recolor and latency behavior below.
 
 Validation lives in `tests/domain/registry.test.ts` and `tests/registry.spec.ts`.
 The shared `tests/fixtures/registry.ts` constructs Mountain and Stone wall through
@@ -328,7 +330,7 @@ cases cover R01–R07, R10–R19, including full content/history/checkpoint snap
 exact associations, targeted events, cancellation, malformed/ambiguous input,
 stale previews, history capacity rollback, raw/registered paint selection and
 observer errors. Basic recolor checks exercise the R08/R09 behavior needed by
-Edit; R20's dedicated populated integration remains TW-017. Browser cases cover
+Edit; R20's dedicated populated integration is recorded below. Browser cases cover
 all four dialogs, collision actions, RGB validation, focus/shortcuts, refreshed
 counts, duplicate names and the 640 × 452 layout. WebGL tests at DPR 1/2 adopt
 3,136 green cells on two layers and compare pixels before/after removal and
@@ -342,3 +344,68 @@ No new timing or memory budget pass is claimed; large-edit refinement remains
 TW-050 and rendering/presentation refinement remains TW-049 under AGENTS.md.
 Actual commands, results and native smoke observations are recorded in
 [the implementation ticket](../.wrk/wrk-230b4c1d.md).
+
+## TW-017 recolor integration
+
+Recolor uses the existing TW-016 Edit command: `RegistryCommands.prepare` checks
+canonical ownership, and `commit` records only the entry's new metadata through
+`CommandHistory`. No tile read, tile rewrite, canvas traversal, or association
+index is needed. Identity and meaning survive changing the shade, even when the
+entry appears on hidden layers or far outside the viewport. The Edit dialog now
+explains this all-layer scope and the independence of raw colors.
+
+`EditorSession` keeps an explicitly selected registry ID and synchronizes its
+swatch on commit/undo/redo; raw paint selection retains its own bytes.
+`canvasInvalidation` forwards the changed ID without tile rectangles.
+`TileScene.invalidate` refreshes only visible chunks that reference that ID;
+hidden layers and offscreen detail have no retained textures and resolve current
+metadata when revealed. `OverviewCache.invalidate` marks **every retained overview
+entry**, including offscreen entries and other resolutions, dirty. Only visible
+entries rebuild; pending jobs are canceled so one published image cannot mix
+registry versions. Both history directions use the same path.
+
+This ticket retains conservative overview invalidation and the existing
+[progressive refresh contract](overview-rendering.md#scheduling-and-invalidation):
+old images may remain while “Refreshing map…”/`aria-busy` is active; each region
+is replaced atomically and settled views contain current colors. Refresh latency
+is distinct from the small metadata command cost. Recomposition reads bounded
+source blocks from visible regions, including empty areas. That rendering work
+does not propagate color changes by rewriting all possible tile positions.
+Dependency indexing, recolor-specific texture representations, and presentation
+refinement remain TW-049; large edit/history/memory refinement remains TW-050.
+
+Acceptance coverage:
+
+- `tests/fixtures/recolor.ts` creates 1,728 occupied cells, including 576 Grass
+  references on two layers, in three groups at x=0, 1024 and 6272 on a 6,400-square
+  map. It includes covered/hidden Grass, Mountain, Stone wall, and independent
+  raw swatches matching both the old and new Grass shades.
+- `tests/domain/recolor.test.ts` makes tile reads, enumeration and writes throw
+  during recolor/undo/redo. It verifies a single registry-only event, stable
+  associations, all-layer content, metadata, allocation, selected paint,
+  saved/recovery state, no-op/collision rejection and the redo branch.
+- `tests/domain/overview.test.ts` exercises the actual feature command against
+  retained offscreen images at two resolutions and an interrupted multi-slice
+  rebuild. Every pixel of the resumed image must belong to the latest color.
+- `tests/recolor.spec.ts` reads real WebGL pixels at DPR 1/2 through detail,
+  two overview scales, distant pan/back, layer reveal/hide and both history
+  directions. A detail recolor rebuilds exactly its two referencing visible
+  terrain chunks; raw/other-entry chunks and inactive overviews do no work.
+- `tests/registry.spec.ts` exercises the actual Edit dialog, selected named
+  swatch, raw selection and history, including recoloring to an unused shade.
+- `tests/recolor-scale.spec.ts` loads both **complete** populated target fixtures
+  (6,620,700 and 24,025,200 layer cells). It measures three recolor/undo/redo cycles
+  in detail and three at whole-map Fit per fixture. An independent fixture recipe
+  checks composited/downsampled pixels after every operation. Complete stored-run
+  SHA-256 fingerprints and per-layer occupancy before/after prove associations
+  and unrelated content are retained; hashing is outside timed intervals.
+
+Run `npx playwright test tests/recolor.spec.ts tests/recolor-scale.spec.ts` for
+the dedicated integration and benchmark cases. Raw reports/screenshots appear
+under `test-results/`; [recolor-baseline.json](recolor-baseline.json) retains the
+measured runs, fixture identities/counts, environment and source fingerprints.
+Timings distinguish preparation, synchronous command/notification/render work,
+and settled overview readiness. These Chromium development measurements are
+not native presented-frame latency, physical-memory measurements or a performance
+budget pass. The [TW-017 ticket](../.wrk/wrk-8110dbc9.md) records the actual full
+validation results and acceptance audit.

@@ -128,3 +128,9 @@ more of a 60 Hz frame for cold generation; the bounded block still controls
 cooperative overshoot. The 1,024-unit fallback avoids an artificial 64-block
 ceiling when the work finishes before the clock budget. Neither is a presentation
 latency guarantee.
+
+TW-017 verifies feature-command recoloring through retained offscreen resolutions,
+hidden layers, interrupted rebuilds and undo/redo. Dedicated populated-map recolor
+and refresh timings are in the [recolor integration record](registry-decisions.md#tw-017-recolor-integration)
+and [recolor baseline](recolor-baseline.json). Conservative registry invalidation
+and the progressive refresh behavior above are unchanged.

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { MapDocument } from "../../src/domain/document.ts";
+import { CommandHistory } from "../../src/domain/history.ts";
+import { RegistryCommands } from "../../src/domain/registry.ts";
 import {
   layerId,
   rawColor,
@@ -245,6 +247,100 @@ test("partial work cannot publish across edits, document replacement, or disposa
   other.flush();
   assert.deepEqual(other.published[0].pixel, []);
   assert.equal(h.published.length, 1);
+});
+
+test("R20: recolor invalidates retained resolutions and cancels mixed-color work through undo/redo", () => {
+  const document = map(1024, 256);
+  const history = new CommandHistory(document);
+  const commands = new RegistryCommands(history);
+  const plan = commands.prepare({
+    kind: "add",
+    name: "Grass",
+    color: "#335c46",
+    adopt: false,
+  });
+  commands.commit(plan);
+  history.execute("Grass on both layers", [
+    {
+      kind: "tiles",
+      writes: [bottom, top].flatMap((layerId) =>
+        [0, 256].flatMap((x) =>
+          Array.from({ length: 256 }, (_, y) => ({
+            layerId,
+            x,
+            y,
+            length: 256,
+            value: registeredColor(plan.id),
+          })),
+        ),
+      ),
+    },
+  ]);
+  const h = harness(document);
+  document.subscribe((change) =>
+    h.cache.invalidate(canvasInvalidation(change)),
+  );
+  const regions = [region(0, 1, 256), region(256, 1, 256), region(0, 2, 256)];
+  for (const r of regions) {
+    h.cache.sync([r], [top]);
+    h.flush();
+  }
+  h.cache.sync([], [top]); // Detail view retains old overview entries.
+  const builds = h.cache.snapshot().builds;
+  commands.commit(
+    commands.prepare({
+      kind: "edit",
+      id: plan.id,
+      name: "Grass",
+      color: "#557755",
+    }),
+  );
+  h.flush();
+  assert.equal(h.cache.snapshot().builds, builds); // No offscreen rebuild.
+  assert.ok([...h.cache.entries].every((entry) => entry.dirty));
+  for (const r of regions) {
+    h.cache.sync([r], [top]);
+    h.flush();
+    assert.deepEqual(h.published.at(-1)?.pixel, [85, 119, 85, 255]);
+  }
+  h.cache.sync([regions[0]], []); // Reveal previously hidden layer.
+  h.flush();
+  assert.deepEqual(h.published.at(-1)?.pixel, [85, 119, 85, 255]);
+  // Force a yield after every block, then change the entry between slices.
+  const iterate = document.iterateRuns.bind(document);
+  document.iterateRuns = (id, bounds) => {
+    for (let i = 0; i < 6; i++) h.tickClock();
+    return iterate(id, bounds);
+  };
+  history.undo();
+  const published = h.published.length;
+  h.one();
+  assert.equal(h.published.length, published);
+  history.redo();
+  h.flush();
+  assert.equal(h.published.length, published + 1);
+  assert.ok(h.cache.snapshot().discarded > 0);
+  const pixels = [...h.cache.entries].find(
+    (entry) => entry.region.key === regions[0].key,
+  )!.pixels!;
+  for (let offset = 0; offset < pixels.length; offset += 4)
+    assert.deepEqual(
+      [...pixels.subarray(offset, offset + 4)],
+      [85, 119, 85, 255],
+    );
+  history.undo();
+  for (const r of regions) {
+    h.cache.sync([r], []);
+    h.flush();
+    assert.deepEqual(h.published.at(-1)?.pixel, [51, 92, 70, 255]);
+  }
+  history.redo();
+  for (const r of regions) {
+    h.cache.sync([r], []);
+    h.flush();
+    assert.deepEqual(h.published.at(-1)?.pixel, [85, 119, 85, 255]);
+  }
+  h.cache.destroy();
 });
 
 test("LRU byte and entry caps bound retained cache across unbounded panning", () => {

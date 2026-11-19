@@ -193,6 +193,72 @@ test("R13: Cancel and Escape in every registry dialog preserve all state and blo
   }
 });
 
+test("R09: Edit recolors the selected named swatch through history while raw selection remains independent", async ({
+  page,
+}, info) => {
+  await start(page);
+  const id = await addGrass(page, true);
+  const linked = await snapshot(page);
+  const edit = async (color: string) => {
+    await panel(page)
+      .getByRole("button", { name: "Edit Grass", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog", {
+      name: "Edit named color",
+      exact: true,
+    });
+    await expect(dialog).toContainText("including hidden and offscreen tiles");
+    await dialog.getByLabel("Named color hex").fill(color);
+    await page.screenshot({ path: info.outputPath("recolor-dialog.png") });
+    await dialog
+      .getByRole("button", { name: "Edit named color", exact: true })
+      .click();
+  };
+  await edit("#557755");
+  await expect(panel(page).getByLabel("Selected color")).toHaveText("#557755");
+  await expect(panel(page).getByTestId("color-association")).toHaveText(
+    "Named color · Grass",
+  );
+  for (const [action, color] of [
+    ["undo", "#335C46"],
+    ["redo", "#557755"],
+  ] as const) {
+    await page.evaluate(
+      (action) => window.editorProbe.session.perform(action),
+      action,
+    );
+    await expect(panel(page).getByLabel("Selected color")).toHaveText(color);
+    expect((await snapshot(page)).paint).toEqual({
+      kind: "registered",
+      registryId: id,
+    });
+  }
+  await panel(page).getByLabel("Hex color", { exact: true }).fill("#335c46");
+  await panel(page)
+    .getByRole("button", { name: "Apply color", exact: true })
+    .click();
+  await edit("#446644"); // A previously unused shade, with raw paint selected.
+  for (const action of ["undo", "redo"] as const) {
+    await page.evaluate(
+      (action) => window.editorProbe.session.perform(action),
+      action,
+    );
+    await expect(panel(page).getByLabel("Selected color")).toHaveText(
+      "#335C46",
+    );
+    expect((await snapshot(page)).paint).toEqual({
+      kind: "raw",
+      rgba: "#335c46ff",
+    });
+  }
+  const after = await snapshot(page);
+  expect(after.runs).toEqual(linked.runs);
+  expect(after.registry.find(([key]) => key === id)?.[1]).toEqual({
+    name: "Grass",
+    rgba: "#446644ff",
+  });
+});
+
 test("duplicate registration identifies its owner; explicit adoption and selection remain separate", async ({
   page,
 }) => {

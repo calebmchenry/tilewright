@@ -16,6 +16,7 @@ import { populatedDocument } from "./fixtures/populated";
 import { gridDocument } from "./fixtures/grid";
 import { overviewDocument } from "./fixtures/overview";
 import { colorsDocument } from "./fixtures/colors";
+import { recolorDocument } from "./fixtures/recolor";
 
 const host = document.getElementById("tiles")!;
 let renderer: CanvasRenderer;
@@ -91,22 +92,25 @@ async function load(
     | "heartland"
     | "grid"
     | "colors"
+    | "recolor"
     | "overview" = "small",
 ) {
   dispose();
   queries = [];
   const document =
-    kind === "colors"
-      ? colorsDocument()
-      : kind === "overview"
-        ? overviewDocument()
-        : kind === "grid"
-          ? gridDocument()
-          : kind === "small"
-            ? small()
-            : kind === "empty"
-              ? new MapDocument()
-              : populatedDocument(kind === "frontier" ? 0 : 1);
+    kind === "recolor"
+      ? recolorDocument()
+      : kind === "colors"
+        ? colorsDocument()
+        : kind === "overview"
+          ? overviewDocument()
+          : kind === "grid"
+            ? gridDocument()
+            : kind === "small"
+              ? small()
+              : kind === "empty"
+                ? new MapDocument()
+                : populatedDocument(kind === "frontier" ? 0 : 1);
   // Record bounded queries, not pixels or model objects. Clear between measurements.
   const original = document.iterateRuns.bind(document);
   document.iterateRuns = (id, bounds) => {

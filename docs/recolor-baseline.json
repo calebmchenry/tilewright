@@ -1,0 +1,2886 @@
+{
+  "ticket": "wrk-8110dbc9",
+  "parentRevision": "d2867663a153e68df26d2f571b59f28fe394e152",
+  "command": "npm test (tests/recolor-scale.spec.ts)",
+  "machine": "TW-M1Pro-16 / MacBookPro18,3 / Apple M1 Pro / 16 GiB / macOS 15.8.1 (24H32)",
+  "summary": [
+    {
+      "fixture": "frontier-v1",
+      "mode": "detail",
+      "operation": "recolor",
+      "samples": 3,
+      "synchronousMedianMs": 1,
+      "readyMedianMs": 1,
+      "readyMinMs": 0.6999998092651367,
+      "readyMaxMs": 1.3000001907348633
+    },
+    {
+      "fixture": "frontier-v1",
+      "mode": "detail",
+      "operation": "undo",
+      "samples": 3,
+      "synchronousMedianMs": 1.0999999046325684,
+      "readyMedianMs": 1.0999999046325684,
+      "readyMinMs": 0.6999998092651367,
+      "readyMaxMs": 1.5999999046325684
+    },
+    {
+      "fixture": "frontier-v1",
+      "mode": "detail",
+      "operation": "redo",
+      "samples": 3,
+      "synchronousMedianMs": 0.7999997138977051,
+      "readyMedianMs": 0.7999997138977051,
+      "readyMinMs": 0.7000002861022949,
+      "readyMaxMs": 1
+    },
+    {
+      "fixture": "frontier-v1",
+      "mode": "overview",
+      "operation": "recolor",
+      "samples": 3,
+      "synchronousMedianMs": 0.5,
+      "readyMedianMs": 1375.1999998092651,
+      "readyMinMs": 1371.5,
+      "readyMaxMs": 1382.9000000953674
+    },
+    {
+      "fixture": "frontier-v1",
+      "mode": "overview",
+      "operation": "undo",
+      "samples": 3,
+      "synchronousMedianMs": 0.40000009536743164,
+      "readyMedianMs": 1367.4000000953674,
+      "readyMinMs": 1361.1000003814697,
+      "readyMaxMs": 1480.6999998092651
+    },
+    {
+      "fixture": "frontier-v1",
+      "mode": "overview",
+      "operation": "redo",
+      "samples": 3,
+      "synchronousMedianMs": 0.3000001907348633,
+      "readyMedianMs": 1387,
+      "readyMinMs": 1354.5999999046326,
+      "readyMaxMs": 1398.7999997138977
+    },
+    {
+      "fixture": "heartland-v1",
+      "mode": "detail",
+      "operation": "recolor",
+      "samples": 3,
+      "synchronousMedianMs": 1.200000286102295,
+      "readyMedianMs": 1.200000286102295,
+      "readyMinMs": 1.0999999046325684,
+      "readyMaxMs": 1.799999713897705
+    },
+    {
+      "fixture": "heartland-v1",
+      "mode": "detail",
+      "operation": "undo",
+      "samples": 3,
+      "synchronousMedianMs": 1.1999998092651367,
+      "readyMedianMs": 1.299999713897705,
+      "readyMinMs": 1.1999998092651367,
+      "readyMaxMs": 1.700000286102295
+    },
+    {
+      "fixture": "heartland-v1",
+      "mode": "detail",
+      "operation": "redo",
+      "samples": 3,
+      "synchronousMedianMs": 1.1000003814697266,
+      "readyMedianMs": 1.1000003814697266,
+      "readyMinMs": 1.0999999046325684,
+      "readyMaxMs": 1.4000000953674316
+    },
+    {
+      "fixture": "heartland-v1",
+      "mode": "overview",
+      "operation": "recolor",
+      "samples": 3,
+      "synchronousMedianMs": 0.40000009536743164,
+      "readyMedianMs": 2716.699999809265,
+      "readyMinMs": 2694.0999999046326,
+      "readyMaxMs": 2766.5999999046326
+    },
+    {
+      "fixture": "heartland-v1",
+      "mode": "overview",
+      "operation": "undo",
+      "samples": 3,
+      "synchronousMedianMs": 0.3000001907348633,
+      "readyMedianMs": 2740.7000002861023,
+      "readyMinMs": 2735.2999997138977,
+      "readyMaxMs": 2744.9000000953674
+    },
+    {
+      "fixture": "heartland-v1",
+      "mode": "overview",
+      "operation": "redo",
+      "samples": 3,
+      "synchronousMedianMs": 0.40000009536743164,
+      "readyMedianMs": 2769.300000190735,
+      "readyMinMs": 2696.800000190735,
+      "readyMaxMs": 2809.5999999046326
+    }
+  ],
+  "runs": [
+    {
+      "date": "2026-11-19T00:04:36.642Z",
+      "fixture": {
+        "version": 1,
+        "id": "frontier-v1",
+        "seed": 439041101,
+        "terrainPercent": 18,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": ["terrain", "buildings", "furniture", "canopy"],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 138222,
+        "occupiedByLayer": [6545856, 57024, 3564, 14256],
+        "occupiedLayerCells": 6620700,
+        "uniqueOccupiedPositions": 6545856,
+        "emptyPositions": 34414144,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [34414144, 6480912, 55440, 9108, 396],
+        "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+      },
+      "environment": {
+        "platform": "darwin",
+        "release": "24.6.0",
+        "arch": "arm64",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "node": "v24.22.3",
+        "browser": "159.0.8154.6",
+        "canvas": {
+          "width": 1024,
+          "height": 640,
+          "dpr": 2
+        },
+        "mode": "Chromium WebGL2 / Vite development"
+      },
+      "sources": {
+        "package-lock.json": "c8f9aaaf0121ad82a34d6ecd95c216e48c05044a8c17d2fd726608eba7b01853",
+        "src/domain/registry.ts": "7eb977b41e72debd597bbb6c194b0c0201f50d1fc34564789730a057baafff40",
+        "src/domain/document.ts": "2c5e1c75882058330c0baaa00049e12e49ee7a23ce4fc13e6f70e32d4e177af2",
+        "src/domain/history.ts": "7419ed9d3ab746b97d970f697cbd7002ccbc1b03928d6522107f8e4ed8c88b2c",
+        "src/editor/session.ts": "1a060412e6150033eb50036312eac46012efd60b8e80e6574ffcf5630b990f1d",
+        "src/editor/invalidation.ts": "6d472a9cbf6a27f03fc9b67f2d244daa64c49f5b4ef5e953dffe8b0f767101a0",
+        "src/RegistryControls.tsx": "4384736848e8c4e4c2ed9159e0f2ec1561b881e07f88dd4ceae19129a3336e9d",
+        "src/renderer/tileScene.ts": "5cf4aa2a78e3f6ea9ac2ed4bf71d36bbb288454193e0133b6ed48af67f3cc8af",
+        "src/renderer/overview.ts": "28fe6956de0fbe57271a8e687f27df0d92d00d8af00870038b1aac92fefe4055",
+        "src/renderer/overviewScene.ts": "c31a2655998c039673e2441e54ac8eca36b1a8c8b304a690110f9fe33924f877",
+        "src/renderer/createRenderer.ts": "11428eecbbfa47f7d8091d3d8ce040b996a18640a44e5e9ced61c5950143fcde",
+        "src/renderer/chunks.ts": "00887f8742de588a8f21d967c029f093096a14b13558a6c5575c63e6ce0b1140",
+        "src/renderer/colors.ts": "addce4eab946e2daaa5f4afb25540f172de38dce019a8aa7ed9473af308d7426",
+        "tests/fixtures/maps.ts": "fc4a5576552bce3491d0b09fe2e13848af9aa314fa441fdf5ad35f8e15b0ca5a",
+        "tests/fixtures/populated.ts": "9d78c2e151cebeaba10789576fc361a262ac15cfabf89b1afd43972afeedbd59",
+        "tests/tiles-harness.ts": "a08cca9f71a83bf78a786d8cc6b431baa2c005c0443ea61a32ca09a1bba4e3ca",
+        "tests/recolor-scale.spec.ts": "61bffa36b0faeac56272227678956b67edd508500c8b2121b8dcf33e2b5bf2cd"
+      },
+      "before": {
+        "contentHash": "069257168002cd9f39f377f98fb5d019ece3d82cdf25cb9010b41f0c84524da3",
+        "runs": 123870,
+        "grassCells": 5950896,
+        "occupiedByLayer": {
+          "terrain": 6545856,
+          "buildings": 57024,
+          "furniture": 3564,
+          "canopy": 14256
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 6620700,
+          "partitions": 11193,
+          "typedArrayBytes": 32292864,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 6545856,
+              "partitions": 8322,
+              "densePartitions": 7884,
+              "sparsePartitions": 438,
+              "typedArrayBytes": 32292864
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": []
+      },
+      "after": {
+        "contentHash": "069257168002cd9f39f377f98fb5d019ece3d82cdf25cb9010b41f0c84524da3",
+        "runs": 123870,
+        "grassCells": 5950896,
+        "occupiedByLayer": {
+          "terrain": 6545856,
+          "buildings": 57024,
+          "furniture": 3564,
+          "canopy": 14256
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 6620700,
+          "partitions": 11193,
+          "typedArrayBytes": 32292864,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 6545856,
+              "partitions": 8322,
+              "densePartitions": 7884,
+              "sparsePartitions": 438,
+              "typedArrayBytes": 32292864
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#336633ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": []
+      },
+      "modes": [
+        {
+          "mode": "detail",
+          "view": {
+            "x": 272,
+            "y": 272,
+            "zoom": 0.16666666666666666
+          },
+          "points": [
+            [280, 280],
+            [350, 350],
+            [319, 319]
+          ],
+          "coldReadyMs": 3.1999998092651367,
+          "coldStats": {
+            "mode": "detail",
+            "overview": {
+              "entries": 0,
+              "visible": 0,
+              "pending": 0,
+              "bytes": 0,
+              "builds": 0,
+              "discarded": 0,
+              "slices": 0,
+              "maxSliceMs": 0,
+              "workMs": 0,
+              "evictions": 0,
+              "scheduled": false,
+              "textures": 0,
+              "sprites": 0,
+              "created": 0,
+              "released": 0
+            },
+            "layers": 4,
+            "chunks": 216,
+            "textures": 51,
+            "sprites": 51,
+            "cells": 22240,
+            "textureBytes": 208896,
+            "cpuPixelBytes": 208896,
+            "builds": 224,
+            "uploads": 51,
+            "created": 51,
+            "released": 0,
+            "runs": 830,
+            "renders": 3
+          },
+          "samples": [
+            {
+              "operation": "recolor",
+              "color": "#557755ff",
+              "prepareMs": 0.19999980926513672,
+              "synchronousMs": 1.3000001907348633,
+              "readyMs": 1.3000001907348633,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 242,
+                "uploads": 69,
+                "created": 51,
+                "released": 0,
+                "runs": 1402,
+                "renders": 4
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#629653ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.0999999046325684,
+              "readyMs": 1.0999999046325684,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 260,
+                "uploads": 87,
+                "created": 51,
+                "released": 0,
+                "runs": 1974,
+                "renders": 6
+              },
+              "pixels": [
+                [98, 150, 83, 255],
+                [98, 150, 83, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.7999997138977051,
+              "readyMs": 0.7999997138977051,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 278,
+                "uploads": 105,
+                "created": 51,
+                "released": 0,
+                "runs": 2546,
+                "renders": 8
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#446644ff",
+              "prepareMs": 0.10000038146972656,
+              "synchronousMs": 1,
+              "readyMs": 1,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 296,
+                "uploads": 123,
+                "created": 51,
+                "released": 0,
+                "runs": 3118,
+                "renders": 10
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.5999999046325684,
+              "readyMs": 1.5999999046325684,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 314,
+                "uploads": 141,
+                "created": 51,
+                "released": 0,
+                "runs": 3690,
+                "renders": 12
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.7000002861022949,
+              "readyMs": 0.7000002861022949,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 332,
+                "uploads": 159,
+                "created": 51,
+                "released": 0,
+                "runs": 4262,
+                "renders": 14
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.6999998092651367,
+              "readyMs": 0.6999998092651367,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 350,
+                "uploads": 177,
+                "created": 51,
+                "released": 0,
+                "runs": 4834,
+                "renders": 16
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.6999998092651367,
+              "readyMs": 0.6999998092651367,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 368,
+                "uploads": 195,
+                "created": 51,
+                "released": 0,
+                "runs": 5406,
+                "renders": 18
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 1,
+              "readyMs": 1,
+              "synchronousQueries": 18,
+              "queries": 18,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 18,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 51,
+                "sprites": 51,
+                "cells": 22240,
+                "textureBytes": 208896,
+                "cpuPixelBytes": 208896,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 0,
+                "runs": 5978,
+                "renders": 20
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255]
+              ]
+            }
+          ]
+        },
+        {
+          "mode": "overview",
+          "view": {
+            "x": -2075.675675675676,
+            "y": 0,
+            "zoom": 0.0038541666666666668
+          },
+          "points": [
+            [280, 280],
+            [350, 350],
+            [319, 319],
+            [5908, 5908],
+            [108, 108],
+            [6308, 6308],
+            [1908, 3508]
+          ],
+          "coldReadyMs": 1248.5,
+          "coldStats": {
+            "mode": "overview",
+            "overview": {
+              "entries": 169,
+              "visible": 169,
+              "pending": 0,
+              "bytes": 10878976,
+              "builds": 169,
+              "discarded": 0,
+              "slices": 42,
+              "maxSliceMs": 6.300000190734863,
+              "workMs": 248.20000076293945,
+              "evictions": 0,
+              "scheduled": false,
+              "textures": 166,
+              "sprites": 166,
+              "created": 166,
+              "released": 0
+            },
+            "layers": 0,
+            "chunks": 0,
+            "textures": 0,
+            "sprites": 0,
+            "cells": 0,
+            "textureBytes": 0,
+            "cpuPixelBytes": 0,
+            "builds": 386,
+            "uploads": 213,
+            "created": 51,
+            "released": 51,
+            "runs": 5978,
+            "renders": 64
+          },
+          "samples": [
+            {
+              "operation": "recolor",
+              "color": "#557755ff",
+              "prepareMs": 0.09999990463256836,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 1371.5,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 236.0999994277954,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 338,
+                  "discarded": 0,
+                  "slices": 82,
+                  "maxSliceMs": 6.300000190734863,
+                  "workMs": 484.30000019073486,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 105
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 1361.1000003814697,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 237.00000047683716,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 507,
+                  "discarded": 0,
+                  "slices": 122,
+                  "maxSliceMs": 7.200000286102295,
+                  "workMs": 721.300000667572,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 147
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.3000001907348633,
+              "readyMs": 1387,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 238.5,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 676,
+                  "discarded": 0,
+                  "slices": 162,
+                  "maxSliceMs": 7.599999904632568,
+                  "workMs": 959.800000667572,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 189
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#446644ff",
+              "prepareMs": 0.09999990463256836,
+              "synchronousMs": 0.5,
+              "readyMs": 1382.9000000953674,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 235.7999997138977,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 845,
+                  "discarded": 0,
+                  "slices": 202,
+                  "maxSliceMs": 7.599999904632568,
+                  "workMs": 1195.6000003814697,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 231
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 1367.4000000953674,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 237.59999990463257,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 1014,
+                  "discarded": 0,
+                  "slices": 242,
+                  "maxSliceMs": 7.599999904632568,
+                  "workMs": 1433.2000002861023,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 273
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.2999997138977051,
+              "readyMs": 1354.5999999046326,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 236.20000076293945,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 1183,
+                  "discarded": 0,
+                  "slices": 282,
+                  "maxSliceMs": 7.599999904632568,
+                  "workMs": 1669.4000010490417,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 315
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#336633ff",
+              "prepareMs": 0.09999990463256836,
+              "synchronousMs": 0.5,
+              "readyMs": 1375.1999998092651,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 234.2999997138977,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 1352,
+                  "discarded": 0,
+                  "slices": 322,
+                  "maxSliceMs": 7.599999904632568,
+                  "workMs": 1903.7000007629395,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 357
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 1480.6999998092651,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 235.89999961853027,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 1521,
+                  "discarded": 0,
+                  "slices": 362,
+                  "maxSliceMs": 7.599999904632568,
+                  "workMs": 2139.6000003814697,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 399
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 1398.7999997138977,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 234.7999997138977,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 10878976,
+                  "builds": 1690,
+                  "discarded": 0,
+                  "slices": 402,
+                  "maxSliceMs": 7.599999904632568,
+                  "workMs": 2374.4000000953674,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 166,
+                  "sprites": 166,
+                  "created": 166,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 386,
+                "uploads": 213,
+                "created": 51,
+                "released": 51,
+                "runs": 5978,
+                "renders": 441
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "limitations": "One fresh browser context per fixture; 3 recolor/undo/redo cycles in detail and 3 at Fit. Timings use performance.now: prepareMs is feature validation/planning, synchronousMs includes planning, history, notifications and synchronous detail rendering, readyMs ends after all visible overview regions publish and render. Not native presented-frame latency or a budget pass. Complete stored-run hashes and occupancy are checked outside timing. No native physical-memory measurement. Conservative all-overview invalidation retained; TW-049/TW-050 own refinement."
+    },
+    {
+      "date": "2026-11-19T00:05:08.294Z",
+      "fixture": {
+        "version": 1,
+        "id": "heartland-v1",
+        "seed": 1584361601,
+        "terrainPercent": 82,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": ["terrain", "buildings", "furniture", "canopy"],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 500802,
+        "occupiedByLayer": [23950356, 57024, 3564, 14256],
+        "occupiedLayerCells": 24025200,
+        "uniqueOccupiedPositions": 23950356,
+        "emptyPositions": 17009644,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [17009644, 23885412, 55440, 9108, 396],
+        "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+      },
+      "environment": {
+        "platform": "darwin",
+        "release": "24.6.0",
+        "arch": "arm64",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "node": "v24.22.3",
+        "browser": "159.0.8154.6",
+        "canvas": {
+          "width": 1024,
+          "height": 640,
+          "dpr": 2
+        },
+        "mode": "Chromium WebGL2 / Vite development"
+      },
+      "sources": {
+        "package-lock.json": "c8f9aaaf0121ad82a34d6ecd95c216e48c05044a8c17d2fd726608eba7b01853",
+        "src/domain/registry.ts": "7eb977b41e72debd597bbb6c194b0c0201f50d1fc34564789730a057baafff40",
+        "src/domain/document.ts": "2c5e1c75882058330c0baaa00049e12e49ee7a23ce4fc13e6f70e32d4e177af2",
+        "src/domain/history.ts": "7419ed9d3ab746b97d970f697cbd7002ccbc1b03928d6522107f8e4ed8c88b2c",
+        "src/editor/session.ts": "1a060412e6150033eb50036312eac46012efd60b8e80e6574ffcf5630b990f1d",
+        "src/editor/invalidation.ts": "6d472a9cbf6a27f03fc9b67f2d244daa64c49f5b4ef5e953dffe8b0f767101a0",
+        "src/RegistryControls.tsx": "4384736848e8c4e4c2ed9159e0f2ec1561b881e07f88dd4ceae19129a3336e9d",
+        "src/renderer/tileScene.ts": "5cf4aa2a78e3f6ea9ac2ed4bf71d36bbb288454193e0133b6ed48af67f3cc8af",
+        "src/renderer/overview.ts": "28fe6956de0fbe57271a8e687f27df0d92d00d8af00870038b1aac92fefe4055",
+        "src/renderer/overviewScene.ts": "c31a2655998c039673e2441e54ac8eca36b1a8c8b304a690110f9fe33924f877",
+        "src/renderer/createRenderer.ts": "11428eecbbfa47f7d8091d3d8ce040b996a18640a44e5e9ced61c5950143fcde",
+        "src/renderer/chunks.ts": "00887f8742de588a8f21d967c029f093096a14b13558a6c5575c63e6ce0b1140",
+        "src/renderer/colors.ts": "addce4eab946e2daaa5f4afb25540f172de38dce019a8aa7ed9473af308d7426",
+        "tests/fixtures/maps.ts": "fc4a5576552bce3491d0b09fe2e13848af9aa314fa441fdf5ad35f8e15b0ca5a",
+        "tests/fixtures/populated.ts": "9d78c2e151cebeaba10789576fc361a262ac15cfabf89b1afd43972afeedbd59",
+        "tests/tiles-harness.ts": "a08cca9f71a83bf78a786d8cc6b431baa2c005c0443ea61a32ca09a1bba4e3ca",
+        "tests/recolor-scale.spec.ts": "61bffa36b0faeac56272227678956b67edd508500c8b2121b8dcf33e2b5bf2cd"
+      },
+      "before": {
+        "contentHash": "b7d40a7c6216058c6fb18dc1d495caf669001d1596b6d8712a5231b376154137",
+        "runs": 470490,
+        "grassCells": 20760096,
+        "occupiedByLayer": {
+          "terrain": 23950356,
+          "buildings": 57024,
+          "furniture": 3564,
+          "canopy": 14256
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 24025200,
+          "partitions": 35021,
+          "typedArrayBytes": 123985920,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 23950356,
+              "partitions": 32150,
+              "densePartitions": 30270,
+              "sparsePartitions": 1880,
+              "typedArrayBytes": 123985920
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": []
+      },
+      "after": {
+        "contentHash": "b7d40a7c6216058c6fb18dc1d495caf669001d1596b6d8712a5231b376154137",
+        "runs": 470490,
+        "grassCells": 20760096,
+        "occupiedByLayer": {
+          "terrain": 23950356,
+          "buildings": 57024,
+          "furniture": 3564,
+          "canopy": 14256
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 24025200,
+          "partitions": 35021,
+          "typedArrayBytes": 123985920,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 23950356,
+              "partitions": 32150,
+              "densePartitions": 30270,
+              "sparsePartitions": 1880,
+              "typedArrayBytes": 123985920
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#336633ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": []
+      },
+      "modes": [
+        {
+          "mode": "detail",
+          "view": {
+            "x": 272,
+            "y": 272,
+            "zoom": 0.16666666666666666
+          },
+          "points": [
+            [280, 280],
+            [350, 350],
+            [319, 319]
+          ],
+          "coldReadyMs": 3.200000286102295,
+          "coldStats": {
+            "mode": "detail",
+            "overview": {
+              "entries": 0,
+              "visible": 0,
+              "pending": 0,
+              "bytes": 0,
+              "builds": 0,
+              "discarded": 0,
+              "slices": 0,
+              "maxSliceMs": 0,
+              "workMs": 0,
+              "evictions": 0,
+              "scheduled": false,
+              "textures": 0,
+              "sprites": 0,
+              "created": 0,
+              "released": 0
+            },
+            "layers": 4,
+            "chunks": 216,
+            "textures": 69,
+            "sprites": 69,
+            "cells": 35200,
+            "textureBytes": 282624,
+            "cpuPixelBytes": 282624,
+            "builds": 224,
+            "uploads": 71,
+            "created": 71,
+            "released": 2,
+            "runs": 1430,
+            "renders": 3
+          },
+          "samples": [
+            {
+              "operation": "recolor",
+              "color": "#557755ff",
+              "prepareMs": 0.19999980926513672,
+              "synchronousMs": 1.799999713897705,
+              "readyMs": 1.799999713897705,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 262,
+                "uploads": 109,
+                "created": 71,
+                "released": 2,
+                "runs": 2602,
+                "renders": 4
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#629653ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.700000286102295,
+              "readyMs": 1.700000286102295,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 300,
+                "uploads": 147,
+                "created": 71,
+                "released": 2,
+                "runs": 3774,
+                "renders": 6
+              },
+              "pixels": [
+                [98, 150, 83, 255],
+                [98, 150, 83, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.3000001907348633,
+              "readyMs": 1.4000000953674316,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 338,
+                "uploads": 185,
+                "created": 71,
+                "released": 2,
+                "runs": 4946,
+                "renders": 8
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#446644ff",
+              "prepareMs": 0.09999990463256836,
+              "synchronousMs": 1.200000286102295,
+              "readyMs": 1.200000286102295,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 376,
+                "uploads": 223,
+                "created": 71,
+                "released": 2,
+                "runs": 6118,
+                "renders": 10
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.1999998092651367,
+              "readyMs": 1.299999713897705,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 414,
+                "uploads": 261,
+                "created": 71,
+                "released": 2,
+                "runs": 7290,
+                "renders": 12
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.1000003814697266,
+              "readyMs": 1.1000003814697266,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 452,
+                "uploads": 299,
+                "created": 71,
+                "released": 2,
+                "runs": 8462,
+                "renders": 14
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.0999999046325684,
+              "readyMs": 1.0999999046325684,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 490,
+                "uploads": 337,
+                "created": 71,
+                "released": 2,
+                "runs": 9634,
+                "renders": 16
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.1999998092651367,
+              "readyMs": 1.1999998092651367,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 528,
+                "uploads": 375,
+                "created": 71,
+                "released": 2,
+                "runs": 10806,
+                "renders": 18
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 1.0999999046325684,
+              "readyMs": 1.0999999046325684,
+              "synchronousQueries": 38,
+              "queries": 38,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 38,
+              "rebuiltOverview": 0,
+              "overviewWorkMs": 0,
+              "stats": {
+                "mode": "detail",
+                "overview": {
+                  "entries": 0,
+                  "visible": 0,
+                  "pending": 0,
+                  "bytes": 0,
+                  "builds": 0,
+                  "discarded": 0,
+                  "slices": 0,
+                  "maxSliceMs": 0,
+                  "workMs": 0,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 0,
+                  "sprites": 0,
+                  "created": 0,
+                  "released": 0
+                },
+                "layers": 4,
+                "chunks": 216,
+                "textures": 69,
+                "sprites": 69,
+                "cells": 35200,
+                "textureBytes": 282624,
+                "cpuPixelBytes": 282624,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 2,
+                "runs": 11978,
+                "renders": 20
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255]
+              ]
+            }
+          ]
+        },
+        {
+          "mode": "overview",
+          "view": {
+            "x": -2075.675675675676,
+            "y": 0,
+            "zoom": 0.0038541666666666668
+          },
+          "points": [
+            [280, 280],
+            [350, 350],
+            [319, 319],
+            [5908, 5908],
+            [108, 108],
+            [6308, 6308],
+            [1908, 3508]
+          ],
+          "coldReadyMs": 2407.699999809265,
+          "coldStats": {
+            "mode": "overview",
+            "overview": {
+              "entries": 169,
+              "visible": 169,
+              "pending": 0,
+              "bytes": 11010048,
+              "builds": 169,
+              "discarded": 0,
+              "slices": 82,
+              "maxSliceMs": 6.400000095367432,
+              "workMs": 491.80000019073486,
+              "evictions": 0,
+              "scheduled": false,
+              "textures": 168,
+              "sprites": 168,
+              "created": 168,
+              "released": 0
+            },
+            "layers": 0,
+            "chunks": 0,
+            "textures": 0,
+            "sprites": 0,
+            "cells": 0,
+            "textureBytes": 0,
+            "cpuPixelBytes": 0,
+            "builds": 566,
+            "uploads": 413,
+            "created": 71,
+            "released": 71,
+            "runs": 11978,
+            "renders": 103
+          },
+          "samples": [
+            {
+              "operation": "recolor",
+              "color": "#557755ff",
+              "prepareMs": 0.09999990463256836,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 2766.5999999046326,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 486.30000019073486,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 338,
+                  "discarded": 0,
+                  "slices": 163,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 978.1000003814697,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 185
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.2999997138977051,
+              "readyMs": 2735.2999997138977,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 481.20000076293945,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 507,
+                  "discarded": 0,
+                  "slices": 244,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 1459.3000011444092,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 268
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 2696.800000190735,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 479.2000002861023,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 676,
+                  "discarded": 0,
+                  "slices": 324,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 1938.5000014305115,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 350
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 2716.699999809265,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 478.19999980926514,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 845,
+                  "discarded": 0,
+                  "slices": 404,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 2416.7000012397766,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 432
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#557755ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 2744.9000000953674,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 479.30000019073486,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 1014,
+                  "discarded": 0,
+                  "slices": 484,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 2896.0000014305115,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 514
+              },
+              "pixels": [
+                [85, 119, 85, 255],
+                [85, 119, 85, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 2769.300000190735,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 480.3999991416931,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 1183,
+                  "discarded": 0,
+                  "slices": 564,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 3376.4000005722046,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 596
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "recolor",
+              "color": "#336633ff",
+              "prepareMs": 0.09999990463256836,
+              "synchronousMs": 0.40000009536743164,
+              "readyMs": 2694.0999999046326,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 477.40000009536743,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 1352,
+                  "discarded": 0,
+                  "slices": 644,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 3853.800000667572,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 678
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "undo",
+              "color": "#446644ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.3000001907348633,
+              "readyMs": 2740.7000002861023,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 476.69999980926514,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 1521,
+                  "discarded": 0,
+                  "slices": 724,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 4330.500000476837,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 760
+              },
+              "pixels": [
+                [68, 102, 68, 255],
+                [68, 102, 68, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            },
+            {
+              "operation": "redo",
+              "color": "#336633ff",
+              "prepareMs": 0,
+              "synchronousMs": 0.3000001907348633,
+              "readyMs": 2809.5999999046326,
+              "synchronousQueries": 0,
+              "queries": 40000,
+              "unboundedQueries": 0,
+              "rebuiltDetail": 0,
+              "rebuiltOverview": 169,
+              "overviewWorkMs": 480.00000047683716,
+              "stats": {
+                "mode": "overview",
+                "overview": {
+                  "entries": 169,
+                  "visible": 169,
+                  "pending": 0,
+                  "bytes": 11010048,
+                  "builds": 1690,
+                  "discarded": 0,
+                  "slices": 804,
+                  "maxSliceMs": 6.900000095367432,
+                  "workMs": 4810.500000953674,
+                  "evictions": 0,
+                  "scheduled": false,
+                  "textures": 168,
+                  "sprites": 168,
+                  "created": 168,
+                  "released": 0
+                },
+                "layers": 0,
+                "chunks": 0,
+                "textures": 0,
+                "sprites": 0,
+                "cells": 0,
+                "textureBytes": 0,
+                "cpuPixelBytes": 0,
+                "builds": 566,
+                "uploads": 413,
+                "created": 71,
+                "released": 71,
+                "runs": 11978,
+                "renders": 842
+              },
+              "pixels": [
+                [51, 102, 51, 255],
+                [51, 102, 51, 255],
+                [40, 92, 57, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255],
+                [29, 39, 50, 255]
+              ]
+            }
+          ]
+        }
+      ],
+      "errors": [],
+      "limitations": "One fresh browser context per fixture; 3 recolor/undo/redo cycles in detail and 3 at Fit. Timings use performance.now: prepareMs is feature validation/planning, synchronousMs includes planning, history, notifications and synchronous detail rendering, readyMs ends after all visible overview regions publish and render. Not native presented-frame latency or a budget pass. Complete stored-run hashes and occupancy are checked outside timing. No native physical-memory measurement. Conservative all-overview invalidation retained; TW-049/TW-050 own refinement."
+    }
+  ]
+}
