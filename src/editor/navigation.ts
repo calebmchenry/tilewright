@@ -155,6 +155,9 @@ export function bindNavigation(
             );
           }
         }
+      } else if (session.activeTool.getSnapshot() === "fill") {
+        event.preventDefault();
+        void session.fill.start(local(lastPointer));
       } else if (session.activeTool.getSnapshot() === "eyedropper") {
         event.preventDefault();
         session.sampleColorAt(local(lastPointer));
@@ -258,6 +261,7 @@ export function bindNavigation(
       updatePointer();
     } else if (event.key === "Escape") {
       event.preventDefault();
+      session.fill.cancel();
       reset();
       session.setRectangle(null);
     }
@@ -363,6 +367,7 @@ export function bindNavigation(
     window.removeEventListener("blur", reset);
     for (const stop of stops) stop();
     reset();
+    session.fill.cancel();
     delete host.dataset.navigation;
   };
 }

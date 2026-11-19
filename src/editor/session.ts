@@ -21,6 +21,7 @@ import {
 } from "../domain/registry.ts";
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
+import { FillController } from "./fill.ts";
 import { DrawingController, type DrawingToolId } from "./drawing.ts";
 import { assertPencilSize, eraserTool, pencilTool } from "./pencil.ts";
 import { lineTool, rectangleTool, type RectangleMode } from "./shapes.ts";
@@ -105,6 +106,7 @@ export class EditorSession {
   readonly history: CommandHistory;
   readonly registryCommands: RegistryCommands;
   readonly drawing: DrawingController;
+  readonly fill: FillController;
   readonly layers;
   readonly bounds;
   readonly registry;
@@ -207,6 +209,7 @@ export class EditorSession {
       unsubscribeDocument();
       unsubscribeHistory();
     };
+    this.fill = new FillController(this);
     this.drawing = new DrawingController(this);
     this.drawing.register(
       "pencil",
@@ -224,6 +227,7 @@ export class EditorSession {
   }
   dispose(): void {
     this.#closed = true;
+    this.fill.dispose();
     this.drawing.dispose();
     this.#dispose();
   }
@@ -264,6 +268,18 @@ export class EditorSession {
       !canEditTiles(this.viewport.getSnapshot())
     )
       return { label: unavailable[id]!.label, reason: OVERVIEW_MESSAGE };
+    if (id === "fill")
+      return {
+        label: "Fill",
+        reason:
+          this.canvasState.getSnapshot() !== "ready"
+            ? "Wait for the map canvas to be ready."
+            : !this.editableLayerIds().length
+              ? "Show the active layer to fill it."
+              : this.fill.progress.getSnapshot()
+                ? "A fill is running. Cancel it before starting another."
+                : null,
+      };
     const drawingTool = this.drawing.tool(id);
     if (drawingTool)
       return {
@@ -315,6 +331,13 @@ export class EditorSession {
       return false;
     }
     if (id === "add-layer") return this.addLayer();
+    if (id === "fill") {
+      this.activeTool.set(id);
+      this.report(
+        "Fill active. Click a region on the active layer; Escape cancels a running fill.",
+      );
+      return true;
+    }
     if (id === "eyedropper") {
       this.activeTool.set(id);
       this.report(
@@ -681,6 +704,7 @@ export class EditorSession {
         d: "eyedropper",
         l: "line",
         r: "rectangle",
+        g: "fill",
       };
       if (toolKeys[key]) this.perform(toolKeys[key]);
       else if (

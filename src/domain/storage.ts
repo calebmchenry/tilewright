@@ -12,6 +12,16 @@ export class TilePalette {
   #tokens = new Map<string, number>();
   #next = 1;
 
+  clone(): TilePalette {
+    const copy = new TilePalette();
+    copy.#entries = new Map(
+      [...this.#entries].map(([token, entry]) => [token, { ...entry }]),
+    );
+    copy.#tokens = new Map(this.#tokens);
+    copy.#next = this.#next;
+    return copy;
+  }
+
   get size(): number {
     return this.#entries.size;
   }
@@ -65,6 +75,15 @@ export class TilePartition {
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+  clone(): TilePartition {
+    const copy = new TilePartition(this.x, this.y);
+    copy.#cells =
+      this.#cells instanceof Uint32Array
+        ? this.#cells.slice()
+        : new Map(this.#cells);
+    copy.#size = this.#size;
+    return copy;
   }
   get size(): number {
     return this.#size;

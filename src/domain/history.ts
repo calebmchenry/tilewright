@@ -7,6 +7,8 @@ import {
   MapDocument,
   type MutationResult,
   type PrimitiveChange,
+  type PreparedTiles,
+  type DocumentChange,
 } from "./document.ts";
 
 export interface HistoryLimits {
@@ -98,42 +100,53 @@ export class CommandHistory {
       throw new TypeError("Command label must not be blank.");
     return this.#run(() =>
       this.document.applyCommands(commands, (change) => {
-        if (change.kind !== "transaction")
-          throw new Error("Expected a transaction.");
-        // Accounting includes UTF-16 serialized payload plus conservative object/run
-        // overhead. It is a deterministic budget, not a JavaScript heap measurement.
-        const bytes =
-          256 +
-          2 * (JSON.stringify(change.changes).length + label.length) +
-          change.changes.reduce(
-            (n, part) =>
-              n + (part.kind === "tiles" ? 128 * part.runs.length : 128),
-            0,
-          );
-        if (bytes > this.limits.maxBytes)
-          throw new RangeError(
-            "Transaction exceeds history byte limit; split the operation or raise the limit.",
-          );
-        const entry: Entry = Object.freeze({
-          label,
-          before: this.#revision,
-          after: this.#nextRevision++,
-          changes: change.changes,
-          bytes,
-        });
-        this.#entries.splice(this.#cursor);
-        this.#entries.push(entry);
-        let retained = this.#entries.reduce((n, item) => n + item.bytes, 0);
-        while (
-          this.#entries.length > this.limits.maxEntries ||
-          retained > this.limits.maxBytes
-        )
-          retained -= this.#entries.shift()!.bytes;
-        this.#cursor = this.#entries.length;
-        this.#revision = entry.after;
-        this.#expectedVersion = change.version;
+        this.#record(label, change);
       }),
     );
+  }
+  executePrepared(label: string, plan: PreparedTiles): MutationResult {
+    if (typeof label !== "string" || !label.trim())
+      throw new TypeError("Command label must not be blank.");
+    return this.#run(() =>
+      this.document.applyPreparedTiles(plan, (change) =>
+        this.#record(label, change),
+      ),
+    );
+  }
+  #record(label: string, change: DocumentChange): void {
+    if (change.kind !== "transaction")
+      throw new Error("Expected a transaction.");
+    // Accounting includes UTF-16 serialized payload plus conservative object/run
+    // overhead. It is a deterministic budget, not a JavaScript heap measurement.
+    const bytes =
+      256 +
+      2 * (JSON.stringify(change.changes).length + label.length) +
+      change.changes.reduce(
+        (n, part) => n + (part.kind === "tiles" ? 128 * part.runs.length : 128),
+        0,
+      );
+    if (bytes > this.limits.maxBytes)
+      throw new RangeError(
+        "Transaction exceeds history byte limit; split the operation or raise the limit.",
+      );
+    const entry: Entry = Object.freeze({
+      label,
+      before: this.#revision,
+      after: this.#nextRevision++,
+      changes: change.changes,
+      bytes,
+    });
+    this.#entries.splice(this.#cursor);
+    this.#entries.push(entry);
+    let retained = this.#entries.reduce((n, item) => n + item.bytes, 0);
+    while (
+      this.#entries.length > this.limits.maxEntries ||
+      retained > this.limits.maxBytes
+    )
+      retained -= this.#entries.shift()!.bytes;
+    this.#cursor = this.#entries.length;
+    this.#revision = entry.after;
+    this.#expectedVersion = change.version;
   }
   undo(): MutationResult {
     return this.#travel("undo");

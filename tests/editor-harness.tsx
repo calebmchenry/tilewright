@@ -26,7 +26,8 @@ const session = new EditorSession(
   fixture === "drawing" ||
     fixture === "pencil" ||
     fixture === "eraser-sampling" ||
-    fixture === "shapes"
+    fixture === "shapes" ||
+    fixture === "fill"
     ? drawingDocument()
     : fixture === "registry"
       ? registryDocument()
@@ -48,7 +49,8 @@ if (
   fixture === "drawing" ||
   fixture === "pencil" ||
   fixture === "eraser-sampling" ||
-  fixture === "shapes"
+  fixture === "shapes" ||
+  fixture === "fill"
 ) {
   if (fixture === "drawing") installDrawingTools(session);
   session.selectLayer(layerId("buildings"));

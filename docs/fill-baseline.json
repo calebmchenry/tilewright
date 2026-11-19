@@ -1,0 +1,4280 @@
+{
+  "ticket": "wrk-3af2d9eb",
+  "recordedAt": "2026-11-19T01:42:14.791023+00:00",
+  "sourceBaseCommit": "16994c03c864cab07ebb0030f0da320855e8fe12",
+  "sourceDescription": "Working implementation before its completion commit; exact file hashes below.",
+  "sourceSha256": {
+    "src/domain/fill.ts": "c21eae8125cd5c94171c83c6ec4133363adb6c536c2b144e283138a1f259a6d2",
+    "src/domain/document.ts": "a97fc8fa3f20d2cb8740c2ba7e33e61217b80eb6f5ce674a5e5ef5c579c01a35",
+    "src/domain/storage.ts": "44abcdf018792d092ed52a297b31d50f7d704523f780b1334a371aea758463d0",
+    "src/domain/history.ts": "7bddba3a3f0978248bcc1f66eed63d1131bff5742b6360d654eafcbe70a099b2",
+    "src/editor/fill.ts": "57d2649f5e9ad418e3fb21ac02849892e0079cb444c22099329913b178de5252",
+    "src/editor/session.ts": "461759c65b91f98cc6d3dedd1f09fd871c25a4b082f096f31bb8b78a8a8b1c67",
+    "src/editor/navigation.ts": "759b692b1bc4147ee4ee528bb229bb8ce48d869c21e49a958884376bd9bfe908",
+    "src/App.tsx": "931e5c4f53913f6dacd62232f0e5aa2df759c0d626e2e778374e70ac1c6d53eb",
+    "src/MapCanvas.tsx": "0608c79179590dfad70b4ab6ce2cb4a7d16b8b69d5959ff0c0a09c0182e59f4b",
+    "src/styles.css": "4501147f2eb2e52e60906f58353efd07af1c7139d1db6eeeef7b65e1214be9ef",
+    "tests/fill-scale.spec.ts": "207c0189585997ad63622af56382d4d773598abfc9751ba53c01297999f80103",
+    "tests/fixtures/maps.ts": "fc4a5576552bce3491d0b09fe2e13848af9aa314fa441fdf5ad35f8e15b0ca5a",
+    "tests/fixtures/populated.ts": "9d78c2e151cebeaba10789576fc361a262ac15cfabf89b1afd43972afeedbd59",
+    "package-lock.json": "c8f9aaaf0121ad82a34d6ecd95c216e48c05044a8c17d2fd726608eba7b01853"
+  },
+  "command": "npx playwright test tests/fill-scale.spec.ts (also included in npm test)",
+  "method": "One fill and one cancellation per complete fixture per run. Browser development/WebGL; rAF and timer gap proxies, not native presented frames or physical memory. Complete per-layer stored-run hashes are checked outside timed intervals. Filled region is terrain [256,1280) squared. No performance budget pass claimed; uncontrolled background apps/power/refresh. Final dedicated rerun additionally asserts exactly 1,024 complete rows; earlier runs used the same timed implementation.",
+  "runs": [
+    {
+      "fixture": "frontier",
+      "original": {
+        "hashes": {
+          "terrain": "b2b82bf36a2dbbec43a429c40d1a78bde02a959940bcd05f453ea3af075afce7",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 6620700,
+          "partitions": 11193,
+          "typedArrayBytes": 32292864,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 6545856,
+              "partitions": 8322,
+              "densePartitions": 7884,
+              "sparsePartitions": 438,
+              "typedArrayBytes": 32292864
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 271,
+        "history": {
+          "revision": 0,
+          "savedRevision": null,
+          "recoveryRevision": null,
+          "dirty": true,
+          "undoSteps": 0,
+          "redoSteps": 0,
+          "retainedBytes": 0,
+          "undoLabel": null,
+          "redoLabel": null
+        },
+        "invalidations": 0
+      },
+      "before": {
+        "hashes": {
+          "terrain": "e3a10b3266f593e072405aa4d3601010bbd258b615bee09a2505f5b0fa3ebc76",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 7464720,
+          "partitions": 11969,
+          "typedArrayBytes": 35512320,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 7389876,
+              "partitions": 9098,
+              "densePartitions": 8670,
+              "sparsePartitions": 428,
+              "typedArrayBytes": 35512320
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 272,
+        "history": {
+          "revision": 1,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": false,
+          "undoSteps": 1,
+          "redoSteps": 0,
+          "retainedBytes": 2530000,
+          "undoLabel": "Contiguous fixture region",
+          "redoLabel": null
+        },
+        "invalidations": 1
+      },
+      "after": {
+        "hashes": {
+          "terrain": "81647df19f8735d77f291ebdd628c6f4e538ee5cece3df1232b7aff869d49732",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 7464720,
+          "partitions": 11969,
+          "typedArrayBytes": 35512320,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 7389876,
+              "partitions": 9098,
+              "densePartitions": 8670,
+              "sparsePartitions": 428,
+              "typedArrayBytes": 35512320
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 273,
+        "history": {
+          "revision": 2,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": true,
+          "undoSteps": 2,
+          "redoSteps": 0,
+          "retainedBytes": 2942526,
+          "undoLabel": "Fill",
+          "redoLabel": null
+        },
+        "invalidations": 2
+      },
+      "canceled": {
+        "ok": false,
+        "durationMs": 241.19999980926514,
+        "cancellationMs": 26,
+        "frames": 15,
+        "timerGapsMs": [
+          31.90000009536743, 27, 12.599999904632568, 40.09999990463257,
+          22.09999990463257, 13.300000190734863, 13.099999904632568,
+          25.699999809265137, 11.900000095367432, 13.700000286102295
+        ],
+        "progress": [
+          {
+            "ms": 0.40000009536743164,
+            "cells": 0
+          },
+          {
+            "ms": 1.1999998092651367,
+            "cells": 0
+          },
+          {
+            "ms": 11.599999904632568,
+            "cells": 11352
+          },
+          {
+            "ms": 22.199999809265137,
+            "cells": 29342
+          },
+          {
+            "ms": 30.90000009536743,
+            "cells": 46818
+          },
+          {
+            "ms": 40,
+            "cells": 64551
+          },
+          {
+            "ms": 49.69999980926514,
+            "cells": 82284
+          },
+          {
+            "ms": 58.40000009536743,
+            "cells": 100788
+          },
+          {
+            "ms": 71.09999990463257,
+            "cells": 119035
+          },
+          {
+            "ms": 83.90000009536743,
+            "cells": 138053
+          },
+          {
+            "ms": 120.09999990463257,
+            "cells": 157328
+          },
+          {
+            "ms": 132.7999997138977,
+            "cells": 177631
+          },
+          {
+            "ms": 146,
+            "cells": 197420
+          },
+          {
+            "ms": 158.90000009536743,
+            "cells": 216181
+          },
+          {
+            "ms": 171.59999990463257,
+            "cells": 235199
+          },
+          {
+            "ms": 185.2999997138977,
+            "cells": 254217
+          },
+          {
+            "ms": 197.40000009536743,
+            "cells": 274263
+          },
+          {
+            "ms": 210.2999997138977,
+            "cells": 294309
+          }
+        ],
+        "commitNotificationMs": null
+      },
+      "filled": {
+        "ok": true,
+        "durationMs": 703.7000002861023,
+        "cancellationMs": null,
+        "frames": 42,
+        "timerGapsMs": [
+          49, 26.59999990463257, 12.900000095367432, 14, 13.400000095367432,
+          13.599999904632568, 15.300000190734863, 23.699999809265137, 13, 13,
+          13.800000190734863, 17, 22.59999990463257, 12.099999904632568,
+          12.700000286102295, 15.799999713897705, 23.40000009536743, 13, 12.5,
+          14.699999809265137, 24, 12.400000095367432, 13.5, 15.099999904632568,
+          22.5, 13.5, 13.200000286102295, 14.699999809265137, 22.90000009536743,
+          13.199999809265137, 13.5, 14.200000286102295, 24.799999713897705,
+          13.800000190734863, 13.5, 13.199999809265137, 14.100000381469727,
+          24.399999618530273, 12.200000286102295, 12.900000095367432,
+          14.699999809265137
+        ],
+        "progress": [
+          {
+            "ms": 0,
+            "cells": 0
+          },
+          {
+            "ms": 0.5999999046325684,
+            "cells": 0
+          },
+          {
+            "ms": 9.200000286102295,
+            "cells": 14436
+          },
+          {
+            "ms": 18.5,
+            "cells": 32426
+          },
+          {
+            "ms": 48.5,
+            "cells": 49902
+          },
+          {
+            "ms": 57.59999990463257,
+            "cells": 67121
+          },
+          {
+            "ms": 66.40000009536743,
+            "cells": 85368
+          },
+          {
+            "ms": 75.30000019073486,
+            "cells": 104129
+          },
+          {
+            "ms": 88.09999990463257,
+            "cells": 123147
+          },
+          {
+            "ms": 101.59999990463257,
+            "cells": 143193
+          },
+          {
+            "ms": 115,
+            "cells": 163239
+          },
+          {
+            "ms": 128.5,
+            "cells": 183542
+          },
+          {
+            "ms": 142.09999990463257,
+            "cells": 203845
+          },
+          {
+            "ms": 154.80000019073486,
+            "cells": 224405
+          },
+          {
+            "ms": 167.59999990463257,
+            "cells": 244451
+          },
+          {
+            "ms": 180.40000009536743,
+            "cells": 265011
+          },
+          {
+            "ms": 194.09999990463257,
+            "cells": 285314
+          },
+          {
+            "ms": 206.80000019073486,
+            "cells": 305617
+          },
+          {
+            "ms": 220.30000019073486,
+            "cells": 325920
+          },
+          {
+            "ms": 233.30000019073486,
+            "cells": 345966
+          },
+          {
+            "ms": 246.90000009536743,
+            "cells": 366269
+          },
+          {
+            "ms": 259.5,
+            "cells": 385801
+          },
+          {
+            "ms": 272.30000019073486,
+            "cells": 405847
+          },
+          {
+            "ms": 285.2000002861023,
+            "cells": 426150
+          },
+          {
+            "ms": 297.7000002861023,
+            "cells": 446453
+          },
+          {
+            "ms": 311,
+            "cells": 465471
+          },
+          {
+            "ms": 324.5,
+            "cells": 485517
+          },
+          {
+            "ms": 336.90000009536743,
+            "cells": 506077
+          },
+          {
+            "ms": 350,
+            "cells": 526380
+          },
+          {
+            "ms": 362.40000009536743,
+            "cells": 547454
+          },
+          {
+            "ms": 375.80000019073486,
+            "cells": 568271
+          },
+          {
+            "ms": 388,
+            "cells": 588060
+          },
+          {
+            "ms": 401.09999990463257,
+            "cells": 608363
+          },
+          {
+            "ms": 413.80000019073486,
+            "cells": 628923
+          },
+          {
+            "ms": 426.2000002861023,
+            "cells": 649226
+          },
+          {
+            "ms": 439.2000002861023,
+            "cells": 668758
+          },
+          {
+            "ms": 452.2000002861023,
+            "cells": 689061
+          },
+          {
+            "ms": 465.5,
+            "cells": 709107
+          },
+          {
+            "ms": 478.80000019073486,
+            "cells": 730181
+          },
+          {
+            "ms": 491.30000019073486,
+            "cells": 750741
+          },
+          {
+            "ms": 503.5,
+            "cells": 770800
+          },
+          {
+            "ms": 516.4000000953674,
+            "cells": 791546
+          },
+          {
+            "ms": 529.7000002861023,
+            "cells": 811027
+          },
+          {
+            "ms": 543.2000002861023,
+            "cells": 830761
+          },
+          {
+            "ms": 555.9000000953674,
+            "cells": 851001
+          },
+          {
+            "ms": 569.2000002861023,
+            "cells": 870988
+          },
+          {
+            "ms": 582.7000002861023,
+            "cells": 890975
+          },
+          {
+            "ms": 596,
+            "cells": 910709
+          },
+          {
+            "ms": 609.5999999046326,
+            "cells": 930443
+          },
+          {
+            "ms": 622.5999999046326,
+            "cells": 949671
+          },
+          {
+            "ms": 635.5999999046326,
+            "cells": 969152
+          },
+          {
+            "ms": 647.7000002861023,
+            "cells": 989139
+          },
+          {
+            "ms": 660.4000000953674,
+            "cells": 1008492
+          },
+          {
+            "ms": 673.3000001907349,
+            "cells": 1027413
+          },
+          {
+            "ms": 686.2000002861023,
+            "cells": 1045794
+          },
+          {
+            "ms": 695.4000000953674,
+            "cells": 1048576
+          }
+        ],
+        "commitNotificationMs": 703
+      },
+      "undoMs": 42.39999961853027,
+      "redoMs": 37.39999961853027,
+      "environment": {
+        "browser": "159.0.8154.6",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "os": "24.6.0",
+        "node": "v24.22.3",
+        "dpr": 1
+      },
+      "limits": "Chromium development; timer/rAF proxies, no native presentation or physical-memory budget claim."
+    },
+    {
+      "fixture": "heartland",
+      "original": {
+        "hashes": {
+          "terrain": "4a940d1709fa0957fa81d6607961b3fcdb300ce1af6156b8e3cba64a28730cad",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 24025200,
+          "partitions": 35021,
+          "typedArrayBytes": 123985920,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 23950356,
+              "partitions": 32150,
+              "densePartitions": 30270,
+              "sparsePartitions": 1880,
+              "typedArrayBytes": 123985920
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 980,
+        "history": {
+          "revision": 0,
+          "savedRevision": null,
+          "recoveryRevision": null,
+          "dirty": true,
+          "undoSteps": 0,
+          "redoSteps": 0,
+          "retainedBytes": 0,
+          "undoLabel": null,
+          "redoLabel": null
+        },
+        "invalidations": 0
+      },
+      "before": {
+        "hashes": {
+          "terrain": "4a9cbdf42b1a6c6f81509d3175ab1a25e1b68ff8a95f027afd24186736541a47",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 24438180,
+          "partitions": 35207,
+          "typedArrayBytes": 124870656,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 24363336,
+              "partitions": 32336,
+              "densePartitions": 30486,
+              "sparsePartitions": 1850,
+              "typedArrayBytes": 124870656
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 981,
+        "history": {
+          "revision": 1,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": false,
+          "undoSteps": 1,
+          "redoSteps": 0,
+          "retainedBytes": 8639376,
+          "undoLabel": "Contiguous fixture region",
+          "redoLabel": null
+        },
+        "invalidations": 1
+      },
+      "after": {
+        "hashes": {
+          "terrain": "ddf9489251c9f5763287d94b88ced2c9220e884aafe98a7f65625ee16d0a650e",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 24438180,
+          "partitions": 35207,
+          "typedArrayBytes": 124870656,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 24363336,
+              "partitions": 32336,
+              "densePartitions": 30486,
+              "sparsePartitions": 1850,
+              "typedArrayBytes": 124870656
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 982,
+        "history": {
+          "revision": 2,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": true,
+          "undoSteps": 2,
+          "redoSteps": 0,
+          "retainedBytes": 9051902,
+          "undoLabel": "Fill",
+          "redoLabel": null
+        },
+        "invalidations": 2
+      },
+      "canceled": {
+        "ok": false,
+        "durationMs": 210.5,
+        "cancellationMs": 27.699999809265137,
+        "frames": 12,
+        "timerGapsMs": [
+          31.200000286102295, 26.799999713897705, 31.600000381469727,
+          12.799999713897705, 13.099999904632568, 13.400000095367432,
+          15.400000095367432, 22.199999809265137, 13.400000095367432
+        ],
+        "progress": [
+          {
+            "ms": 0.10000038146972656,
+            "cells": 0
+          },
+          {
+            "ms": 1.9000000953674316,
+            "cells": 0
+          },
+          {
+            "ms": 12,
+            "cells": 12380
+          },
+          {
+            "ms": 21.700000286102295,
+            "cells": 31655
+          },
+          {
+            "ms": 30.800000190734863,
+            "cells": 50673
+          },
+          {
+            "ms": 39.700000286102295,
+            "cells": 69691
+          },
+          {
+            "ms": 48.90000009536743,
+            "cells": 89480
+          },
+          {
+            "ms": 57.700000286102295,
+            "cells": 107470
+          },
+          {
+            "ms": 89.2000002861023,
+            "cells": 127002
+          },
+          {
+            "ms": 101.40000009536743,
+            "cells": 147305
+          },
+          {
+            "ms": 114.5,
+            "cells": 168122
+          },
+          {
+            "ms": 127.30000019073486,
+            "cells": 188168
+          },
+          {
+            "ms": 140.40000009536743,
+            "cells": 208728
+          },
+          {
+            "ms": 152.60000038146973,
+            "cells": 229288
+          },
+          {
+            "ms": 165.7000002861023,
+            "cells": 249848
+          },
+          {
+            "ms": 179.10000038146973,
+            "cells": 270408
+          }
+        ],
+        "commitNotificationMs": null
+      },
+      "filled": {
+        "ok": true,
+        "durationMs": 689.8000001907349,
+        "cancellationMs": null,
+        "frames": 41,
+        "timerGapsMs": [
+          49, 26.200000286102295, 12.899999618530273, 13.300000190734863,
+          13.099999904632568, 14.400000095367432, 23.09999990463257,
+          13.099999904632568, 13, 14.5, 24.800000190734863, 12.900000095367432,
+          13.900000095367432, 12.799999713897705, 15.400000095367432,
+          24.09999990463257, 12.800000190734863, 12.599999904632568,
+          14.199999809265137, 24.90000009536743, 12.599999904632568, 13,
+          13.700000286102295, 16.5, 20.199999809265137, 13.099999904632568,
+          14.5, 22.600000381469727, 13.099999904632568, 13, 15.099999904632568,
+          23.59999990463257, 13.099999904632568, 12.800000190734863,
+          15.099999904632568, 23.700000286102295, 13.599999904632568,
+          12.699999809265137, 13.200000286102295, 16.59999990463257
+        ],
+        "progress": [
+          {
+            "ms": 0,
+            "cells": 0
+          },
+          {
+            "ms": 1.700000286102295,
+            "cells": 0
+          },
+          {
+            "ms": 10.300000190734863,
+            "cells": 14436
+          },
+          {
+            "ms": 20.09999990463257,
+            "cells": 31912
+          },
+          {
+            "ms": 48.5,
+            "cells": 49131
+          },
+          {
+            "ms": 57.5,
+            "cells": 66350
+          },
+          {
+            "ms": 66.2000002861023,
+            "cells": 85368
+          },
+          {
+            "ms": 75,
+            "cells": 104129
+          },
+          {
+            "ms": 87.80000019073486,
+            "cells": 123147
+          },
+          {
+            "ms": 100.80000019073486,
+            "cells": 143707
+          },
+          {
+            "ms": 113.90000009536743,
+            "cells": 164010
+          },
+          {
+            "ms": 126.40000009536743,
+            "cells": 184827
+          },
+          {
+            "ms": 138.7000002861023,
+            "cells": 205644
+          },
+          {
+            "ms": 151.5,
+            "cells": 226461
+          },
+          {
+            "ms": 164.59999990463257,
+            "cells": 247278
+          },
+          {
+            "ms": 177.90000009536743,
+            "cells": 267838
+          },
+          {
+            "ms": 190.7000002861023,
+            "cells": 288398
+          },
+          {
+            "ms": 203.90000009536743,
+            "cells": 308701
+          },
+          {
+            "ms": 217.09999990463257,
+            "cells": 329261
+          },
+          {
+            "ms": 229.30000019073486,
+            "cells": 347251
+          },
+          {
+            "ms": 243.7000002861023,
+            "cells": 366526
+          },
+          {
+            "ms": 256.7000002861023,
+            "cells": 386572
+          },
+          {
+            "ms": 269.59999990463257,
+            "cells": 406618
+          },
+          {
+            "ms": 282.80000019073486,
+            "cells": 426921
+          },
+          {
+            "ms": 295.90000009536743,
+            "cells": 446967
+          },
+          {
+            "ms": 309,
+            "cells": 466756
+          },
+          {
+            "ms": 321.59999990463257,
+            "cells": 487059
+          },
+          {
+            "ms": 334.40000009536743,
+            "cells": 507619
+          },
+          {
+            "ms": 347.59999990463257,
+            "cells": 528179
+          },
+          {
+            "ms": 360.7000002861023,
+            "cells": 548996
+          },
+          {
+            "ms": 373.40000009536743,
+            "cells": 569042
+          },
+          {
+            "ms": 386.2000002861023,
+            "cells": 589345
+          },
+          {
+            "ms": 399.7000002861023,
+            "cells": 609905
+          },
+          {
+            "ms": 412.80000019073486,
+            "cells": 630208
+          },
+          {
+            "ms": 424.80000019073486,
+            "cells": 650254
+          },
+          {
+            "ms": 436.80000019073486,
+            "cells": 670557
+          },
+          {
+            "ms": 449.5,
+            "cells": 690860
+          },
+          {
+            "ms": 462.59999990463257,
+            "cells": 711163
+          },
+          {
+            "ms": 474.90000009536743,
+            "cells": 731980
+          },
+          {
+            "ms": 487,
+            "cells": 752797
+          },
+          {
+            "ms": 499.80000019073486,
+            "cells": 773077
+          },
+          {
+            "ms": 512.8000001907349,
+            "cells": 793570
+          },
+          {
+            "ms": 526,
+            "cells": 813810
+          },
+          {
+            "ms": 538.3000001907349,
+            "cells": 834050
+          },
+          {
+            "ms": 551.4000000953674,
+            "cells": 854543
+          },
+          {
+            "ms": 564.5,
+            "cells": 875036
+          },
+          {
+            "ms": 577.5999999046326,
+            "cells": 895529
+          },
+          {
+            "ms": 590.5,
+            "cells": 916275
+          },
+          {
+            "ms": 603.3000001907349,
+            "cells": 936768
+          },
+          {
+            "ms": 616.4000000953674,
+            "cells": 957008
+          },
+          {
+            "ms": 629.7000002861023,
+            "cells": 976742
+          },
+          {
+            "ms": 642.8000001907349,
+            "cells": 997235
+          },
+          {
+            "ms": 656,
+            "cells": 1016459
+          },
+          {
+            "ms": 668.8000001907349,
+            "cells": 1035630
+          },
+          {
+            "ms": 682.0999999046326,
+            "cells": 1048576
+          }
+        ],
+        "commitNotificationMs": 689.3000001907349
+      },
+      "undoMs": 41.69999980926514,
+      "redoMs": 38.5,
+      "environment": {
+        "browser": "159.0.8154.6",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "os": "24.6.0",
+        "node": "v24.22.3",
+        "dpr": 1
+      },
+      "limits": "Chromium development; timer/rAF proxies, no native presentation or physical-memory budget claim."
+    }
+  ],
+  "earlierFocusedRun": [
+    {
+      "fixture": "frontier",
+      "original": {
+        "hashes": {
+          "terrain": "b2b82bf36a2dbbec43a429c40d1a78bde02a959940bcd05f453ea3af075afce7",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 6620700,
+          "partitions": 11193,
+          "typedArrayBytes": 32292864,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 6545856,
+              "partitions": 8322,
+              "densePartitions": 7884,
+              "sparsePartitions": 438,
+              "typedArrayBytes": 32292864
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 271,
+        "history": {
+          "revision": 0,
+          "savedRevision": null,
+          "recoveryRevision": null,
+          "dirty": true,
+          "undoSteps": 0,
+          "redoSteps": 0,
+          "retainedBytes": 0,
+          "undoLabel": null,
+          "redoLabel": null
+        },
+        "invalidations": 0
+      },
+      "before": {
+        "hashes": {
+          "terrain": "e3a10b3266f593e072405aa4d3601010bbd258b615bee09a2505f5b0fa3ebc76",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 7464720,
+          "partitions": 11969,
+          "typedArrayBytes": 35512320,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 7389876,
+              "partitions": 9098,
+              "densePartitions": 8670,
+              "sparsePartitions": 428,
+              "typedArrayBytes": 35512320
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 272,
+        "history": {
+          "revision": 1,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": false,
+          "undoSteps": 1,
+          "redoSteps": 0,
+          "retainedBytes": 2530000,
+          "undoLabel": "Contiguous fixture region",
+          "redoLabel": null
+        },
+        "invalidations": 1
+      },
+      "after": {
+        "hashes": {
+          "terrain": "81647df19f8735d77f291ebdd628c6f4e538ee5cece3df1232b7aff869d49732",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 7464720,
+          "partitions": 11969,
+          "typedArrayBytes": 35512320,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 7389876,
+              "partitions": 9098,
+              "densePartitions": 8670,
+              "sparsePartitions": 428,
+              "typedArrayBytes": 35512320
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 273,
+        "history": {
+          "revision": 2,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": true,
+          "undoSteps": 2,
+          "redoSteps": 0,
+          "retainedBytes": 2942526,
+          "undoLabel": "Fill",
+          "redoLabel": null
+        },
+        "invalidations": 2
+      },
+      "canceled": {
+        "ok": false,
+        "durationMs": 236.40000009536743,
+        "cancellationMs": 32,
+        "frames": 14,
+        "timerGapsMs": [
+          33.90000009536743, 26.800000190734863, 3.6999998092651367,
+          44.59999990463257, 3.700000286102295, 23, 13.799999713897705,
+          14.300000190734863, 13.099999904632568, 24
+        ],
+        "progress": [
+          {
+            "ms": 0.3000001907348633,
+            "cells": 0
+          },
+          {
+            "ms": 2,
+            "cells": 0
+          },
+          {
+            "ms": 12.300000190734863,
+            "cells": 8011
+          },
+          {
+            "ms": 22.200000286102295,
+            "cells": 27286
+          },
+          {
+            "ms": 33.5,
+            "cells": 46561
+          },
+          {
+            "ms": 42.5,
+            "cells": 65836
+          },
+          {
+            "ms": 51.5,
+            "cells": 85368
+          },
+          {
+            "ms": 60.40000009536743,
+            "cells": 104900
+          },
+          {
+            "ms": 72.5,
+            "cells": 124689
+          },
+          {
+            "ms": 108.5,
+            "cells": 144992
+          },
+          {
+            "ms": 120.7000002861023,
+            "cells": 165295
+          },
+          {
+            "ms": 134.90000009536743,
+            "cells": 185855
+          },
+          {
+            "ms": 148.80000019073486,
+            "cells": 205644
+          },
+          {
+            "ms": 161.60000038146973,
+            "cells": 225433
+          },
+          {
+            "ms": 173.60000038146973,
+            "cells": 245222
+          },
+          {
+            "ms": 186.2000002861023,
+            "cells": 266296
+          },
+          {
+            "ms": 200.10000038146973,
+            "cells": 286599
+          }
+        ],
+        "commitNotificationMs": null
+      },
+      "filled": {
+        "ok": true,
+        "durationMs": 704.4000000953674,
+        "cancellationMs": null,
+        "frames": 42,
+        "timerGapsMs": [
+          46.90000009536743, 17.5, 22.200000286102295, 13, 13.899999618530273,
+          14.700000286102295, 24.799999713897705, 14, 12.800000190734863,
+          13.300000190734863, 15.799999713897705, 24.200000286102295,
+          14.099999904632568, 13.599999904632568, 13, 14.699999809265137,
+          17.300000190734863, 21.90000009536743, 12.799999713897705,
+          12.900000095367432, 16.09999990463257, 22.700000286102295,
+          12.400000095367432, 13.899999618530273, 13.5, 17.5,
+          21.600000381469727, 13.599999904632568, 14.099999904632568,
+          13.400000095367432, 16, 23, 13.599999904632568, 13.699999809265137,
+          13.800000190734863, 25.40000009536743, 14.5, 13.799999713897705,
+          13.400000095367432, 13, 16.09999990463257
+        ],
+        "progress": [
+          {
+            "ms": 0,
+            "cells": 0
+          },
+          {
+            "ms": 0.6000003814697266,
+            "cells": 0
+          },
+          {
+            "ms": 9.200000286102295,
+            "cells": 15464
+          },
+          {
+            "ms": 18.600000381469727,
+            "cells": 34482
+          },
+          {
+            "ms": 46.5,
+            "cells": 52472
+          },
+          {
+            "ms": 55.40000009536743,
+            "cells": 70719
+          },
+          {
+            "ms": 64.2000002861023,
+            "cells": 90251
+          },
+          {
+            "ms": 72.7000002861023,
+            "cells": 109269
+          },
+          {
+            "ms": 86,
+            "cells": 129829
+          },
+          {
+            "ms": 99,
+            "cells": 149875
+          },
+          {
+            "ms": 112.7000002861023,
+            "cells": 170178
+          },
+          {
+            "ms": 126.7000002861023,
+            "cells": 190995
+          },
+          {
+            "ms": 139.60000038146973,
+            "cells": 212069
+          },
+          {
+            "ms": 152.80000019073486,
+            "cells": 232629
+          },
+          {
+            "ms": 166.40000009536743,
+            "cells": 253189
+          },
+          {
+            "ms": 179.30000019073486,
+            "cells": 274006
+          },
+          {
+            "ms": 192.80000019073486,
+            "cells": 294309
+          },
+          {
+            "ms": 206.2000002861023,
+            "cells": 315126
+          },
+          {
+            "ms": 219.7000002861023,
+            "cells": 335429
+          },
+          {
+            "ms": 232.90000009536743,
+            "cells": 355732
+          },
+          {
+            "ms": 246.60000038146973,
+            "cells": 376035
+          },
+          {
+            "ms": 260.5,
+            "cells": 396595
+          },
+          {
+            "ms": 273.5,
+            "cells": 416898
+          },
+          {
+            "ms": 286.80000019073486,
+            "cells": 437201
+          },
+          {
+            "ms": 300.30000019073486,
+            "cells": 457247
+          },
+          {
+            "ms": 313.90000009536743,
+            "cells": 477293
+          },
+          {
+            "ms": 327.40000009536743,
+            "cells": 497596
+          },
+          {
+            "ms": 340.30000019073486,
+            "cells": 518156
+          },
+          {
+            "ms": 353.1000003814697,
+            "cells": 538716
+          },
+          {
+            "ms": 366.40000009536743,
+            "cells": 559533
+          },
+          {
+            "ms": 378.7000002861023,
+            "cells": 580607
+          },
+          {
+            "ms": 391.90000009536743,
+            "cells": 601424
+          },
+          {
+            "ms": 404.30000019073486,
+            "cells": 622498
+          },
+          {
+            "ms": 418,
+            "cells": 643315
+          },
+          {
+            "ms": 431.5,
+            "cells": 663618
+          },
+          {
+            "ms": 445.1000003814697,
+            "cells": 683921
+          },
+          {
+            "ms": 457.5,
+            "cells": 704224
+          },
+          {
+            "ms": 470.80000019073486,
+            "cells": 724784
+          },
+          {
+            "ms": 484.1000003814697,
+            "cells": 745858
+          },
+          {
+            "ms": 498.1000003814697,
+            "cells": 765487
+          },
+          {
+            "ms": 511.90000009536743,
+            "cells": 786233
+          },
+          {
+            "ms": 525,
+            "cells": 806220
+          },
+          {
+            "ms": 537.4000000953674,
+            "cells": 825954
+          },
+          {
+            "ms": 550.6000003814697,
+            "cells": 845688
+          },
+          {
+            "ms": 564.2000002861023,
+            "cells": 865422
+          },
+          {
+            "ms": 578.1000003814697,
+            "cells": 884903
+          },
+          {
+            "ms": 590.8000001907349,
+            "cells": 904637
+          },
+          {
+            "ms": 604,
+            "cells": 924371
+          },
+          {
+            "ms": 617.3000001907349,
+            "cells": 943599
+          },
+          {
+            "ms": 631.3000001907349,
+            "cells": 963080
+          },
+          {
+            "ms": 645.3000001907349,
+            "cells": 983067
+          },
+          {
+            "ms": 659.2000002861023,
+            "cells": 1003520
+          },
+          {
+            "ms": 672,
+            "cells": 1022627
+          },
+          {
+            "ms": 685.4000000953674,
+            "cells": 1041240
+          },
+          {
+            "ms": 696.4000000953674,
+            "cells": 1048576
+          }
+        ],
+        "commitNotificationMs": 703.9000000953674
+      },
+      "undoMs": 40.90000009536743,
+      "redoMs": 35.5,
+      "environment": {
+        "browser": "159.0.8154.6",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "os": "24.6.0",
+        "node": "v24.22.3",
+        "dpr": 1
+      },
+      "limits": "Chromium development; timer/rAF proxies, no native presentation or physical-memory budget claim."
+    },
+    {
+      "fixture": "heartland",
+      "original": {
+        "hashes": {
+          "terrain": "4a940d1709fa0957fa81d6607961b3fcdb300ce1af6156b8e3cba64a28730cad",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 24025200,
+          "partitions": 35021,
+          "typedArrayBytes": 123985920,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 23950356,
+              "partitions": 32150,
+              "densePartitions": 30270,
+              "sparsePartitions": 1880,
+              "typedArrayBytes": 123985920
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 980,
+        "history": {
+          "revision": 0,
+          "savedRevision": null,
+          "recoveryRevision": null,
+          "dirty": true,
+          "undoSteps": 0,
+          "redoSteps": 0,
+          "retainedBytes": 0,
+          "undoLabel": null,
+          "redoLabel": null
+        },
+        "invalidations": 0
+      },
+      "before": {
+        "hashes": {
+          "terrain": "4a9cbdf42b1a6c6f81509d3175ab1a25e1b68ff8a95f027afd24186736541a47",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 24438180,
+          "partitions": 35207,
+          "typedArrayBytes": 124870656,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 24363336,
+              "partitions": 32336,
+              "densePartitions": 30486,
+              "sparsePartitions": 1850,
+              "typedArrayBytes": 124870656
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 981,
+        "history": {
+          "revision": 1,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": false,
+          "undoSteps": 1,
+          "redoSteps": 0,
+          "retainedBytes": 8639376,
+          "undoLabel": "Contiguous fixture region",
+          "redoLabel": null
+        },
+        "invalidations": 1
+      },
+      "after": {
+        "hashes": {
+          "terrain": "ddf9489251c9f5763287d94b88ced2c9220e884aafe98a7f65625ee16d0a650e",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 24438180,
+          "partitions": 35207,
+          "typedArrayBytes": 124870656,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 24363336,
+              "partitions": 32336,
+              "densePartitions": 30486,
+              "sparsePartitions": 1850,
+              "typedArrayBytes": 124870656
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 982,
+        "history": {
+          "revision": 2,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": true,
+          "undoSteps": 2,
+          "redoSteps": 0,
+          "retainedBytes": 9051902,
+          "undoLabel": "Fill",
+          "redoLabel": null
+        },
+        "invalidations": 2
+      },
+      "canceled": {
+        "ok": false,
+        "durationMs": 203.90000009536743,
+        "cancellationMs": 24.40000009536743,
+        "frames": 12,
+        "timerGapsMs": [
+          31.59999990463257, 26.59999990463257, 42.59999990463257,
+          14.100000381469727, 13.799999713897705, 23.800000190734863, 12.5,
+          38.59999990463257
+        ],
+        "progress": [
+          {
+            "ms": 0.19999980926513672,
+            "cells": 0
+          },
+          {
+            "ms": 2,
+            "cells": 0
+          },
+          {
+            "ms": 12.099999904632568,
+            "cells": 12380
+          },
+          {
+            "ms": 22.299999713897705,
+            "cells": 31912
+          },
+          {
+            "ms": 31.199999809265137,
+            "cells": 51187
+          },
+          {
+            "ms": 39.799999713897705,
+            "cells": 70719
+          },
+          {
+            "ms": 49.299999713897705,
+            "cells": 89480
+          },
+          {
+            "ms": 57.90000009536743,
+            "cells": 108755
+          },
+          {
+            "ms": 100.19999980926514,
+            "cells": 125974
+          },
+          {
+            "ms": 113.7999997138977,
+            "cells": 145763
+          },
+          {
+            "ms": 126.19999980926514,
+            "cells": 166580
+          },
+          {
+            "ms": 139.40000009536743,
+            "cells": 187654
+          },
+          {
+            "ms": 152.09999990463257,
+            "cells": 208728
+          },
+          {
+            "ms": 164.59999990463257,
+            "cells": 229545
+          },
+          {
+            "ms": 177.59999990463257,
+            "cells": 249334
+          }
+        ],
+        "commitNotificationMs": null
+      },
+      "filled": {
+        "ok": true,
+        "durationMs": 689.5,
+        "cancellationMs": null,
+        "frames": 42,
+        "timerGapsMs": [
+          29.700000286102295, 17, 8.699999809265137, 12.900000095367432, 13.5,
+          15.099999904632568, 16.40000009536743, 21.699999809265137,
+          12.900000095367432, 13.5, 15.800000190734863, 23.699999809265137, 14,
+          13.900000095367432, 13.299999713897705, 14.700000286102295,
+          17.09999990463257, 22.199999809265137, 13.200000286102295,
+          12.900000095367432, 15, 16, 21.799999713897705, 12.900000095367432,
+          13.599999904632568, 15.400000095367432, 24.300000190734863,
+          13.099999904632568, 13.599999904632568, 13.5, 15, 16.300000190734863,
+          22, 13.399999618530273, 13.600000381469727, 14.799999713897705,
+          16.800000190734863, 22.09999990463257, 13.599999904632568,
+          13.300000190734863, 14.900000095367432, 15.699999809265137
+        ],
+        "progress": [
+          {
+            "ms": 0.09999990463256836,
+            "cells": 0
+          },
+          {
+            "ms": 1.5999999046325684,
+            "cells": 0
+          },
+          {
+            "ms": 11.099999904632568,
+            "cells": 14693
+          },
+          {
+            "ms": 21,
+            "cells": 33968
+          },
+          {
+            "ms": 29.5,
+            "cells": 53243
+          },
+          {
+            "ms": 38.09999990463257,
+            "cells": 72261
+          },
+          {
+            "ms": 46.5,
+            "cells": 92564
+          },
+          {
+            "ms": 55.200000286102295,
+            "cells": 111839
+          },
+          {
+            "ms": 67.59999990463257,
+            "cells": 132399
+          },
+          {
+            "ms": 81.30000019073486,
+            "cells": 152959
+          },
+          {
+            "ms": 95,
+            "cells": 173519
+          },
+          {
+            "ms": 108.7000002861023,
+            "cells": 194079
+          },
+          {
+            "ms": 121.30000019073486,
+            "cells": 214382
+          },
+          {
+            "ms": 134.5,
+            "cells": 235199
+          },
+          {
+            "ms": 147.30000019073486,
+            "cells": 255502
+          },
+          {
+            "ms": 160.90000009536743,
+            "cells": 275805
+          },
+          {
+            "ms": 174.5,
+            "cells": 296108
+          },
+          {
+            "ms": 187.30000019073486,
+            "cells": 316154
+          },
+          {
+            "ms": 200.59999990463257,
+            "cells": 336457
+          },
+          {
+            "ms": 214.40000009536743,
+            "cells": 356503
+          },
+          {
+            "ms": 228.30000019073486,
+            "cells": 376035
+          },
+          {
+            "ms": 241.80000019073486,
+            "cells": 395824
+          },
+          {
+            "ms": 255.30000019073486,
+            "cells": 415356
+          },
+          {
+            "ms": 268.59999990463257,
+            "cells": 435402
+          },
+          {
+            "ms": 281.90000009536743,
+            "cells": 455705
+          },
+          {
+            "ms": 295.59999990463257,
+            "cells": 475237
+          },
+          {
+            "ms": 309.09999990463257,
+            "cells": 495540
+          },
+          {
+            "ms": 322,
+            "cells": 515329
+          },
+          {
+            "ms": 335.30000019073486,
+            "cells": 535375
+          },
+          {
+            "ms": 348.90000009536743,
+            "cells": 555421
+          },
+          {
+            "ms": 361.2000002861023,
+            "cells": 575210
+          },
+          {
+            "ms": 374.80000019073486,
+            "cells": 595256
+          },
+          {
+            "ms": 387.7000002861023,
+            "cells": 615559
+          },
+          {
+            "ms": 401,
+            "cells": 635862
+          },
+          {
+            "ms": 415,
+            "cells": 655651
+          },
+          {
+            "ms": 427.59999990463257,
+            "cells": 675697
+          },
+          {
+            "ms": 441.09999990463257,
+            "cells": 695743
+          },
+          {
+            "ms": 454.09999990463257,
+            "cells": 716046
+          },
+          {
+            "ms": 467.40000009536743,
+            "cells": 736349
+          },
+          {
+            "ms": 480.90000009536743,
+            "cells": 756126
+          },
+          {
+            "ms": 494.59999990463257,
+            "cells": 775860
+          },
+          {
+            "ms": 508.30000019073486,
+            "cells": 796353
+          },
+          {
+            "ms": 520.7000002861023,
+            "cells": 816340
+          },
+          {
+            "ms": 534.2000002861023,
+            "cells": 836580
+          },
+          {
+            "ms": 547.7000002861023,
+            "cells": 856567
+          },
+          {
+            "ms": 561.2000002861023,
+            "cells": 876554
+          },
+          {
+            "ms": 575,
+            "cells": 896541
+          },
+          {
+            "ms": 588.3000001907349,
+            "cells": 916275
+          },
+          {
+            "ms": 601.3000001907349,
+            "cells": 936768
+          },
+          {
+            "ms": 614.7000002861023,
+            "cells": 956755
+          },
+          {
+            "ms": 628.4000000953674,
+            "cells": 976489
+          },
+          {
+            "ms": 642,
+            "cells": 996476
+          },
+          {
+            "ms": 655.7000002861023,
+            "cells": 1016202
+          },
+          {
+            "ms": 668.8000001907349,
+            "cells": 1036144
+          },
+          {
+            "ms": 681.4000000953674,
+            "cells": 1048576
+          }
+        ],
+        "commitNotificationMs": 689.0999999046326
+      },
+      "undoMs": 41.5,
+      "redoMs": 36.89999961853027,
+      "environment": {
+        "browser": "159.0.8154.6",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "os": "24.6.0",
+        "node": "v24.22.3",
+        "dpr": 1
+      },
+      "limits": "Chromium development; timer/rAF proxies, no native presentation or physical-memory budget claim."
+    }
+  ],
+  "fullSuiteRun": [
+    {
+      "fixture": "frontier",
+      "original": {
+        "hashes": {
+          "terrain": "b2b82bf36a2dbbec43a429c40d1a78bde02a959940bcd05f453ea3af075afce7",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 6620700,
+          "partitions": 11193,
+          "typedArrayBytes": 32292864,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 6545856,
+              "partitions": 8322,
+              "densePartitions": 7884,
+              "sparsePartitions": 438,
+              "typedArrayBytes": 32292864
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 271,
+        "history": {
+          "revision": 0,
+          "savedRevision": null,
+          "recoveryRevision": null,
+          "dirty": true,
+          "undoSteps": 0,
+          "redoSteps": 0,
+          "retainedBytes": 0,
+          "undoLabel": null,
+          "redoLabel": null
+        },
+        "invalidations": 0
+      },
+      "before": {
+        "hashes": {
+          "terrain": "e3a10b3266f593e072405aa4d3601010bbd258b615bee09a2505f5b0fa3ebc76",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 7464720,
+          "partitions": 11969,
+          "typedArrayBytes": 35512320,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 7389876,
+              "partitions": 9098,
+              "densePartitions": 8670,
+              "sparsePartitions": 428,
+              "typedArrayBytes": 35512320
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 272,
+        "history": {
+          "revision": 1,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": false,
+          "undoSteps": 1,
+          "redoSteps": 0,
+          "retainedBytes": 2530000,
+          "undoLabel": "Contiguous fixture region",
+          "redoLabel": null
+        },
+        "invalidations": 1
+      },
+      "after": {
+        "hashes": {
+          "terrain": "81647df19f8735d77f291ebdd628c6f4e538ee5cece3df1232b7aff869d49732",
+          "buildings": "d566b931cef266ad15164c5a01766e7397dfd919a3500caf4463ea9bba114c8c",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 7464720,
+          "partitions": 11969,
+          "typedArrayBytes": 35512320,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 7389876,
+              "partitions": 9098,
+              "densePartitions": 8670,
+              "sparsePartitions": 428,
+              "typedArrayBytes": 35512320
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 273,
+        "history": {
+          "revision": 2,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": true,
+          "undoSteps": 2,
+          "redoSteps": 0,
+          "retainedBytes": 2942526,
+          "undoLabel": "Fill",
+          "redoLabel": null
+        },
+        "invalidations": 2
+      },
+      "canceled": {
+        "ok": false,
+        "durationMs": 243.69999980926514,
+        "cancellationMs": 31.09999990463257,
+        "frames": 14,
+        "timerGapsMs": [
+          29.199999809265137, 17.90000009536743, 9.900000095367432, 9.5,
+          43.09999990463257, 8.900000095367432, 13, 12.599999904632568,
+          17.199999809265137, 21.59999990463257, 13, 12.5
+        ],
+        "progress": [
+          {
+            "ms": 0.09999990463256836,
+            "cells": 0
+          },
+          {
+            "ms": 0.8999996185302734,
+            "cells": 0
+          },
+          {
+            "ms": 17.899999618530273,
+            "cells": 11352
+          },
+          {
+            "ms": 28.699999809265137,
+            "cells": 30627
+          },
+          {
+            "ms": 37.89999961853027,
+            "cells": 48103
+          },
+          {
+            "ms": 46.59999990463257,
+            "cells": 65322
+          },
+          {
+            "ms": 56.5,
+            "cells": 82541
+          },
+          {
+            "ms": 65.2999997138977,
+            "cells": 100274
+          },
+          {
+            "ms": 77.2999997138977,
+            "cells": 115951
+          },
+          {
+            "ms": 117.7999997138977,
+            "cells": 132656
+          },
+          {
+            "ms": 130.39999961853027,
+            "cells": 151931
+          },
+          {
+            "ms": 142.5,
+            "cells": 172491
+          },
+          {
+            "ms": 156,
+            "cells": 190995
+          },
+          {
+            "ms": 169.39999961853027,
+            "cells": 210270
+          },
+          {
+            "ms": 181.7999997138977,
+            "cells": 229288
+          },
+          {
+            "ms": 194.89999961853027,
+            "cells": 248563
+          },
+          {
+            "ms": 207.89999961853027,
+            "cells": 267838
+          }
+        ],
+        "commitNotificationMs": null
+      },
+      "filled": {
+        "ok": true,
+        "durationMs": 719,
+        "cancellationMs": null,
+        "frames": 43,
+        "timerGapsMs": [
+          41.19999980926514, 17.40000009536743, 17.40000009536743,
+          12.199999809265137, 13.599999904632568, 14, 12.800000190734863, 17,
+          21.5, 14.099999904632568, 14, 12.800000190734863, 17.199999809265137,
+          22.300000190734863, 12.599999904632568, 12.099999904632568,
+          16.40000009536743, 23.299999713897705, 13.600000381469727,
+          12.099999904632568, 15.400000095367432, 24, 11.899999618530273, 13,
+          14.900000095367432, 15.5, 22.700000286102295, 12.699999809265137,
+          13.5, 16.09999990463257, 20.5, 13.5, 13.300000190734863,
+          16.199999809265137, 23.200000286102295, 13.5, 12.399999618530273,
+          14.600000381469727, 24.299999713897705, 12.300000190734863,
+          12.900000095367432, 15.099999904632568, 22
+        ],
+        "progress": [
+          {
+            "ms": 0,
+            "cells": 0
+          },
+          {
+            "ms": 0.6999998092651367,
+            "cells": 0
+          },
+          {
+            "ms": 9.299999713897705,
+            "cells": 14693
+          },
+          {
+            "ms": 40.19999980926514,
+            "cells": 32683
+          },
+          {
+            "ms": 49.19999980926514,
+            "cells": 49902
+          },
+          {
+            "ms": 58.19999980926514,
+            "cells": 66093
+          },
+          {
+            "ms": 66.69999980926514,
+            "cells": 83826
+          },
+          {
+            "ms": 75.5,
+            "cells": 102073
+          },
+          {
+            "ms": 87.69999980926514,
+            "cells": 120577
+          },
+          {
+            "ms": 101.2999997138977,
+            "cells": 140366
+          },
+          {
+            "ms": 114.7999997138977,
+            "cells": 159898
+          },
+          {
+            "ms": 127.69999980926514,
+            "cells": 179687
+          },
+          {
+            "ms": 140.89999961853027,
+            "cells": 199733
+          },
+          {
+            "ms": 153.69999980926514,
+            "cells": 219522
+          },
+          {
+            "ms": 166.59999990463257,
+            "cells": 239311
+          },
+          {
+            "ms": 180.19999980926514,
+            "cells": 260128
+          },
+          {
+            "ms": 194.2999997138977,
+            "cells": 279917
+          },
+          {
+            "ms": 207.59999990463257,
+            "cells": 299963
+          },
+          {
+            "ms": 220.5,
+            "cells": 319495
+          },
+          {
+            "ms": 233.2999997138977,
+            "cells": 338513
+          },
+          {
+            "ms": 246.5,
+            "cells": 357788
+          },
+          {
+            "ms": 259,
+            "cells": 376292
+          },
+          {
+            "ms": 271.69999980926514,
+            "cells": 395567
+          },
+          {
+            "ms": 284.69999980926514,
+            "cells": 414328
+          },
+          {
+            "ms": 297.7999997138977,
+            "cells": 433346
+          },
+          {
+            "ms": 310.8999996185303,
+            "cells": 452107
+          },
+          {
+            "ms": 324.5,
+            "cells": 470868
+          },
+          {
+            "ms": 337.09999990463257,
+            "cells": 490400
+          },
+          {
+            "ms": 350.2999997138977,
+            "cells": 510189
+          },
+          {
+            "ms": 363.2999997138977,
+            "cells": 529464
+          },
+          {
+            "ms": 376,
+            "cells": 549253
+          },
+          {
+            "ms": 388.5,
+            "cells": 568785
+          },
+          {
+            "ms": 401.3999996185303,
+            "cells": 587803
+          },
+          {
+            "ms": 414.5,
+            "cells": 606050
+          },
+          {
+            "ms": 428.3999996185303,
+            "cells": 625582
+          },
+          {
+            "ms": 441.59999990463257,
+            "cells": 645114
+          },
+          {
+            "ms": 454.59999990463257,
+            "cells": 664646
+          },
+          {
+            "ms": 467.19999980926514,
+            "cells": 683664
+          },
+          {
+            "ms": 480.19999980926514,
+            "cells": 703196
+          },
+          {
+            "ms": 493.09999990463257,
+            "cells": 724270
+          },
+          {
+            "ms": 505.2999997138977,
+            "cells": 745087
+          },
+          {
+            "ms": 517.5,
+            "cells": 764981
+          },
+          {
+            "ms": 530.3999996185303,
+            "cells": 785474
+          },
+          {
+            "ms": 544,
+            "cells": 805967
+          },
+          {
+            "ms": 557.2999997138977,
+            "cells": 825701
+          },
+          {
+            "ms": 570,
+            "cells": 844929
+          },
+          {
+            "ms": 583.5,
+            "cells": 864157
+          },
+          {
+            "ms": 596.5999999046326,
+            "cells": 884144
+          },
+          {
+            "ms": 609,
+            "cells": 904131
+          },
+          {
+            "ms": 622.3999996185303,
+            "cells": 923865
+          },
+          {
+            "ms": 635,
+            "cells": 943093
+          },
+          {
+            "ms": 648,
+            "cells": 963333
+          },
+          {
+            "ms": 660.5,
+            "cells": 983573
+          },
+          {
+            "ms": 673.7999997138977,
+            "cells": 1004033
+          },
+          {
+            "ms": 686.5,
+            "cells": 1023398
+          },
+          {
+            "ms": 699.2999997138977,
+            "cells": 1042252
+          },
+          {
+            "ms": 710.7999997138977,
+            "cells": 1048576
+          }
+        ],
+        "commitNotificationMs": 718.2999997138977
+      },
+      "undoMs": 41.90000009536743,
+      "redoMs": 36.69999980926514,
+      "environment": {
+        "browser": "159.0.8154.6",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "os": "24.6.0",
+        "node": "v24.22.3",
+        "dpr": 1
+      },
+      "limits": "Chromium development; timer/rAF proxies, no native presentation or physical-memory budget claim."
+    },
+    {
+      "fixture": "heartland",
+      "original": {
+        "hashes": {
+          "terrain": "4a940d1709fa0957fa81d6607961b3fcdb300ce1af6156b8e3cba64a28730cad",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 6,
+          "occupiedCells": 24025200,
+          "partitions": 35021,
+          "typedArrayBytes": 123985920,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 23950356,
+              "partitions": 32150,
+              "densePartitions": 30270,
+              "sparsePartitions": 1880,
+              "typedArrayBytes": 123985920
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 980,
+        "history": {
+          "revision": 0,
+          "savedRevision": null,
+          "recoveryRevision": null,
+          "dirty": true,
+          "undoSteps": 0,
+          "redoSteps": 0,
+          "retainedBytes": 0,
+          "undoLabel": null,
+          "redoLabel": null
+        },
+        "invalidations": 0
+      },
+      "before": {
+        "hashes": {
+          "terrain": "4a9cbdf42b1a6c6f81509d3175ab1a25e1b68ff8a95f027afd24186736541a47",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 24438180,
+          "partitions": 35207,
+          "typedArrayBytes": 124870656,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 24363336,
+              "partitions": 32336,
+              "densePartitions": 30486,
+              "sparsePartitions": 1850,
+              "typedArrayBytes": 124870656
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 981,
+        "history": {
+          "revision": 1,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": false,
+          "undoSteps": 1,
+          "redoSteps": 0,
+          "retainedBytes": 8639376,
+          "undoLabel": "Contiguous fixture region",
+          "redoLabel": null
+        },
+        "invalidations": 1
+      },
+      "after": {
+        "hashes": {
+          "terrain": "ddf9489251c9f5763287d94b88ced2c9220e884aafe98a7f65625ee16d0a650e",
+          "buildings": "28bbdf5653126d1246c9d697f3f3afbaa4e87e754d396f597346fbfdeab0a893",
+          "furniture": "54822ea89e9db3af59dbaf6e446f5edaeba75aeecc85e2bbaa6d2d7c47aa2d02",
+          "canopy": "608947e5855eb9405e48d08d2e2d126a10a4abca95d33069d199884f467dbfb1"
+        },
+        "storage": {
+          "partitionSize": 32,
+          "paletteEntries": 7,
+          "occupiedCells": 24438180,
+          "partitions": 35207,
+          "typedArrayBytes": 124870656,
+          "layers": [
+            {
+              "layerId": "terrain",
+              "occupiedCells": 24363336,
+              "partitions": 32336,
+              "densePartitions": 30486,
+              "sparsePartitions": 1850,
+              "typedArrayBytes": 124870656
+            },
+            {
+              "layerId": "buildings",
+              "occupiedCells": 57024,
+              "partitions": 1584,
+              "densePartitions": 0,
+              "sparsePartitions": 1584,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "furniture",
+              "occupiedCells": 3564,
+              "partitions": 891,
+              "densePartitions": 0,
+              "sparsePartitions": 891,
+              "typedArrayBytes": 0
+            },
+            {
+              "layerId": "canopy",
+              "occupiedCells": 14256,
+              "partitions": 396,
+              "densePartitions": 0,
+              "sparsePartitions": 396,
+              "typedArrayBytes": 0
+            }
+          ]
+        },
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          {
+            "id": "terrain",
+            "name": "terrain"
+          },
+          {
+            "id": "buildings",
+            "name": "buildings"
+          },
+          {
+            "id": "furniture",
+            "name": "furniture"
+          },
+          {
+            "id": "canopy",
+            "name": "canopy"
+          }
+        ],
+        "registry": [
+          [
+            "grass",
+            {
+              "name": "Grass",
+              "rgba": "#629653ff"
+            }
+          ],
+          [
+            "leaves",
+            {
+              "name": "Tree canopy",
+              "rgba": "#285c39ff"
+            }
+          ],
+          [
+            "stone",
+            {
+              "name": "Stone building",
+              "rgba": "#8d939cff"
+            }
+          ],
+          [
+            "water",
+            {
+              "name": "Water",
+              "rgba": "#417aabff"
+            }
+          ],
+          [
+            "wood",
+            {
+              "name": "Wood building",
+              "rgba": "#a7754cff"
+            }
+          ]
+        ],
+        "annotations": [],
+        "version": 982,
+        "history": {
+          "revision": 2,
+          "savedRevision": 1,
+          "recoveryRevision": 1,
+          "dirty": true,
+          "undoSteps": 2,
+          "redoSteps": 0,
+          "retainedBytes": 9051902,
+          "undoLabel": "Fill",
+          "redoLabel": null
+        },
+        "invalidations": 2
+      },
+      "canceled": {
+        "ok": false,
+        "durationMs": 202,
+        "cancellationMs": 20.200000286102295,
+        "frames": 11,
+        "timerGapsMs": [
+          32.299999713897705, 27, 55.30000019073486, 14.5, 16,
+          22.699999809265137, 34.09999990463257
+        ],
+        "progress": [
+          {
+            "ms": 0.19999980926513672,
+            "cells": 0
+          },
+          {
+            "ms": 1.8999996185302734,
+            "cells": 0
+          },
+          {
+            "ms": 12.099999904632568,
+            "cells": 12123
+          },
+          {
+            "ms": 22.699999809265137,
+            "cells": 31141
+          },
+          {
+            "ms": 32,
+            "cells": 50416
+          },
+          {
+            "ms": 40.5,
+            "cells": 68149
+          },
+          {
+            "ms": 50.19999980926514,
+            "cells": 88452
+          },
+          {
+            "ms": 58.89999961853027,
+            "cells": 107984
+          },
+          {
+            "ms": 114,
+            "cells": 127773
+          },
+          {
+            "ms": 127.2999997138977,
+            "cells": 147819
+          },
+          {
+            "ms": 142.09999990463257,
+            "cells": 168636
+          },
+          {
+            "ms": 154.2999997138977,
+            "cells": 189710
+          },
+          {
+            "ms": 167.39999961853027,
+            "cells": 210784
+          },
+          {
+            "ms": 179.5,
+            "cells": 230316
+          }
+        ],
+        "commitNotificationMs": null
+      },
+      "filled": {
+        "ok": true,
+        "durationMs": 675.8000001907349,
+        "cancellationMs": null,
+        "frames": 41,
+        "timerGapsMs": [
+          30, 16.700000286102295, 8.799999713897705, 14.200000286102295,
+          12.099999904632568, 14.599999904632568, 24, 13.400000095367432,
+          12.699999809265137, 14.100000381469727, 16.299999713897705,
+          21.90000009536743, 13, 12.699999809265137, 15.900000095367432,
+          24.200000286102295, 12.799999713897705, 13.5, 13.5, 16.5, 22,
+          12.400000095367432, 13, 16.699999809265137, 20.700000286102295,
+          13.299999713897705, 13.600000381469727, 16.199999809265137,
+          22.59999990463257, 13.400000095367432, 13.300000190734863,
+          14.799999713897705, 23.700000286102295, 13.199999809265137,
+          13.199999809265137, 14.200000286102295, 16.199999809265137, 22,
+          13.400000095367432, 12.5, 15.699999809265137, 16.40000009536743
+        ],
+        "progress": [
+          {
+            "ms": 0.10000038146972656,
+            "cells": 0
+          },
+          {
+            "ms": 1.700000286102295,
+            "cells": 0
+          },
+          {
+            "ms": 11.200000286102295,
+            "cells": 14179
+          },
+          {
+            "ms": 20.5,
+            "cells": 33197
+          },
+          {
+            "ms": 29.700000286102295,
+            "cells": 51958
+          },
+          {
+            "ms": 38.30000019073486,
+            "cells": 70462
+          },
+          {
+            "ms": 46.5,
+            "cells": 89737
+          },
+          {
+            "ms": 55.200000286102295,
+            "cells": 109012
+          },
+          {
+            "ms": 68.7000002861023,
+            "cells": 129058
+          },
+          {
+            "ms": 81.2000002861023,
+            "cells": 149361
+          },
+          {
+            "ms": 94.40000009536743,
+            "cells": 169921
+          },
+          {
+            "ms": 106.80000019073486,
+            "cells": 190224
+          },
+          {
+            "ms": 119.7000002861023,
+            "cells": 210270
+          },
+          {
+            "ms": 133.10000038146973,
+            "cells": 230830
+          },
+          {
+            "ms": 145.7000002861023,
+            "cells": 251390
+          },
+          {
+            "ms": 159,
+            "cells": 271179
+          },
+          {
+            "ms": 172.2000002861023,
+            "cells": 291739
+          },
+          {
+            "ms": 184.90000009536743,
+            "cells": 311785
+          },
+          {
+            "ms": 198.10000038146973,
+            "cells": 332345
+          },
+          {
+            "ms": 211.5,
+            "cells": 352905
+          },
+          {
+            "ms": 224.2000002861023,
+            "cells": 372951
+          },
+          {
+            "ms": 237.60000038146973,
+            "cells": 393254
+          },
+          {
+            "ms": 250.60000038146973,
+            "cells": 413300
+          },
+          {
+            "ms": 263.90000009536743,
+            "cells": 433603
+          },
+          {
+            "ms": 277.1000003814697,
+            "cells": 453392
+          },
+          {
+            "ms": 290.5,
+            "cells": 473438
+          },
+          {
+            "ms": 304.1000003814697,
+            "cells": 493484
+          },
+          {
+            "ms": 316.90000009536743,
+            "cells": 513016
+          },
+          {
+            "ms": 328.90000009536743,
+            "cells": 533062
+          },
+          {
+            "ms": 342.40000009536743,
+            "cells": 553622
+          },
+          {
+            "ms": 355,
+            "cells": 573925
+          },
+          {
+            "ms": 367.5,
+            "cells": 593971
+          },
+          {
+            "ms": 380.80000019073486,
+            "cells": 613760
+          },
+          {
+            "ms": 393,
+            "cells": 633806
+          },
+          {
+            "ms": 405.40000009536743,
+            "cells": 654366
+          },
+          {
+            "ms": 418.2000002861023,
+            "cells": 673898
+          },
+          {
+            "ms": 431.7000002861023,
+            "cells": 693687
+          },
+          {
+            "ms": 445.2000002861023,
+            "cells": 713990
+          },
+          {
+            "ms": 458.1000003814697,
+            "cells": 733779
+          },
+          {
+            "ms": 471,
+            "cells": 753054
+          },
+          {
+            "ms": 483.90000009536743,
+            "cells": 771559
+          },
+          {
+            "ms": 497.30000019073486,
+            "cells": 790534
+          },
+          {
+            "ms": 510.6000003814697,
+            "cells": 809509
+          },
+          {
+            "ms": 523.2000002861023,
+            "cells": 828990
+          },
+          {
+            "ms": 536.3000001907349,
+            "cells": 848471
+          },
+          {
+            "ms": 548.9000000953674,
+            "cells": 868711
+          },
+          {
+            "ms": 562.3000001907349,
+            "cells": 889204
+          },
+          {
+            "ms": 575.7000002861023,
+            "cells": 909444
+          },
+          {
+            "ms": 588.6000003814697,
+            "cells": 929937
+          },
+          {
+            "ms": 601.6000003814697,
+            "cells": 949924
+          },
+          {
+            "ms": 614.9000000953674,
+            "cells": 969658
+          },
+          {
+            "ms": 628.5,
+            "cells": 990404
+          },
+          {
+            "ms": 641,
+            "cells": 1010291
+          },
+          {
+            "ms": 653.3000001907349,
+            "cells": 1030490
+          },
+          {
+            "ms": 669.1000003814697,
+            "cells": 1048576
+          }
+        ],
+        "commitNotificationMs": 675.3000001907349
+      },
+      "undoMs": 43.09999990463257,
+      "redoMs": 37.5,
+      "environment": {
+        "browser": "159.0.8154.6",
+        "cpu": "Apple M1 Pro",
+        "ram": 17179869184,
+        "os": "24.6.0",
+        "node": "v24.22.3",
+        "dpr": 1
+      },
+      "limits": "Chromium development; timer/rAF proxies, no native presentation or physical-memory budget claim."
+    }
+  ]
+}

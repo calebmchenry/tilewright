@@ -213,3 +213,14 @@ ArrayBuffers and is not added again. RSS is process-wide; snapshots are not a
 transient heap profiler. The measured notification consumer validates invalidation
 content; it does not present a frame. Two runs do not establish percentile editor
 budgets, app physical memory, native I/O or recovery performance.
+
+## Prepared tile edits (TW-022)
+
+Flood fill uses `MapDocument.prepareTiles` to stage a cancelable copy-on-write
+edit without changing live content or locking navigation. It returns an opaque,
+single-use plan. `CommandHistory.executePrepared(label, plan)` validates its
+source version and applies the same history accounting/limits and one-event
+contract as `execute`. Capacity failure occurs before storage publication, so no
+rollback writes are required. A dropped plan is collectible. Other edits may run
+while preparing, but invalidate that plan; no stale storage is published.
+See [flood fill](drawing-gestures.md#flood-fill-tw-022) for scheduling and limits.

@@ -55,6 +55,8 @@ The [eraser and eyedropper](docs/drawing-gestures.md#eraser-and-eyedropper-tw-02
 clear active-layer content and sample visible tiles while preserving named-color identity.
 [Lines and rectangles](docs/drawing-gestures.md#lines-and-rectangles-tw-021)
 preview and commit precise one-tile lines and filled or outlined footprints.
+[Four-way flood fill](docs/drawing-gestures.md#flood-fill-tw-022) fills active-layer
+regions with progress, cancellation and one undo step.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).

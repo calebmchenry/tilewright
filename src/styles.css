@@ -664,3 +664,29 @@ footer {
 .registry-dialog .dialog-actions {
   margin-top: 0;
 }
+
+.fill-progress {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  padding: 10px;
+  background: #171f2a;
+  border: 1px solid #95a4b3;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.fill-progress progress {
+  width: 64px;
+}
+.fill-progress span {
+  min-width: 150px;
+  font-variant-numeric: tabular-nums;
+}

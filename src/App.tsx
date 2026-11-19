@@ -29,16 +29,23 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
         : null,
   );
   useStoreField(session.canvasState, (state) =>
-    ["inspect", "pan", "fit-map", "eyedropper"].includes(action) ||
+    ["inspect", "pan", "fit-map", "eyedropper", "fill"].includes(action) ||
     session.drawing.tool(action)
       ? state
       : null,
   );
   useStoreField(session.hiddenLayers, () =>
-    session.drawing.tool(action) ? session.editableLayerIds().length > 0 : null,
+    session.drawing.tool(action) || action === "fill"
+      ? session.editableLayerIds().length > 0
+      : null,
   );
   useStoreField(session.activeLayer, () =>
-    session.drawing.tool(action) ? session.editableLayerIds().length > 0 : null,
+    session.drawing.tool(action) || action === "fill"
+      ? session.editableLayerIds().length > 0
+      : null,
+  );
+  useStoreField(session.fill.progress, (state) =>
+    action === "fill" ? !!state : null,
   );
   useStoreField(session.viewport, canEditTiles);
   const activeTool = useStore(session.activeTool);
@@ -54,6 +61,7 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
           action === "inspect" ||
           action === "pan" ||
           action === "eyedropper" ||
+          action === "fill" ||
           session.drawing.tool(action)
             ? action === activeTool
             : undefined
@@ -149,14 +157,16 @@ export function ToolPanel({ session }: Props) {
       )}
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
-        B: Pencil · E: Eraser · D: Eyedropper · L: Line · R: Rectangle · [ / ]:
-        Brush size · H: Pan · I: Inspect · F: Fit map. Drag with Inspect to
-        measure a rectangle; Escape clears it.{" "}
+        B: Pencil · E: Eraser · D: Eyedropper · G: Fill · L: Line · R: Rectangle
+        · [ / ]: Brush size · H: Pan · I: Inspect · F: Fit map. Drag with
+        Inspect to measure a rectangle; Escape clears it.{" "}
         {session.drawing.tool(tool)
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : tool === "eyedropper"
-            ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
-            : "Choose Pencil to paint the active layer."}
+          : tool === "fill"
+            ? "Click to fill connected tiles on the active layer. Matching uses exact color or named identity; corners do not connect. Escape cancels a running fill."
+            : tool === "eyedropper"
+              ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
+              : "Choose Pencil to paint the active layer."}
       </p>
     </section>
   );

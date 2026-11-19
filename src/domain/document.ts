@@ -76,6 +76,17 @@ const NO_CHANGE: MutationResult = Object.freeze({
   change: null,
   observerErrors: Object.freeze([]),
 });
+/** Opaque, single-use staged edit owned by its source document. */
+export interface PreparedTiles {
+  readonly changedCells: number;
+}
+export interface TilePreparationOptions {
+  readonly signal?: { readonly aborted: boolean };
+  readonly onProgress?: (changedCells: number) => void;
+  /** Scheduling seam for deterministic tests; production yields to a timer task. */
+  readonly yieldControl?: () => Promise<void>;
+}
+
 type LayerStorage = {
   metadata: Layer;
   partitions: Map<string, TilePartition>;
@@ -119,6 +130,12 @@ export class MapDocument {
   #registry = new Map<RegistryId, JsonObject>();
   #annotations = new Map<AnnotationId, JsonObject>();
   #listeners = new Set<(change: DocumentChange) => void>();
+  #copyOnWrite = false;
+  #ownedPartitions = new WeakSet<TilePartition>();
+  #prepared = new WeakMap<
+    PreparedTiles,
+    { fork: MapDocument; version: number; changes: readonly PrimitiveChange[] }
+  >();
 
   constructor(options: { bounds?: Bounds; layers?: readonly Layer[] } = {}) {
     this.#bounds = checkedBounds(
@@ -223,6 +240,106 @@ export class MapDocument {
     } finally {
       this.#journal = null;
     }
+  }
+
+  /** Prepare bounded batches on a private copy-on-write fork. No live writes/events.
+   * Null input items are scheduling checkpoints for producers doing read-only work.
+   * Concurrent edits invalidate this work; callers never publish a mixed revision.
+   */
+  async prepareTiles(
+    writes: Iterable<TileWrite | null>,
+    options: TilePreparationOptions = {},
+  ): Promise<PreparedTiles> {
+    const version = this.#version;
+    const check = () => {
+      if (options.signal?.aborted)
+        throw new Error("Tile preparation canceled.");
+      this.#unchanged(version);
+      if (this.#busy || this.#journal) throw new Error("Document is busy.");
+    };
+    check();
+    const fork = new MapDocument({ bounds: this.#bounds, layers: this.#order });
+    fork.#palette = this.#palette.clone();
+    for (const [id, layer] of this.#layers)
+      fork.#layers.set(id, { ...layer, partitions: new Map(layer.partitions) });
+    fork.#copyOnWrite = true;
+    const deltas: PendingDelta[] = [];
+    let changedCells = 0,
+      sliceStart = performance.now();
+    const pause = async () => {
+      options.onProgress?.(changedCells);
+      await (options.yieldControl?.() ??
+        new Promise<void>((resolve) => setTimeout(resolve, 0)));
+      check();
+      sliceStart = performance.now();
+    };
+    await pause();
+    for (const input of writes) {
+      check();
+      if (input) {
+        fork.#layer(input.layerId);
+        fork.#address(input.x, input.y);
+        if (
+          !Number.isSafeInteger(input.length) ||
+          input.length < 1 ||
+          !Number.isSafeInteger(input.x + input.length)
+        )
+          throw new RangeError("Invalid prepared write length.");
+        fork.#address(input.x + input.length - 1, input.y);
+        const value = copyCell(input.value);
+        for (let x = input.x; x < input.x + input.length;) {
+          const length = Math.min(1024, input.x + input.length - x);
+          fork.#write(
+            { layerId: input.layerId, x, y: input.y, length, value },
+            deltas,
+          );
+          // This is processed coverage, finalized below to exact net changed cells.
+          changedCells += length;
+          x += length;
+          if (performance.now() - sliceStart >= 8) await pause();
+        }
+      }
+      if (performance.now() - sliceStart >= 8) await pause();
+    }
+    const changes = compactChanges([{ kind: "tiles", runs: deltas }]);
+    changedCells = changes.reduce(
+      (n, part) =>
+        n +
+        (part.kind === "tiles"
+          ? part.runs.reduce((m, run) => m + run.length, 0)
+          : 0),
+      0,
+    );
+    await pause();
+    const plan = Object.freeze({ changedCells });
+    this.#prepared.set(plan, { fork, version, changes });
+    return plan;
+  }
+
+  /** Constant-size root publication after history accepts the immutable patch. */
+  applyPreparedTiles(
+    plan: PreparedTiles,
+    accept?: (change: DocumentChange) => void,
+  ): MutationResult {
+    return this.#mutate(() => {
+      const pending = this.#prepared.get(plan);
+      this.#prepared.delete(plan);
+      if (!pending)
+        throw new Error("Unknown or already consumed prepared edit.");
+      this.#unchanged(pending.version);
+      if (this.#journal) throw new Error("Document is busy.");
+      if (!pending.changes.length) return NO_CHANGE;
+      const change: DocumentChange = Object.freeze({
+        kind: "transaction",
+        version: this.#version + 1,
+        changes: pending.changes,
+      });
+      accept?.(change);
+      this.#layers = pending.fork.#layers;
+      this.#palette = pending.fork.#palette;
+      this.#version++;
+      return this.#publish(change);
+    });
   }
 
   #execute(command: DocumentCommand): void {
@@ -611,6 +728,11 @@ export class MapDocument {
       if (!partition) {
         partition = new TilePartition(cx, cy);
         layer.partitions.set(key, partition);
+      }
+      if (this.#copyOnWrite && !this.#ownedPartitions.has(partition)) {
+        partition = partition.clone();
+        layer.partitions.set(key, partition);
+        this.#ownedPartitions.add(partition);
       }
       for (let i = 0; i < count; i++, x++) {
         const index = localY * SIZE + (x - cx * SIZE);

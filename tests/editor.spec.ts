@@ -38,7 +38,7 @@ test("shell displays state, explains unavailable actions, and keeps native text 
     await expect(page.getByRole("button", { name, exact: true })).toBeEnabled();
   await expect(
     page.getByRole("button", { name: "Fill", exact: true }),
-  ).toHaveAccessibleDescription("Flood fill is not available yet.");
+  ).toBeEnabled();
   await expect(page.getByLabel("Zoom", { exact: true })).toHaveValue("1");
   await expect(page.getByLabel("Current color", { exact: true })).toHaveValue(
     "#91baa1",

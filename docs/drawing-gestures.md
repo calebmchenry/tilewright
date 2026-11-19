@@ -5,7 +5,7 @@ TW-018 supplies the shared drawing pipeline, following [INTENT.md](../INTENT.md)
 [history](command-history.md). These are implementation decisions. Tool algorithms,
 sizes and shortcuts are supplied by feature modules. TW-019 installs the pencil;
 TW-020 adds the eraser and eyedropper; TW-021 adds lines and filled/outlined
-rectangles. The other unfinished drawing tools remain unavailable.
+rectangles; TW-022 adds asynchronous flood fill.
 Test-only adapters also exercise the real controller and canvas.
 
 ## Adjustable pencil (TW-019)
@@ -283,3 +283,64 @@ records actual results and limitations. Chromium input automation and synthetic
 coalesced/cancel events do not claim physical pen/trackpad delivery. Native packaged
 smoke checks validate lifecycle, navigation and terrain/building pencil strokes
 with undo. Other tool interaction checks follow in their implementation tickets.
+
+## Flood fill (TW-022)
+
+Fill uses **four-way connectivity** (left/right/up/down); touching corners do not
+connect. Equality compares stored cells on the active layer only: empty equals
+empty, raw paint equals exact canonical RGBA bytes including alpha, and registered
+paint equals the same stable registry ID. Raw and registered cells of the same
+visible shade are different regions. Distinct registry IDs never merge, even in
+legacy data with identical display colors. Replacement uses the selected raw
+value or registry ID directly; fill does not adopt, register or recolor meanings.
+
+The seed must be inside fixed bounds. Regions can cross signed 32-tile storage
+partitions and 64-tile visual chunks; the map edge stops traversal. Other layers,
+visibility of covering tiles, annotations and registry metadata do not participate.
+Identical replacement and outside seeds are no-ops, preserving redo/checkpoints.
+A successful fill is one **Fill** history step restoring exact prior content.
+
+`src/domain/fill.ts` uses a scanline worklist, row segments of at most 513 cells,
+and sparse 32x32 visited bitsets. No recursion or per-cell object queue is needed.
+`MapDocument.prepareTiles` stages bounded writes on a private copy-on-write fork:
+partition indexes and palette accounting are copied, touched partitions are
+cloned, and unchanged tile buffers are shared. Work yields to timer tasks after
+approximately 8 ms, with cancellation/version checks on resumption and a final
+yield before publication. Live content, allocation, version, history and renderer
+notifications stay unchanged during computation or cancellation. Concurrent edits
+invalidate staging; a stale result cannot replace newer document content.
+`CommandHistory.executePrepared` checks normal history capacity before swapping
+storage roots and publishing one immutable transaction. Failed capacity checks
+leave the original document and redo intact. Plans are document-owned, opaque and
+single-use. The synchronous patch compaction, history accounting/undo/redo and
+renderer publication still need TW-050/TW-049 refinement; this is not a general
+main-thread deadline or performance budget guarantee.
+
+Choose **Fill** or press **G** with canvas focus. A primary unmodified click
+starts the operation at that tile; moving/releasing does not restart it. Brush
+size does not apply. Fill requires a ready canvas, tile-editing zoom and a visible
+active layer. A nonmodal **Filling…** count and **Cancel fill** button appear while
+working; the total is unknown until traversal ends. Escape on the canvas or Cancel
+button cancels. Pan/zoom/resize and temporary Space/middle-button panning remain
+available, including navigation into overview after a fill has started.
+Changing tool, active layer, visibility, paint, canvas readiness or document
+content cancels staging. Session replacement, disposal or canvas unmount cancels
+it too. Merely focusing the Cancel button does not cancel. No preview tiles are
+published during fill; the old map stays visible until the complete result is
+accepted. Filling the same value does not add history or remove redo.
+
+`src/editor/fill.ts` owns operation lifetime and progress independently from the
+synchronous drag-preview pipeline. `tests/domain/fill.test.ts` checks the algorithm
+against an independent cell BFS, atomicity, invalidation and complete history
+restoration. UI and populated-map evidence are in the TW-022 ticket.
+
+Run `npx playwright test tests/fill.spec.ts tests/fill-scale.spec.ts` for shipping
+pointer/keyboard controls, pixel-exact undo/redo at DPR 1/2, minimum-window Cancel,
+and full populated target-map checks. The scale cases load all 6,620,700 frontier
+or 24,025,200 heartland layer cells, then seed a 1024-square contiguous raw terrain
+region at [256,1280)² while retaining all upper layers and the rest of the map.
+They measure fill/cancel, timer gaps and rAF callbacks, exercise navigation during
+fill, and compare complete per-layer hashes after cancel/undo/redo. Hashing occurs
+outside timings. Raw reports are emitted under `test-results/fill-scale-*`;
+retained evidence is in [fill-baseline.json](fill-baseline.json). Browser timers
+and rAF are responsiveness proxies, not native presented-frame measurements.
