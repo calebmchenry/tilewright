@@ -126,7 +126,10 @@ export async function createRenderer(
         )
         .fill("#1d2732");
       const selectionPreview = session?.selection.preview.getSnapshot();
-      const placement = selectionPreview?.move ?? selectionPreview?.paste;
+      const placement =
+        selectionPreview?.move ??
+        selectionPreview?.paste ??
+        selectionPreview?.transform;
       tiles!.setPreview(placement?.writes ?? null);
       tiles!.sync(
         view,

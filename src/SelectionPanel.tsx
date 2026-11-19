@@ -1,3 +1,7 @@
+import {
+  selectionTransforms,
+  type SelectionTransform,
+} from "./domain/selection";
 import type { EditorSession } from "./editor/session";
 import { useStore } from "./editor/useStore";
 
@@ -16,6 +20,9 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
   const bounds = preview?.bounds ?? selection?.bounds;
   const ids =
     preview?.layerIds ?? selection?.layers.map((layer) => layer.layerId) ?? [];
+  const placement = preview?.paste ?? preview?.transform;
+  const placementName = preview?.paste ? "paste" : "transform";
+  const transformReason = session.selection.transformReason();
   return (
     <section className="panel selection-panel" aria-label="Tile selection">
       <h2>Tile selection</h2>
@@ -45,6 +52,25 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
           {session.action(id).reason}
         </p>
       ))}
+      <div className="selection-actions">
+        {(Object.keys(selectionTransforms) as SelectionTransform[]).map(
+          (id) => (
+            <button
+              key={id}
+              type="button"
+              disabled={!!transformReason}
+              title={transformReason ?? undefined}
+              aria-describedby="selection-transform-reason"
+              onClick={() => session.perform(id)}
+            >
+              {selectionTransforms[id]}
+            </button>
+          ),
+        )}
+      </div>
+      <p id="selection-transform-reason" className="hint">
+        {transformReason}
+      </p>
       {bounds ? (
         <>
           <p data-testid="selection-dimensions">
@@ -64,10 +90,13 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
               {preview.paste
                 ? (preview.paste.reason ??
                   "Paste preview. Pointer sets the top-left; arrows nudge. Click, Enter or Apply paste to commit; Escape cancels.")
-                : preview.move
-                  ? (preview.move.reason ??
-                    `Move ${preview.move.dx}, ${preview.move.dy} tiles. Release to apply; Escape cancels.`)
-                  : "Release to capture tiles; Escape cancels."}
+                : preview.transform
+                  ? (preview.transform.reason ??
+                    "Transform preview. Arrows reposition; rotate or flip again to compose. Enter or Apply transform commits; Escape cancels.")
+                  : preview.move
+                    ? (preview.move.reason ??
+                      `Move ${preview.move.dx}, ${preview.move.dy} tiles. Release to apply; Escape cancels.`)
+                    : "Release to capture tiles; Escape cancels."}
             </p>
           ) : (
             <>
@@ -125,7 +154,7 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
               </button>
             </>
           )}
-          {preview?.paste && (
+          {placement && (
             <div
               className="selection-actions"
               onKeyDown={(event) => {
@@ -145,14 +174,14 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
             >
               <button
                 type="button"
-                disabled={!!preview.paste.reason}
-                title={preview.paste.reason ?? undefined}
-                onClick={() => session.selection.commitPaste()}
+                disabled={!!placement.reason}
+                title={placement.reason ?? undefined}
+                onClick={() => session.selection.commitPlacement()}
               >
-                Apply paste
+                Apply {placementName}
               </button>
               <button type="button" onClick={() => session.selection.cancel()}>
-                Cancel paste
+                Cancel {placementName}
               </button>
             </div>
           )}

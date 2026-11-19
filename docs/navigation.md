@@ -37,7 +37,10 @@ ten with Shift). Other contexts retain the camera shortcuts above. V selects
 Select; R remains the drawing Rectangle shortcut. These selection routes are
 implemented for movement/nudging in TW-025 and paste anchors in TW-026. Canvas
 Cmd/Ctrl+C/X/V copies/cuts/previews paste; click or Enter applies, Escape cancels.
-Text and panel clipboard shortcuts remain native. Transforms follow in TW-027.
+Text and panel clipboard shortcuts remain native. TW-027 adds panel rotation/flip
+actions: arrows reposition the transform preview, Enter/Apply commits, and
+Escape/Cancel discards it. A live transform keeps its top-left fixed under pointer
+motion; a transformed paste retains pointer placement. R remains Rectangle.
 
 `src/editor/navigation.ts` uses non-passive wheel/gesture listeners to prevent
 page scrolling and browser zoom over the canvas. Pixel deltas keep fractional

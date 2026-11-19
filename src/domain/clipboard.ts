@@ -3,6 +3,8 @@ import type { MapDocument, TileWrite } from "./document.ts";
 import { registryEntry } from "./registry.ts";
 import {
   captureSelection,
+  transformSelection,
+  type SelectionTransform,
   selectionFits,
   type SelectionPayload,
 } from "./selection.ts";
@@ -145,4 +147,16 @@ export function planClipboardCut(
       ),
     ),
   );
+}
+
+/** Derive a preview without changing the stored clipboard or widening provenance. */
+export function transformClipboard(
+  payload: SelectionPayload,
+  operation: SelectionTransform,
+): SelectionPayload {
+  const owner = owners.get(payload);
+  if (!owner) throw new Error("Unknown clipboard snapshot.");
+  const result = transformSelection(payload, operation);
+  owners.set(result, owner);
+  return result;
 }

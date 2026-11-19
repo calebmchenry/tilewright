@@ -1,6 +1,9 @@
 import { containsTile, type Bounds } from "../domain/coordinates.ts";
 import {
   captureSelection,
+  transformSelection,
+  planSelectionTransform,
+  type SelectionTransform,
   selectionFits,
   planSelectionMove,
   translatedSelection,
@@ -9,6 +12,7 @@ import {
 import type { TileWrite } from "../domain/document.ts";
 import {
   captureClipboard,
+  transformClipboard,
   clipboardBounds,
   planClipboardCut,
   planClipboardPaste,
@@ -28,6 +32,10 @@ import {
 export interface SelectionRectangle {
   readonly bounds: Bounds;
   readonly layerIds: readonly LayerId[];
+  readonly transform?: {
+    readonly writes: readonly TileWrite[];
+    readonly reason: string | null;
+  };
   readonly paste?: {
     readonly writes: readonly TileWrite[];
     readonly reason: string | null;
@@ -45,7 +53,11 @@ export class SelectionController {
   readonly state = new Store<SelectionPayload | null>(null);
   readonly preview = new Store<SelectionRectangle | null>(null);
   readonly clipboard = new Store<SelectionPayload | null>(null);
-  #paste: { payload: SelectionPayload; version: number } | null = null;
+  #placement: {
+    payload: SelectionPayload;
+    source: SelectionPayload | null;
+    version: number;
+  } | null = null;
   #session: EditorSession;
   #current: {
     id: number;
@@ -89,7 +101,52 @@ export class SelectionController {
     return this.#current?.id ?? null;
   }
   get pasting(): boolean {
-    return this.#paste !== null;
+    return this.#placement !== null && this.#placement.source === null;
+  }
+  get placing(): boolean {
+    return this.#placement !== null;
+  }
+  transformReason(): string | null {
+    if (
+      this.#current ||
+      this.#session.drawing.pointerId !== null ||
+      this.#session.fill.progress.getSnapshot()
+    )
+      return "Finish or cancel the pending edit before transforming.";
+    return this.pasting ? this.clipboardReason("paste") : this.#moveReason();
+  }
+  transform(operation: SelectionTransform): boolean {
+    const session = this.#session;
+    try {
+      const reason = this.transformReason();
+      if (reason) throw new Error(reason);
+      const current = this.#placement;
+      const selected = this.state.getSnapshot();
+      const source = current
+        ? current.source
+        : captureSelection(
+            session.document,
+            selected!.bounds,
+            selected!.layers.map((layer) => layer.layerId),
+          );
+      const payload = current?.payload ?? source!;
+      const anchor = this.preview.getSnapshot()?.bounds ?? payload.bounds;
+      const transformed =
+        current && !current.source
+          ? transformClipboard(payload, operation)
+          : transformSelection(payload, operation);
+      // Changing tools cancels previews, so do it before publishing this candidate.
+      session.activeTool.set("select");
+      this.#placement = {
+        payload: transformed,
+        source,
+        version: session.document.version,
+      };
+      return this.positionPlacement({ x: anchor.minX, y: anchor.minY });
+    } catch (error) {
+      session.reportError(error, "Transform selection");
+      return false;
+    }
   }
   clipboardReason(action: "copy" | "cut" | "paste"): string | null {
     const session = this.#session;
@@ -100,7 +157,7 @@ export class SelectionController {
       this.#current ||
       session.drawing.pointerId !== null ||
       session.fill.progress.getSnapshot() ||
-      (this.#paste && action !== "paste")
+      (this.#placement && (action !== "paste" || !!this.#placement.source))
     )
       return "Apply or cancel the pending edit before copying or cutting.";
     if (action !== "paste") {
@@ -187,12 +244,19 @@ export class SelectionController {
         ? pointer
         : { x: fallback.minX, y: fallback.minY };
     session.activeTool.set("select");
-    this.#paste = { payload, version: session.document.version };
+    this.#placement = {
+      payload,
+      source: null,
+      version: session.document.version,
+    };
     return this.positionPaste(anchor);
   }
   /** World tile anchor; called only for actual pointer motion or arrow intent. */
   positionPaste(anchor: Point): boolean {
-    const current = this.#paste;
+    return this.pasting && this.positionPlacement(anchor);
+  }
+  positionPlacement(anchor: Point): boolean {
+    const current = this.#placement;
     if (!current) return false;
     const session = this.#session;
     try {
@@ -201,15 +265,22 @@ export class SelectionController {
         writes: readonly TileWrite[] = Object.freeze([]);
       try {
         if (current.version !== session.document.version)
-          throw new Error("Map changed; cancel and paste again.");
-        writes = planClipboardPaste(
-          session.document,
-          this,
-          current.payload,
-          anchor.x,
-          anchor.y,
-          session.hiddenLayers.getSnapshot(),
-        ).writes;
+          throw new Error("Map changed; cancel and start the placement again.");
+        writes = current.source
+          ? planSelectionTransform(
+              session.document,
+              current.source,
+              current.payload,
+              bounds,
+            ).writes
+          : planClipboardPaste(
+              session.document,
+              this,
+              current.payload,
+              anchor.x,
+              anchor.y,
+              session.hiddenLayers.getSnapshot(),
+            ).writes;
       } catch (error) {
         reason = error instanceof Error ? error.message : String(error);
       }
@@ -219,42 +290,58 @@ export class SelectionController {
           layerIds: Object.freeze(
             current.payload.layers.map((layer) => layer.layerId),
           ),
-          paste: Object.freeze({ reason, writes }),
+          ...(current.source
+            ? { transform: Object.freeze({ reason, writes }) }
+            : { paste: Object.freeze({ reason, writes }) }),
         }),
       );
       return true;
     } catch (error) {
-      session.reportError(error, "Paste position");
+      session.reportError(error, "Placement position");
       return false;
     }
   }
   commitPaste(): boolean {
-    const current = this.#paste,
+    return this.pasting && this.commitPlacement();
+  }
+  commitPlacement(): boolean {
+    const current = this.#placement,
       preview = this.preview.getSnapshot(),
       session = this.#session;
-    if (!current || !preview?.paste) return false;
+    if (!current || !preview || !(preview.paste || preview.transform))
+      return false;
+    const label = current.source ? "Transform selection" : "Paste";
     let result;
     try {
-      const reason = this.clipboardReason("paste");
+      const reason = current.source
+        ? this.transformReason()
+        : this.clipboardReason("paste");
       if (reason) throw new Error(reason);
       if (current.version !== session.document.version)
-        throw new Error("Map changed; cancel and paste again.");
-      const plan = planClipboardPaste(
-        session.document,
-        this,
-        current.payload,
-        preview.bounds.minX,
-        preview.bounds.minY,
-        session.hiddenLayers.getSnapshot(),
-      );
+        throw new Error("Map changed; cancel and start the placement again.");
+      const plan = current.source
+        ? planSelectionTransform(
+            session.document,
+            current.source,
+            current.payload,
+            preview.bounds,
+          )
+        : planClipboardPaste(
+            session.document,
+            this,
+            current.payload,
+            preview.bounds.minX,
+            preview.bounds.minY,
+            session.hiddenLayers.getSnapshot(),
+          );
       // Detach from synchronous publication; rejection retains the candidate.
-      this.#paste = null;
-      result = session.history.execute("Paste", [
+      this.#placement = null;
+      result = session.history.execute(label, [
         { kind: "tiles", writes: plan.writes },
       ]);
     } catch (error) {
-      this.#paste = current;
-      session.reportError(error, "Paste");
+      this.#placement = current;
+      session.reportError(error, label);
       return false;
     }
     try {
@@ -265,13 +352,15 @@ export class SelectionController {
       if (result.observerErrors.length) throw result.observerErrors[0];
       session.report(
         result.change
-          ? "Paste. Paste again to place another copy."
-          : "Paste positioned; no tile changes.",
+          ? current.source
+            ? "Transform selection applied."
+            : "Paste. Paste again to place another copy."
+          : "Selection positioned; no tile changes.",
       );
     } catch (error) {
       session.reportError(
         error,
-        "Paste committed, but a view could not update",
+        `${label} committed, but a view could not update`,
       );
     }
     return true;
@@ -307,7 +396,7 @@ export class SelectionController {
     if (
       this.#closed ||
       this.#current ||
-      this.#paste ||
+      this.#placement ||
       session.activeTool.getSnapshot() !== "select"
     )
       return false;
@@ -430,9 +519,12 @@ export class SelectionController {
     return null;
   }
   nudge(dx: number, dy: number): boolean {
-    if (this.#paste) {
+    if (this.#placement) {
       const bounds = this.preview.getSnapshot()!.bounds;
-      return this.positionPaste({ x: bounds.minX + dx, y: bounds.minY + dy });
+      return this.positionPlacement({
+        x: bounds.minX + dx,
+        y: bounds.minY + dy,
+      });
     }
     if (this.#current || this.#session.activeTool.getSnapshot() !== "select")
       return false;
@@ -525,11 +617,11 @@ export class SelectionController {
   cancel(id?: number): void {
     if (id !== undefined && this.#current?.id !== id) return;
     this.#current = null;
-    this.#paste = null;
+    this.#placement = null;
     this.preview.set(null);
   }
   escape(): void {
-    if (this.#current || this.#paste) this.cancel();
+    if (this.#current || this.#placement) this.cancel();
     else this.deselect();
   }
   deselect(): void {

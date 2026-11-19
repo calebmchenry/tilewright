@@ -1,3 +1,7 @@
+import {
+  selectionTransforms,
+  type SelectionTransform,
+} from "../domain/selection.ts";
 import { MapDocument, type MutationResult } from "../domain/document.ts";
 import { CommandHistory } from "../domain/history.ts";
 import type { DocumentCommand } from "../domain/commands.ts";
@@ -48,6 +52,7 @@ import {
 
 export type FocusOwner = "canvas" | "panel" | "text" | "outside";
 export type ActionId =
+  | SelectionTransform
   | "undo"
   | "redo"
   | "save"
@@ -261,6 +266,11 @@ export class EditorSession {
     );
   }
   action(id: ActionId): ActionState {
+    if (Object.hasOwn(selectionTransforms, id))
+      return {
+        label: selectionTransforms[id as SelectionTransform],
+        reason: this.selection.transformReason(),
+      };
     if (id === "copy" || id === "cut" || id === "paste")
       return {
         label: id === "copy" ? "Copy" : id === "cut" ? "Cut" : "Paste",
@@ -353,6 +363,8 @@ export class EditorSession {
       this.report(state.reason);
       return false;
     }
+    if (Object.hasOwn(selectionTransforms, id))
+      return this.selection.transform(id as SelectionTransform);
     if (id === "add-layer") return this.addLayer();
     if (id === "copy" || id === "cut") return this.selection.copy(id === "cut");
     if (id === "paste") return this.selection.startPaste();
@@ -737,8 +749,8 @@ export class EditorSession {
       !input.ctrlKey &&
       this.canvasState.getSnapshot() === "ready"
     ) {
-      if (this.selection.pasting && key === "enter") {
-        this.selection.commitPaste();
+      if (this.selection.placing && key === "enter") {
+        this.selection.commitPlacement();
         return true;
       }
       const toolKeys: Readonly<Record<string, ActionId>> = {
@@ -778,7 +790,7 @@ export class EditorSession {
       ) {
         if (
           this.activeTool.getSnapshot() === "select" &&
-          (this.selection.state.getSnapshot() || this.selection.pasting)
+          (this.selection.state.getSnapshot() || this.selection.placing)
         ) {
           const step = input.shiftKey ? 10 : 1;
           this.selection.nudge(

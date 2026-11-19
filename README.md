@@ -66,7 +66,8 @@ movement](docs/selection-decisions.md#selection-movement-implementation-tw-025)
 adds snapped composite drag previews and whole-tile arrow nudges with atomic undo.
 [Clipboard placement](docs/selection-decisions.md#clipboard-implementation-tw-026)
 adds session-local cut/copy/paste, composited previews and repeated placement.
-Transforms follow in TW-027/TW-028.
+[Quarter-turns and flips](docs/selection-decisions.md#transform-implementation-tw-027)
+add composable live/paste previews with arrow positioning and Apply/Cancel.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).

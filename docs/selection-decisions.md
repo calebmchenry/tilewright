@@ -4,7 +4,7 @@ Decision record for [TW-023](../.wrk/wrk-7cd74024.md), subordinate to
 [INTENT.md](../INTENT.md#drawing-and-rearranging). These are implementation
 decisions for TW-024 through TW-028. Rectangle creation and layer inclusion now
 ship in TW-024; overlap-safe movement and nudging ship in TW-025 as described below.
-Clipboard placement ships in TW-026; transforms remain follow-on work.
+Clipboard placement ships in TW-026; quarter-turns and flips ship in TW-027.
 They extend the [coordinate](foundation-decisions.md),
 [layer](layers.md), [registry](registry-decisions.md),
 [input](navigation.md), and [atomic history](command-history.md) contracts.
@@ -59,7 +59,7 @@ Graphics overlay expose this state. Creation refreshes do not invalidate tile or
 overview caches. Selection is separate from Inspect and is not a painting mask.
 A new outside drag replaces the rectangle and resets scope to the active visible
 layer. TW-025 now supplies inside dragging and arrow nudges as described below;
-clipboard placement ships in TW-026; transforms follow in TW-027/TW-028.
+clipboard placement ships in TW-026; transforms ship in TW-027 below.
 
 `tests/domain/selection.test.ts` and `tests/selection.spec.ts` validate S01–S03
 using `tests/fixtures/selection.ts`: 64 registered wall cells crossing four visual
@@ -182,6 +182,65 @@ text clipboard routing and DPR 1/2 real WebGL house/recolor pixels. Actual valid
 is recorded in TW-026. Captures, validation, planning and history are synchronous;
 large or highly varied selections may pause. No new latency or memory budget is
 claimed; rendering refinement remains TW-049, large-edit/history/memory TW-050.
+
+## Transform implementation (TW-027)
+
+The Tile selection panel now provides **Rotate clockwise**, **Rotate
+counterclockwise**, **Flip horizontal**, and **Flip vertical**. A live selection
+starts a transform preview at its current top-left. Each additional action
+composes on the staged payload and dimensions; the document is never recaptured
+between preview actions. The pointer does not move a live transform's anchor.
+Canvas arrows reposition it one tile, Shift+arrow ten. **Apply transform** or
+canvas Enter commits one **Transform selection** step; **Cancel transform** or
+Escape discards it. Enter on the Cancel button uses native cancel activation.
+Non-square rotations swap the displayed width/height and exclusive bounds.
+
+The same actions transform a pending paste, keeping its current anchor and
+ordinary pointer/click, arrows, Enter and Apply/Cancel paste behavior. They do not
+change the session clipboard. Starting another Paste resets orientation from the
+stored copy. Copy/Cut are unavailable during any placement; Paste is unavailable
+during a live transform until Apply/Cancel. Tools, readiness/zoom, context/version
+changes, pointer cancellation/capture loss and window blur use the existing
+all-or-nothing cancellation rules. Text/panel/IME routing remains native.
+
+Invalid full extents show the red outline, unchanged map and reason; Apply is
+disabled and Enter rejects without edits. The preview remains adjustable by
+arrows or another transform. Empty trailing rows/columns still count for bounds.
+A successful transform refreshes the selection from the committed destination,
+including background retained under holes. Four preview turns or two identical
+preview flips are exact payload identities; undo remains the inverse for
+independent committed edits over background content.
+
+`src/domain/selection.ts` implements immutable common-rectangle transforms,
+document/version/source provenance and the shared move/transform plan. Turns
+map occupied runs through local coordinates, sort and merge resulting horizontal
+runs; absent runs encode transformed holes. Values are reused unchanged, including
+raw alpha-zero paint and registered IDs. Source clearing covers only S outside D;
+all occupied writes are planned before publication. `src/domain/clipboard.ts`
+retains session provenance for transformed copies without changing the clipboard.
+`src/editor/selection.ts` shares placement lifecycle and atomic history between
+paste and live transforms. `session.ts`, `SelectionPanel.tsx`, `MapCanvas.tsx` and
+`navigation.ts` expose the actions, controls and input rules. The renderer uses
+the same ordered-layer transient raster path as movement/paste, without modifying
+live tiles or overview caches.
+
+Validation: `tests/domain/selection-transform.test.ts` covers S12/S13 with an
+independent dense-matrix oracle, the documented 3×2 example, asymmetric/sparse
+3×2/4×7 and single-row/column/cell cases, raw/registered identity, signed boundaries,
+all-hole extents, provenance/version rejection, exact inverse maps and real history
+capacity rollback. `transform-controller.test.ts` covers composition, no-op redo/
+checkpoints, context cancellation, anchor nudges, paste reset, history failure,
+observer errors and per-layer preview/committed raster equality.
+`tests/selection-transform.spec.ts` inspects a non-square multilayer house after
+rotation and both flips at DPR 1/2, then undoes the entire sequence. It also tests
+real controls, pixel samples, boundaries, cancellation, text input and 640×452
+layout. Actual build/test/native evidence is recorded in TW-027.
+
+Transform computation, planning, preview rasterization and history remain
+synchronous. Quarter-turns temporarily expand horizontal runs to occupied cells
+before merging; very large dense or varied selections can consume substantial
+memory and pause. No latency or memory budget is claimed. Refinement remains
+TW-049/TW-050 under AGENTS.md; general selection stress scenarios remain TW-028.
 
 ## Rectangle and layer membership
 

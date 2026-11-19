@@ -428,7 +428,7 @@ export function bindNavigation(
           measure ||
           drawing === (event as PointerEvent).pointerId ||
           selecting === (event as PointerEvent).pointerId ||
-          session.selection.pasting
+          session.selection.placing
         )
           cancel();
         else updatePointer();
