@@ -71,6 +71,10 @@ add composable live/paste previews with arrow positioning and Apply/Cancel.
 [Composed workflow verification](docs/selection-decisions.md#composed-workflow-verification-tw-028)
 covers fixed-seed full undo/redo, both house-move scopes and large-selection profiling.
 
+The planned rectangle geometry, explicit annotation editing, three label tiers,
+zoom thresholds and overlap policy are specified in
+[named-area decisions](docs/named-area-decisions.md).
+
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).
 
