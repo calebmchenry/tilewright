@@ -1,0 +1,30 @@
+{
+  "chromium-close.png": {
+    "sha256": "e238b6277792ee2c8dca3d19dc996290baa3121636647f302d864f2cf750425c",
+    "bytes": 11063
+  },
+  "chromium-composed-session.png": {
+    "sha256": "79bc2f81e58c497550e8930e18fda996323bcad371b2f557e9018d9b24e95145",
+    "bytes": 162310
+  },
+  "chromium-locality.png": {
+    "sha256": "4421757388f519fae447c911f7f41a86fc7cff35c77319fdefe80e7d25a27c3c",
+    "bytes": 6802
+  },
+  "chromium-region.png": {
+    "sha256": "d1ee8766b49405243388ff21e02d708ed51d5378cbb3756e7e473a5aa79ecafb",
+    "bytes": 7886
+  },
+  "native-close.png": {
+    "sha256": "faaa3ccd9d0ec725a18ebb288100fc2eb7b7264d67416381028bdcb4ebaebede",
+    "bytes": 644200
+  },
+  "native-locality.png": {
+    "sha256": "34351e91e11f99726053ede67052cee54ab39b1432b49bdca83b53a45717894c",
+    "bytes": 431983
+  },
+  "native-region.png": {
+    "sha256": "20d5a4f3192d9b9e9b57cd2d73dc07e1f8cf1d6c9c62655d4d2371cd9a53e771",
+    "bytes": 486818
+  }
+}

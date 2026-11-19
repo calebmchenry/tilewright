@@ -20,6 +20,7 @@ import { recolorDocument } from "./fixtures/recolor";
 
 import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
 import { areaDocument, annotatePopulatedMap } from "./fixtures/areas";
+import { createDrawingSession } from "./fixtures/complete-session";
 
 const host = document.getElementById("tiles")!;
 let renderer: CanvasRenderer;
@@ -90,6 +91,7 @@ function dispose() {
 async function load(
   kind:
     | "small"
+    | "complete-session"
     | "areas"
     | "drawing"
     | "empty"
@@ -103,8 +105,11 @@ async function load(
 ) {
   dispose();
   queries = [];
-  const document =
-    kind === "areas"
+  const story =
+    kind === "complete-session" ? await createDrawingSession() : null;
+  const document = story
+    ? story.session.document
+    : kind === "areas"
       ? areaDocument()
       : kind === "drawing"
         ? drawingDocument()
@@ -128,7 +133,7 @@ async function load(
     queries.push({ layer: id, bounds });
     return original(id, bounds);
   };
-  session = new EditorSession(document);
+  session = story?.session ?? new EditorSession(document);
   if (kind === "drawing") {
     installDrawingTools(session);
     session.canvasState.set("ready");

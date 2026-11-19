@@ -40,6 +40,8 @@ The editor session, targeted subscriptions, keyboard routing, and workspace cont
 are documented in [the editor shell](docs/editor-shell.md).
 [Complete session integration](docs/editor-shell.md#complete-editing-session-integration-tw-047)
 covers shared shortcuts, focus restoration, cancellation and compact-window controls.
+The [complete drawing, rearrangement and annotation verification](docs/complete-session.md)
+provides repeatable session tests, a desktop fixture and close/locality/region evidence.
 
 Visible sparse WebGL tiles, color lookup, composition, and cache lifetime are
 documented in [the tile renderer](docs/tile-renderer.md).

@@ -19,6 +19,7 @@ import { gridDocument } from "./fixtures/grid";
 import { colorsDocument } from "./fixtures/colors";
 import { registryDocument, buildings } from "./fixtures/registry";
 import { annotatePopulatedMap, areaDocument } from "./fixtures/areas";
+import { createDrawingSession } from "./fixtures/complete-session";
 
 import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
 import {
@@ -33,36 +34,42 @@ function browsingDocument(index: number) {
   annotatePopulatedMap(document);
   return document;
 }
-const session = new EditorSession(
-  fixture === "drawing" ||
-    fixture === "pencil" ||
-    fixture === "eraser-sampling" ||
-    fixture === "shapes" ||
-    fixture === "fill"
-    ? drawingDocument()
-    : fixture === "selection-move"
-      ? movementDocument()
-      : fixture === "selection"
-        ? selectionDocument()
-        : fixture === "registry"
-          ? registryDocument()
-          : fixture === "colors"
-            ? colorsDocument()
-            : fixture === "grid"
-              ? gridDocument()
-              : fixture === "areas"
-                ? areaDocument()
-                : fixture === "areas-frontier" || fixture === "areas-heartland"
-                  ? browsingDocument(fixture === "areas-heartland" ? 1 : 0)
-                  : fixture
-                    ? populatedDocument(fixture === "heartland" ? 1 : 0)
-                    : new MapDocument({
-                        layers: [
-                          { id: layerId("terrain"), name: "Terrain" },
-                          { id: layerId("buildings"), name: "Buildings" },
-                        ],
-                      }),
-);
+const session =
+  fixture === "complete-session"
+    ? (await createDrawingSession()).session
+    : new EditorSession(
+        fixture === "drawing" ||
+          fixture === "pencil" ||
+          fixture === "eraser-sampling" ||
+          fixture === "shapes" ||
+          fixture === "fill"
+          ? drawingDocument()
+          : fixture === "selection-move"
+            ? movementDocument()
+            : fixture === "selection"
+              ? selectionDocument()
+              : fixture === "registry"
+                ? registryDocument()
+                : fixture === "colors"
+                  ? colorsDocument()
+                  : fixture === "grid"
+                    ? gridDocument()
+                    : fixture === "areas"
+                      ? areaDocument()
+                      : fixture === "areas-frontier" ||
+                          fixture === "areas-heartland"
+                        ? browsingDocument(
+                            fixture === "areas-heartland" ? 1 : 0,
+                          )
+                        : fixture
+                          ? populatedDocument(fixture === "heartland" ? 1 : 0)
+                          : new MapDocument({
+                              layers: [
+                                { id: layerId("terrain"), name: "Terrain" },
+                                { id: layerId("buildings"), name: "Buildings" },
+                              ],
+                            }),
+      );
 if (fixture === "registry") session.setLayerVisible(buildings, false);
 if (fixture === "selection" || fixture === "selection-move") {
   session.selectLayer(walls);
