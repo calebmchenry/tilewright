@@ -49,7 +49,8 @@ Camera math, mouse/trackpad/keyboard controls and overview editing availability
 are documented in [map navigation](docs/navigation.md).
 
 Shared pointer capture, transient previews, clipping and gesture history are documented
-in [drawing gestures](docs/drawing-gestures.md). Tool algorithms follow in their feature tickets.
+in [drawing gestures](docs/drawing-gestures.md). The [adjustable pencil](docs/drawing-gestures.md#adjustable-pencil-tw-019)
+paints square footprints with raw or registered colors.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).

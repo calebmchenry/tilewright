@@ -3,8 +3,60 @@
 TW-018 supplies the shared drawing pipeline, following [INTENT.md](../INTENT.md),
 [coordinates](foundation-decisions.md), [navigation](navigation.md), and
 [history](command-history.md). These are implementation decisions. Tool algorithms,
-sizes and shortcuts remain TW-019 onward; no unfinished drawing tool is enabled in
-the shipped toolbar. Test-only adapters exercise the real controller and canvas.
+sizes and shortcuts are supplied by feature modules. TW-019 installs the pencil
+described below; the other unfinished drawing tools remain unavailable.
+Test-only adapters also exercise the real controller and canvas.
+
+## Adjustable pencil (TW-019)
+
+`src/editor/pencil.ts` supplies a square brush with whole-tile sizes **1–32**,
+default **1**. Its top-left offset from the pointer tile is
+`-floor((size - 1) / 2)` on both axes. Odd sizes center on that tile. Even sizes
+put the extra row and column below/right: size 2 at `(63,63)` covers
+`[63,65)²`; size 4 covers `[62,66)²`. These are conventional implementation
+choices, not additional requirements from INTENT.md.
+
+Each sample connects the previous and current integer tiles with a nearest-cell,
+8-connected line (diagonal cells may meet at corners), then stamps every center.
+Both endpoints are included. The larger coordinate delta is the major axis;
+ascending major-axis ordering and half-ties toward the positive minor coordinate
+make the result independent of drag direction. Interpolation uses exact integer
+arithmetic. It skips major-axis positions whose stamps cannot touch fixed bounds,
+without rounding new endpoints or changing the original line's phase. This avoids
+walking a huge off-map gap. Footprints clip all four edges before generating runs;
+chunk boundaries never split a gesture. Repeated same-tile samples are skipped,
+and the shared sparse staging deduplicates overlap/retracing before the command.
+
+The selected raw value or registry identity and brush size are captured at gesture
+start. Release commits one Pencil history step on the active visible layer.
+Undo restores overwritten content and emptiness exactly; other layers, metadata
+and bounds stay unchanged. Same-paint and outside-only gestures preserve redo and
+saved state. Size is a transient session preference, not document content.
+
+Choose **Pencil** or press **B** while the canvas has keyboard focus. The Tools
+panel offers a **Pencil size** selector; **[** and **]** decrease/increase size by
+one, stopping at 1 and 32. Inputs/selects and IME retain their native keys. New Map
+resets size to 1. Changing size cancels an in-progress stroke, preserving redo;
+the next stroke captures the new size. Other cancellation/readiness rules below
+also apply. Inspect remains the initial tool.
+
+Hover shows a clipped square in the selected raw/registered paint; dragging shows
+the accumulated stroke. Both use the existing Pixi overlay and never enter the
+document or tile/overview caches. The hover store is separate from the gesture
+preview/history and clears on canvas exit, navigation, cancellation and teardown.
+Size shortcuts refresh the hover at the stationary pointer after canceling a
+stroke. The overlay indicates affected cells above all layers; it is not a final
+composite preview when another layer covers the editing target.
+
+Pencil geometry and command coverage live in `tests/domain/pencil.test.ts`:
+stationary dabs, sizes 1/2/3/4/31/32, all line octants and reversal ties, rapid
+horizontal/diagonal strokes across signed storage/visual boundaries, overlapping
+stamps, raw/registered identity, layer preservation, undo/redo, clipped corners,
+outside no-ops and very distant endpoints.
+`tests/pencil.spec.ts` exercises the shipping adapter, controls and pointer path
+at DPR 1/2, hover/stroke screenshots, exact canvas pixels after undo/redo, raw and
+registered strokes, layer preservation, even dabs, size-change cancellation,
+clipped edges, text shortcuts and the minimum-window layout.
 
 ## Tool contract and data ownership
 
@@ -88,7 +140,7 @@ composited appearance. It resolves registered colors by identity. Geometry is
 clipped to the visible host; candidate writes are already clipped to map bounds.
 Cancellation clears it. The preview owns no tile textures or overview pixels.
 
-`mountRenderer.ts` subscribes directly to preview changes and cleans up on failure,
+`mountRenderer.ts` subscribes directly to gesture and hover preview changes and cleans up on failure,
 retry and disposal. Preview refresh reads no tile runs and invalidates no tile
 cache. Commit/undo/redo go through the normal document bridge: exact net changed
 spans on the target layer rebuild only intersecting visible detail chunks once;
@@ -114,5 +166,5 @@ No drawing-specific full-map invalidation or React tile state is introduced.
 Run build, full tests, formatting and the packaged desktop build. The WRK ticket
 records actual results and limitations. Chromium input automation and synthetic
 coalesced/cancel events do not claim physical pen/trackpad delivery. Native packaged
-smoke checks validate lifecycle and navigation; shipping tool interaction checks
-follow as TW-019 onward installs its algorithms.
+smoke checks validate lifecycle, navigation and terrain/building pencil strokes
+with undo. Other tool interaction checks follow in their implementation tickets.

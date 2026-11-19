@@ -22,6 +22,7 @@ import {
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import { DrawingController, type DrawingToolId } from "./drawing.ts";
+import { assertPencilSize, pencilTool } from "./pencil.ts";
 import {
   assertBounds,
   containsTile,
@@ -115,6 +116,7 @@ export class EditorSession {
   );
   readonly color = new Store(normalizePaintColor("#91baa1")!);
   readonly selectedRegistryId = new Store<RegistryId | null>(null);
+  readonly pencilSize = new Store(1);
   readonly viewport = new Store<Viewport>(
     Object.freeze({ x: 0, y: 0, zoom: 1 }),
   );
@@ -200,6 +202,10 @@ export class EditorSession {
       unsubscribeHistory();
     };
     this.drawing = new DrawingController(this);
+    this.drawing.register(
+      "pencil",
+      pencilTool(() => this.pencilSize.getSnapshot()),
+    );
   }
   dispose(): void {
     this.#closed = true;
@@ -430,6 +436,17 @@ export class EditorSession {
     this.report(`Current color: ${color.slice(0, 7).toUpperCase()}`);
     return true;
   }
+  setPencilSize(size: number): boolean {
+    if (this.#closed) return false;
+    try {
+      assertPencilSize(size);
+      this.pencilSize.set(size);
+      return true;
+    } catch (error) {
+      this.reportError(error, "Pencil size");
+      return false;
+    }
+  }
   #selectPaint(id: RegistryId | null, color: PaintColor): void {
     const errors: unknown[] = [];
     for (const update of [
@@ -592,8 +609,21 @@ export class EditorSession {
       !input.ctrlKey &&
       this.canvasState.getSnapshot() === "ready"
     ) {
-      if (key === "i" || key === "h")
-        this.perform(key === "i" ? "inspect" : "pan");
+      if (key === "i" || key === "h" || key === "b")
+        this.perform(key === "i" ? "inspect" : key === "h" ? "pan" : "pencil");
+      else if (
+        (key === "[" || key === "]") &&
+        this.activeTool.getSnapshot() === "pencil"
+      )
+        this.setPencilSize(
+          Math.max(
+            1,
+            Math.min(
+              32,
+              this.pencilSize.getSnapshot() + (key === "]" ? 1 : -1),
+            ),
+          ),
+        );
       else if (key === "f") this.perform("fit-map");
       else if (key === "0") this.setZoom(1);
       else if (["+", "=", "-", "_"].includes(key))

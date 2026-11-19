@@ -39,6 +39,8 @@ export interface DrawingOperation {
 }
 export interface DrawingTool {
   readonly label: string;
+  /** Optional hover stamp. It is separate from the active gesture and its history. */
+  footprint?(context: DrawingContext): Iterable<PaintSpan>;
   create(context: DrawingContext): DrawingOperation;
 }
 export interface DrawingPreview {
@@ -95,6 +97,8 @@ export class SparsePaint {
 /** Tool-independent gesture lifetime. DOM routing and Pixi only consume this seam. */
 export class DrawingController {
   readonly preview = new Store<DrawingPreview | null>(null);
+  readonly footprint = new Store<DrawingPreview | null>(null);
+  #hoverTile: Point | null = null;
   #session: EditorSession;
   #tools = new Map<DrawingToolId, DrawingTool>();
   #current: {
@@ -123,6 +127,7 @@ export class DrawingController {
         session.canvasState,
         session.color,
         session.selectedRegistryId,
+        session.pencilSize,
       ].map((store) => store.subscribe(cancel)),
     ];
   }
@@ -141,6 +146,46 @@ export class DrawingController {
     return this.#current?.id ?? null;
   }
 
+  hover(point: Point | null): void {
+    const session = this.#session;
+    const tool = this.tool(session.activeTool.getSnapshot());
+    if (
+      !point ||
+      this.#closed ||
+      this.#current ||
+      !tool?.footprint ||
+      session.canvasState.getSnapshot() !== "ready" ||
+      !canEditTiles(session.viewport.getSnapshot()) ||
+      !session.editableLayerIds().length
+    ) {
+      this.#hoverTile = null;
+      this.footprint.set(null);
+      return;
+    }
+    try {
+      const tile = this.#tile(point);
+      if (tile.x === this.#hoverTile?.x && tile.y === this.#hoverTile?.y)
+        return;
+      const context = Object.freeze({
+        start: tile,
+        bounds: session.document.bounds,
+        layerId: session.activeLayer.getSnapshot(),
+        paint: session.currentPaint(),
+      });
+      const paint = new SparsePaint();
+      paint.update(tool.footprint(context), context.bounds, false);
+      this.#hoverTile = tile;
+      this.footprint.set(
+        Object.freeze({
+          layerId: context.layerId,
+          writes: paint.writes(context.layerId),
+        }),
+      );
+    } catch (error) {
+      this.#fail(error);
+    }
+  }
+
   begin(id: number, point: Point): boolean {
     const session = this.#session;
     const tool = this.tool(session.activeTool.getSnapshot());
@@ -154,6 +199,7 @@ export class DrawingController {
     )
       return false;
     try {
+      this.hover(null);
       const start = this.#tile(point);
       const context = Object.freeze({
         start,
@@ -245,6 +291,7 @@ export class DrawingController {
     this.#current = null;
     current?.history.cancel();
     this.preview.set(null);
+    this.hover(null);
   }
   #fail(error: unknown): false {
     this.cancel();

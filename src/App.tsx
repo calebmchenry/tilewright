@@ -81,6 +81,7 @@ function DocumentStatus({ session }: Props) {
 
 export function ToolPanel({ session }: Props) {
   const tool = useStore(session.activeTool);
+  const pencilSize = useStore(session.pencilSize);
   return (
     <section className="panel tools" aria-label="Tools">
       <h2>
@@ -103,13 +104,31 @@ export function ToolPanel({ session }: Props) {
           <ActionButton key={action} session={session} action={action} />
         ))}
       </div>
+      {tool === "pencil" && (
+        <label>
+          Pencil size
+          <select
+            aria-label="Pencil size"
+            value={pencilSize}
+            onChange={(event) =>
+              session.setPencilSize(Number(event.target.value))
+            }
+          >
+            {Array.from({ length: 32 }, (_, i) => i + 1).map((size) => (
+              <option key={size} value={size}>
+                {size} × {size} tiles
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
-        H: Pan · I: Inspect · F: Fit map. Drag with Inspect to measure a
-        rectangle; Escape clears it.{" "}
+        B: Pencil · [ / ]: Size · H: Pan · I: Inspect · F: Fit map. Drag with
+        Inspect to measure a rectangle; Escape clears it.{" "}
         {session.drawing.tool(tool)
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : "Drawing tools are not available yet."}
+          : "Choose Pencil to paint the active layer."}
       </p>
     </section>
   );

@@ -156,7 +156,10 @@ export async function createRenderer(
           .stroke({ color: "#f5cf7d", width: 2 });
       }
       drawing.clear();
-      for (const run of session?.drawing.preview.getSnapshot()?.writes ?? []) {
+      const paintPreview =
+        session?.drawing.preview.getSnapshot() ??
+        session?.drawing.footprint.getSnapshot();
+      for (const run of paintPreview?.writes ?? []) {
         // Display footprint above the composition; never bake it into tile caches.
         const x = Math.max(0, CANVAS_INSET + (run.x - view.x) * scale);
         const y = Math.max(0, CANVAS_INSET + (run.y - view.y) * scale);

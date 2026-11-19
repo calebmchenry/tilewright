@@ -17,6 +17,7 @@ export function mountRenderer(
   let stopViewport: (() => void) | undefined;
   let stopRectangle: (() => void) | undefined;
   let stopDrawing: (() => void) | undefined;
+  let stopFootprint: (() => void) | undefined;
   let density: MediaQueryList | undefined;
   const measure = () => {
     const { width, height } = host.getBoundingClientRect();
@@ -54,6 +55,7 @@ export function mountRenderer(
     stopVisibility?.();
     stopRectangle?.();
     stopDrawing?.();
+    stopFootprint?.();
     renderer?.destroy();
     renderer = undefined;
   };
@@ -86,6 +88,7 @@ export function mountRenderer(
         stopViewport = session.viewport.subscribe(resize);
         stopRectangle = session.rectangle.subscribe(resize);
         stopDrawing = session.drawing.preview.subscribe(resize);
+        stopFootprint = session.drawing.footprint.subscribe(resize);
       }
       onReady();
     })

@@ -56,12 +56,13 @@ export function MapCanvas({ session }: { session: EditorSession }) {
       />
       <p className="sr-only" id="canvas-help">
         Scroll to pan. Pinch or Cmd/Ctrl-scroll to zoom. Space-drag or
-        middle-drag to pan. H selects Pan; I selects Inspect. F fits the map; 0
-        resets to 100%; plus/minus zoom; arrows pan. Drag with Inspect to
-        measure a rectangle; Escape clears it.{" "}
+        middle-drag to pan. B selects Pencil; brackets change its size. H
+        selects Pan; I selects Inspect. F fits the map; 0 resets to 100%;
+        plus/minus zoom; arrows pan. Drag with Inspect to measure a rectangle;
+        Escape clears it.{" "}
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : "Drawing tools are not available yet."}
+          : "Choose Pencil to paint the active layer."}
       </p>
       {status === "ready" && !editable && (
         <p

@@ -35,6 +35,7 @@ export function bindNavigation(
   const updatePointer = () => {
     if (!lastPointer || !ready()) {
       session.pointer.set(null);
+      session.drawing.hover(null);
       return;
     }
     const point = local(lastPointer),
@@ -46,12 +47,14 @@ export function bindNavigation(
       point.y >= rect.height
     ) {
       session.pointer.set(null);
+      session.drawing.hover(null);
       return;
     }
     const tile = screenToTile(point.x, point.y, session.viewport.getSnapshot());
     const previous = session.pointer.getSnapshot();
     if (tile.x !== previous?.x || tile.y !== previous?.y)
       session.pointer.set(tile);
+    session.drawing.hover(drag || measure || space || gesture ? null : point);
   };
   const cursor = () => {
     host.dataset.navigation = drag
@@ -249,6 +252,7 @@ export function bindNavigation(
       space = true;
       finishDrawing();
       cursor();
+      updatePointer();
     } else if (event.key === "Escape") {
       event.preventDefault();
       reset();
@@ -259,6 +263,7 @@ export function bindNavigation(
     if (event.code === "Space" || event.key === " ") {
       space = false;
       cursor();
+      updatePointer();
     }
   };
   // WebKit delivers cumulative scale relative to gesturestart, not per-event scale.
@@ -336,10 +341,12 @@ export function bindNavigation(
       updatePointer();
     }),
     session.canvasSize.subscribe(updatePointer),
+    session.pencilSize.subscribe(updatePointer),
     session.bounds.subscribe(() => finishMeasure(true)),
     session.activeTool.subscribe(() => {
       finishMeasure(true);
       cursor();
+      updatePointer();
     }),
     session.canvasState.subscribe(() => {
       if (!ready()) reset();
