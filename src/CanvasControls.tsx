@@ -36,7 +36,7 @@ function SizePreview({ bounds }: { bounds: Bounds }) {
   );
 }
 
-function CanvasDialog({
+export function CanvasDialog({
   session,
   onCreateMap,
   close,

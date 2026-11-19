@@ -6,7 +6,8 @@ import { canEditTiles } from "./editor/viewport";
 import { useStore, useStoreField } from "./editor/useStore";
 import { VISUAL_CHUNK_SIZE, visualChunkAt } from "./domain/coordinates";
 import { gridScale } from "./renderer/grid";
-import { CanvasControls } from "./CanvasControls";
+import { CanvasControls, CanvasDialog } from "./CanvasControls";
+import type { ApplicationActions } from "./editor/application-actions";
 import type { EditorWorkspace } from "./editor/workspace";
 import { LayerPanel } from "./LayerPanel";
 import { RegistryControls } from "./RegistryControls";
@@ -430,18 +431,22 @@ function Feedback({ session }: Props) {
 export function Workspace({
   workspace,
   lifecycle,
+  actions,
 }: {
   workspace: EditorWorkspace;
   lifecycle: DocumentLifecycle;
+  actions: ApplicationActions;
 }) {
   const { session, generation, savedPath } = useStore(workspace.state);
   const state = useStore(lifecycle.state);
+  const newDialog = useStore(actions.newDialog);
   return (
     <>
       <App
         key={generation}
         session={session}
         lifecycle={lifecycle}
+        actions={actions}
         savedPath={savedPath}
         lifecycleBusy={state.busy}
         onCreateMap={(width, height) => {
@@ -449,6 +454,13 @@ export function Workspace({
         }}
       />
       <UnsavedChanges lifecycle={lifecycle} />
+      {newDialog && (
+        <CanvasDialog
+          session={session}
+          onCreateMap={(width, height) => actions.createMap(width, height)}
+          close={() => actions.newDialog.set(false)}
+        />
+      )}
     </>
   );
 }
@@ -457,11 +469,13 @@ export function App({
   session,
   onCreateMap,
   lifecycle,
+  actions,
   lifecycleBusy = false,
   savedPath,
 }: Props & {
   onCreateMap?: (width: number, height: number) => void;
   lifecycle?: DocumentLifecycle;
+  actions?: ApplicationActions;
   lifecycleBusy?: boolean;
   savedPath?: string | null;
 }) {
@@ -497,17 +511,27 @@ export function App({
           <DocumentStatus session={session} />
         </div>
         <div className="history-controls">
-          {onCreateMap && (
-            <CanvasControls
-              session={session}
-              onCreateMap={onCreateMap}
+          {actions ? (
+            <button
+              type="button"
               disabled={lifecycleBusy}
-            />
+              onClick={() => actions.perform("new")}
+            >
+              New map
+            </button>
+          ) : (
+            onCreateMap && (
+              <CanvasControls
+                session={session}
+                onCreateMap={onCreateMap}
+                disabled={lifecycleBusy}
+              />
+            )
           )}
           <ActionButton session={session} action="undo" />
           <ActionButton session={session} action="redo" />
-          {lifecycle ? (
-            <FileControls lifecycle={lifecycle} />
+          {actions ? (
+            <FileControls actions={actions} />
           ) : (
             <ActionButton session={session} action="save" />
           )}

@@ -8,15 +8,19 @@ import { ProjectFiles } from "./editor/project-files";
 import { nativeProjectFiles } from "./native/project-files";
 import { DocumentLifecycle } from "./editor/document-lifecycle";
 import { bindNativeDocumentLifecycle } from "./native/document-lifecycle";
+import { ApplicationActions } from "./editor/application-actions";
+import { bindApplicationMenu } from "./native/application-menu";
 
 const root = createRoot(document.getElementById("root")!);
 const workspace = new EditorWorkspace();
 const files = new ProjectFiles(workspace, nativeProjectFiles);
 const lifecycle = new DocumentLifecycle(files);
+const actions = new ApplicationActions(lifecycle);
+const unbindMenu = bindApplicationMenu(actions);
 const unbindNative = bindNativeDocumentLifecycle(lifecycle);
 root.render(
   <StrictMode>
-    <Workspace workspace={workspace} lifecycle={lifecycle} />
+    <Workspace workspace={workspace} lifecycle={lifecycle} actions={actions} />
   </StrictMode>,
 );
 
@@ -24,6 +28,8 @@ root.render(
 function dispose() {
   window.removeEventListener("pagehide", dispose);
   root.unmount();
+  unbindMenu();
+  actions.dispose();
   unbindNative();
   lifecycle.dispose();
   files.dispose();

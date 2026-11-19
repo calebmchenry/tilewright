@@ -686,3 +686,57 @@ substituted IPC, startup close requests, and repeated GPU/session replacement;
 `tests/canvas.spec.ts` retains dimension and renderer teardown regressions. Rust
 checks the retained native close-request state. Actual commands, results and
 packaged WKWebView checks are recorded in the WRK ticket.
+
+## File/Edit menus and shortcuts (TW-038)
+
+`src/editor/application-actions.ts` is the shared file/menu/shortcut router.
+New (Cmd+N) opens the same dimension dialog as **New map**, then uses the existing
+unsaved-change protection. Open (Cmd+O), Save (Cmd+S), and Save As (Cmd+Shift+S)
+call `DocumentLifecycle`; no menu has its own file writer or checkpoint path.
+The first Save prompts for a destination, subsequent Save writes the current
+file, and Save As prompts before changing its association. All explicit saves
+write even clean content so current layer preferences persist. The lifecycle
+operation gate ignores duplicate requests while a picker/write/load is pending.
+Cancellation retains the previous feedback/path/checkpoint; failures display the
+file error and leave unsaved work intact.
+
+`src/native/application-menu.ts` installs one native event and DOM keyboard
+binding outside React, disposed with the workspace. It checks actual focus and
+open dialogs at dispatch, and serializes/coalesces native menu-state updates.
+Session replacement rebinds history, clipboard and tool availability subscriptions.
+File actions are disabled during another operation or an editor modal. Edit
+labels include the next map undo/redo operation; clipboard enablement follows the
+same selection/visibility/preview gates as the panel buttons. Menu and keyboard
+editing call `EditorSession.perform`, exactly as those buttons do. Cmd+Z,
+Cmd+Shift+Z and Cmd+X/C/V operate on the map from canvas or non-text panel focus;
+clipboard contents remain document-local tile data, separate from system text.
+The browser development fallback also accepts Ctrl. Tool and arrow shortcuts
+remain canvas-only and are ignored during text entry, IME composition and modals.
+
+`src-tauri/src/application_menu.rs` owns conventional File/Edit menus and
+accelerators, retaining the guarded Quit/Close and standard View/Window menus.
+Actions begin disabled until the frontend listener is ready. For focused HTML
+text fields (including area names/descriptions and modal fields), Edit invokes
+only AppKit's five standard text selectors through its current first responder.
+This retains native text undo/redo and the system clipboard without touching map
+history, tile selection or drafts. Text labels are generic Undo/Redo/Cut/Copy/Paste;
+the responder decides whether the operation applies. Select All remains native.
+The bridge accepts only these five actions, not arbitrary selectors or scripts.
+
+Native Open/Save panels have their own modal responder loop. A scoped guard in
+`project_files.rs` temporarily installs predefined native Edit items and disables
+File while the panel is open, restoring the retained custom submenu on success,
+cancellation or error. This lets filename/path fields use their own clipboard and
+undo without routing through the background webview. Custom menu updates continue
+to refresh the retained submenu while it is hidden. This follows [Tauri's native
+menu behavior](https://v2.tauri.app/learn/window-menu/) and [AppKit's responder
+action dispatch](<https://developer.apple.com/documentation/appkit/nsapplication/sendaction(_:to:from:)>).
+
+Validation lives in `tests/domain/application-actions.test.ts` (shared save gate,
+first/current/Save As destinations, checkpoint, replacement, focus and failure
+preservation), `tests/project-files.spec.ts` (shipping UI/IPC adapter with native
+menu events, menu/shortcut save spam, exact draw/save/open content, text/modal
+isolation and clipboard placement), and the packaged macOS checks recorded in
+TW-038. Browser IPC tests do not stand in for native panels or WKWebView editing.
+No recovery, cross-document clipboard, new persistence format or performance
+budget claim is introduced; TW-049/TW-050 retain the existing refinement scope.

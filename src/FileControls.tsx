@@ -5,6 +5,7 @@ import type {
 } from "./editor/document-lifecycle";
 import type { ProjectFiles } from "./editor/project-files";
 import { useStore } from "./editor/useStore";
+import type { ApplicationActions } from "./editor/application-actions";
 
 export function UnsavedChanges({
   lifecycle,
@@ -78,18 +79,9 @@ function UnsavedDialog({
   );
 }
 
-export function FileControls({ lifecycle }: { lifecycle: DocumentLifecycle }) {
-  const { busy } = useStore(lifecycle.state);
-  const files = lifecycle.files;
-  useEffect(() => {
-    const keydown = (event: KeyboardEvent) => {
-      if (document.querySelector("dialog[open]")) return;
-      if (lifecycle.routeKey(event)) event.preventDefault();
-    };
-    window.addEventListener("keydown", keydown, true);
-    return () => window.removeEventListener("keydown", keydown, true);
-  }, [lifecycle]);
-  const disabled = busy || !files.available;
+export function FileControls({ actions }: { actions: ApplicationActions }) {
+  useStore(actions.menu);
+  const files = actions.lifecycle.files;
   const title = files.available
     ? undefined
     : "Local project files are available in the Tilewright desktop app.";
@@ -97,22 +89,22 @@ export function FileControls({ lifecycle }: { lifecycle: DocumentLifecycle }) {
     <span className="file-controls" title={title}>
       <button
         type="button"
-        disabled={disabled}
-        onClick={() => void lifecycle.open()}
+        disabled={!actions.state("open").enabled}
+        onClick={() => actions.perform("open")}
       >
         Open…
       </button>
       <button
         type="button"
-        disabled={disabled}
-        onClick={() => void lifecycle.save()}
+        disabled={!actions.state("save").enabled}
+        onClick={() => actions.perform("save")}
       >
         Save
       </button>
       <button
         type="button"
-        disabled={disabled}
-        onClick={() => void lifecycle.save(true)}
+        disabled={!actions.state("save-as").enabled}
+        onClick={() => actions.perform("save-as")}
       >
         Save As…
       </button>

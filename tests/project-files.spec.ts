@@ -18,20 +18,29 @@ test.beforeEach(async ({ page }) => {
       holdWrite: false,
       releaseWrite: null as (() => void) | null,
       requestClose: () => {},
+      requestAction: (_id: string) => {},
+      menu: [] as { id: string; label: string; enabled: boolean }[],
+      textEdits: [] as string[],
+      readSaved: false,
     };
-    let eventHandler: (() => void) | null = null;
-    const callbacks = new Map<number, () => void>();
+    const eventHandlers = new Map<
+      string,
+      (event: { payload: string }) => void
+    >();
+    const callbacks = new Map<number, (event: { payload: string }) => void>();
     let callbackId = 0;
     probe.requestClose = () => {
       probe.closePending = true;
-      eventHandler?.();
+      eventHandlers.get("document-close-requested")?.({ payload: "" });
     };
+    probe.requestAction = (id) =>
+      eventHandlers.get("application-action")?.({ payload: id });
     Object.assign(window, {
       isTauri: true,
       fileProbe: probe,
       __TAURI_EVENT_PLUGIN_INTERNALS__: { unregisterListener() {} },
       __TAURI_INTERNALS__: {
-        transformCallback(callback: () => void) {
+        transformCallback(callback: (event: { payload: string }) => void) {
           callbacks.set(++callbackId, callback);
           return callbackId;
         },
@@ -43,13 +52,25 @@ test.beforeEach(async ({ page }) => {
           if (probe.fail === command)
             throw `Could not ${command}: permission denied. Check folder permissions or use Save As.`;
           if (command === "plugin:event|listen") {
-            eventHandler = callbacks.get(
-              (args as { handler: number }).handler,
-            )!;
+            const { event, handler } = args as {
+              event: string;
+              handler: number;
+            };
+            eventHandlers.set(event, callbacks.get(handler)!);
             return 1;
           }
           if (command === "plugin:event|unlisten") {
-            eventHandler = null;
+            eventHandlers.delete((args as { event: string }).event);
+            return;
+          }
+          if (command === "update_application_menu") {
+            probe.menu = (args as { items: typeof probe.menu }).items;
+            return;
+          }
+          if (command === "edit_focused_text") {
+            const action = (args as { action: string }).action;
+            probe.textEdits.push(action);
+            document.execCommand(action); // Native responder is verified separately in the packaged app.
             return;
           }
           if (command === "take_document_close_request") {
@@ -71,7 +92,11 @@ test.beforeEach(async ({ page }) => {
             };
           }
           if (command === "read_project")
-            return new TextEncoder().encode(JSON.stringify(project)).buffer;
+            return new TextEncoder().encode(
+              JSON.stringify(
+                probe.readSaved ? probe.writes.at(-1)!.project : project,
+              ),
+            ).buffer;
           if (command === "write_project") {
             probe.writes.push({
               token: options!.headers["x-project-token"],
@@ -274,6 +299,10 @@ declare global {
       holdWrite: boolean;
       releaseWrite: (() => void) | null;
       requestClose(): void;
+      requestAction(id: string): void;
+      menu: { id: string; label: string; enabled: boolean }[];
+      textEdits: string[];
+      readSaved: boolean;
     };
   }
 }
@@ -382,4 +411,189 @@ test("Open cancellation/read errors preserve map; dirty Open can be declined; co
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     640,
   );
+});
+
+async function menuAction(page: Page, id: string) {
+  await page.evaluate((id) => window.fileProbe.requestAction(id), id);
+}
+async function menuState(page: Page, id: string) {
+  return page.evaluate(
+    (id) => window.fileProbe.menu.find((item) => item.id === id),
+    id,
+  );
+}
+
+test("native New, draw, Cmd+S, edit, menu Save, Open round trip and one history action per invocation", async ({
+  page,
+}) => {
+  await menuAction(page, "new");
+  await page
+    .getByRole("dialog", { name: "New map", exact: true })
+    .getByRole("button", { name: "Create map" })
+    .click();
+  await page
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Pencil", exact: true }).click();
+  const canvas = page.locator(".canvas-host");
+  await canvas.click({ position: { x: 60, y: 60 } });
+  await expect
+    .poll(() => menuState(page, "undo"))
+    .toMatchObject({ label: "Undo Pencil", enabled: true });
+  await canvas.press("Meta+s");
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  const first = await page.evaluate(() => window.fileProbe.writes[0].project);
+  expect(first.document.layers[0].runs.length).toBeGreaterThan(0);
+  await canvas.click({ position: { x: 108, y: 60 } });
+  await menuAction(page, "undo");
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  await canvas.press("Meta+Shift+z");
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
+  await menuAction(page, "save");
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  const saved = await page.evaluate(
+    () => window.fileProbe.writes.at(-1)!.project,
+  );
+  expect(saved.document.layers[0].runs).not.toEqual(
+    first.document.layers[0].runs,
+  );
+  expect(await page.evaluate(() => window.fileProbe.picks)).toEqual([
+    { save: true },
+  ]);
+  await page.evaluate(() => {
+    window.fileProbe.readSaved = true;
+  });
+  await menuAction(page, "open");
+  await expect(page.locator(".document-title")).toContainText(
+    "café 地図 2.tilewright",
+  );
+  await menuAction(page, "save");
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.writes.length))
+    .toBe(3);
+  expect(
+    await page.evaluate(() => window.fileProbe.writes.at(-1)!.project),
+  ).toEqual(saved);
+  await expect
+    .poll(() => menuState(page, "undo"))
+    .toMatchObject({ enabled: false });
+});
+
+test("menu and shortcut save spam starts one native picker/write, and menu cancellation/failure retains dirty work", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.fileProbe.holdWrite = true;
+  });
+  await menuAction(page, "save");
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.writes.length))
+    .toBe(1);
+  await page.keyboard.press("Meta+s");
+  await menuAction(page, "save-as");
+  await menuAction(page, "save");
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: false });
+  expect(await page.evaluate(() => window.fileProbe.picks.length)).toBe(1);
+  expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(1);
+  await page.evaluate(() => {
+    window.fileProbe.holdWrite = false;
+    window.fileProbe.releaseWrite!();
+  });
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  await page.getByLabel("Layer name", { exact: true }).fill("Still unsaved");
+  await page.getByRole("button", { name: "Rename", exact: true }).click();
+  await page.evaluate(() => {
+    window.fileProbe.cancel = true;
+  });
+  await menuAction(page, "save-as");
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: true });
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
+  await page.evaluate(() => {
+    window.fileProbe.cancel = false;
+    window.fileProbe.fail = "write_project";
+  });
+  await menuAction(page, "save");
+  await expect(
+    page.getByRole("alert", { name: "Project file feedback" }),
+  ).toContainText("permission denied");
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
+});
+
+test("canvas menu clipboard shares keyboard placement; name, description and modal focus isolate map actions", async ({
+  page,
+}) => {
+  const canvas = page.locator(".canvas-host");
+  await page.getByRole("button", { name: "Pencil", exact: true }).click();
+  await canvas.click({ position: { x: 60, y: 60 } });
+  await canvas.press("v");
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + 50, box.y + 50);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 75, box.y + 75);
+  await page.mouse.up();
+  await expect
+    .poll(() => menuState(page, "copy"))
+    .toMatchObject({ enabled: true });
+  await menuAction(page, "copy");
+  await expect
+    .poll(() => menuState(page, "paste"))
+    .toMatchObject({ enabled: true });
+  await menuAction(page, "cut");
+  await expect
+    .poll(() => menuState(page, "undo"))
+    .toMatchObject({ label: "Undo Cut" });
+  await canvas.press("Meta+z");
+  await menuAction(page, "paste");
+  await canvas.press("ArrowRight");
+  await canvas.press("Enter");
+  await expect
+    .poll(() => menuState(page, "undo"))
+    .toMatchObject({ label: "Undo Paste" });
+  await menuAction(page, "save");
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  const selected = await page.getByTestId("selection-bounds").textContent();
+  const name = page.getByLabel("Layer name", { exact: true });
+  await name.focus();
+  for (const key of [
+    "ArrowRight",
+    "Meta+c",
+    "Meta+x",
+    "Meta+v",
+    "Meta+z",
+    "Meta+Shift+z",
+  ])
+    await name.press(key);
+  await menuAction(page, "undo");
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.textEdits.at(-1)))
+    .toBe("undo");
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  expect(await page.getByTestId("selection-bounds").textContent()).toBe(
+    selected,
+  );
+  await page.getByRole("button", { name: "New area", exact: true }).click();
+  const description = page.getByLabel("Description", { exact: true });
+  await description.fill("Text draft");
+  await description.press("ArrowLeft");
+  for (const id of ["undo", "redo", "copy", "cut", "paste"])
+    await menuAction(page, id);
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  await description.press("Meta+n");
+  const dialog = page.getByRole("dialog", { name: "New map", exact: true });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Width (tiles)").press("ArrowRight");
+  await menuAction(page, "copy");
+  await menuAction(page, "save");
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).focus();
+  for (const id of ["undo", "cut", "paste", "save", "open", "new"])
+    await menuAction(page, id);
+  await dialog.press("Meta+s");
+  await expect(dialog).toBeVisible();
+  expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(1);
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  await dialog.press("Escape");
 });

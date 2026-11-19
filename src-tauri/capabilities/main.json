@@ -10,6 +10,8 @@
     "allow-write-project",
     "allow-take-document-close-request",
     "allow-finish-document-close",
+    "allow-update-application-menu",
+    "allow-edit-focused-text",
     "core:event:allow-listen",
     "core:event:allow-unlisten"
   ]

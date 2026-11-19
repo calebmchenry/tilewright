@@ -1,6 +1,5 @@
 import { newMapBounds } from "../domain/canvas.ts";
 import type { ProjectFiles } from "./project-files.ts";
-import type { KeyInput } from "./session.ts";
 import { Store } from "./store.ts";
 
 export type DocumentAction = "new" | "open" | "close";
@@ -142,25 +141,5 @@ export class DocumentLifecycle {
       this.#closed = true;
       return true;
     });
-  }
-
-  routeKey(input: KeyInput): boolean {
-    if (
-      input.defaultPrevented ||
-      input.isComposing ||
-      input.altKey ||
-      !(input.metaKey || input.ctrlKey)
-    )
-      return false;
-    const key = input.key.toLowerCase();
-    if (key === "s") {
-      void this.save(!!input.shiftKey);
-      return true;
-    }
-    if (key === "o" && !input.shiftKey) {
-      void this.open();
-      return true;
-    }
-    return false;
   }
 }

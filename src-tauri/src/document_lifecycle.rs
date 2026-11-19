@@ -3,7 +3,7 @@ use tauri::{Emitter, Manager};
 
 // Muda's predefined macOS Quit calls NSApplication.terminate directly, bypassing
 // Tauri's ExitRequested callback. Replace that application submenu with a custom
-// Quit action; retain Tauri's standard File/Edit/View/Window menus for TW-038.
+// Quit action. application_menu installs the shared File/Edit actions next.
 #[cfg(all(target_os = "macos", not(feature = "performance")))]
 pub fn protected_menu(app: &tauri::AppHandle) -> tauri::Result<tauri::menu::Menu<tauri::Wry>> {
     use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};

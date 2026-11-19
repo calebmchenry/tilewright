@@ -96,9 +96,10 @@ use validated names and opaque colors at this feature boundary.
 outside. Inputs, textarea, selects, contenteditable descendants and textbox roles
 retain native keyboard handling. `routeKey` ignores those targets, composition,
 already-handled events and Alt combinations. Canvas/panel Cmd/Ctrl+Z and Shift+Z
-share `perform` with toolbar undo/redo; Cmd/Ctrl+S shares unavailable Save feedback.
-Canvas `I` selects Inspect; TW-008 adds [navigation controls](navigation.md). Future shortcuts should extend this path instead of
-installing separate document-wide listeners. Clicking/Tabbing into the canvas
+share `perform` with toolbar undo/redo. In the shipping workspace, TW-038
+`ApplicationActions` owns file/history/clipboard shortcuts and native menus;
+`routeKey` retains canvas tools/navigation and the standalone test-shell fallback.
+Canvas `I` selects Inspect; TW-008 adds [navigation controls](navigation.md). Clicking/Tabbing into the canvas
 sets focus ownership; window blur marks it inactive. The readout distinguishes
 text editing, panel controls and canvas keyboard input without stealing focus.
 
@@ -155,8 +156,10 @@ fixture/model/history baselines have not been regenerated.
 `main.tsx` also owns `ProjectFiles`, `DocumentLifecycle`, and the native close-event
 subscription, disposing them on pagehide/HMR. `Workspace` routes New, Open and
 explicit saves through the coordinator, with one Save/Discard/Cancel modal shared
-with native close/Quit. `FileControls` routes Cmd+O/Cmd+S/Cmd+Shift+S through that
-same coordinator even from text inputs; editor modals isolate shortcuts. The
+with native close/Quit. `ApplicationActions` and its native menu binding route New/Open/Save/Save As
+through that same coordinator even from text inputs; editor modals isolate
+shortcuts. Native Edit and map shortcuts share session actions while text fields
+retain AppKit editing. See [File/Edit menus](project-format.md#fileedit-menus-and-shortcuts-tw-038). The
 header derives the path from workspace state and dirty status from the current
 history checkpoint. See [the lifecycle contract](project-format.md#document-lifecycle-tw-037)
 for asynchronous saves, failure preservation, session reset and validation.

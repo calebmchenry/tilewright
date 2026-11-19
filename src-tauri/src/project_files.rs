@@ -114,11 +114,15 @@ pub async fn choose_project(
         } else {
             dialog = dialog.set_title("Open Tilewright project");
         }
+        #[cfg(all(target_os = "macos", not(feature = "performance")))]
+        let native_editing = crate::application_menu::DialogEditing::begin(&app)?;
         let chosen = if save {
             dialog.blocking_save_file()
         } else {
             dialog.blocking_pick_file()
         };
+        #[cfg(all(target_os = "macos", not(feature = "performance")))]
+        drop(native_editing);
         let Some(chosen) = chosen else {
             return Ok(None);
         };

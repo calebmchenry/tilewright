@@ -1,3 +1,5 @@
+#[cfg(all(target_os = "macos", not(feature = "performance")))]
+mod application_menu;
 mod document_lifecycle;
 mod project_files;
 use tauri::Manager;
@@ -9,19 +11,17 @@ fn main() {
         .manage(project_files::ProjectFiles::default());
     #[cfg(all(target_os = "macos", not(feature = "performance")))]
     let builder = builder
-        .menu(document_lifecycle::protected_menu)
-        .on_menu_event(|app, event| {
-            if event.id().as_ref() == "document-quit" {
-                document_lifecycle::request_close(app);
-            }
-        });
+        .menu(application_menu::menu)
+        .on_menu_event(application_menu::dispatch);
     #[cfg(not(feature = "performance"))]
     let builder = builder.invoke_handler(tauri::generate_handler![
         project_files::choose_project,
         project_files::read_project,
         project_files::write_project,
         document_lifecycle::take_document_close_request,
-        document_lifecycle::finish_document_close
+        document_lifecycle::finish_document_close,
+        application_menu::update_application_menu,
+        application_menu::edit_focused_text
     ]);
     #[cfg(feature = "performance")]
     let builder = builder.invoke_handler(tauri::generate_handler![

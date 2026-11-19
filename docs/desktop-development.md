@@ -108,7 +108,8 @@ for this baseline. Do not claim notarized distribution from this command.
 - The native identifier is `app.tilewright.desktop`; the window label is `main`.
   `src-tauri/capabilities/main.json` applies only to the local macOS main window
   and grants `choose_project`, `read_project`, `write_project`, the two document
-  close-handshake commands, and event listen/unlisten. Rust
+  close-handshake commands, fixed application menu-state updates, the five native
+  text-edit actions, and event listen/unlisten. Rust
   opens native dialogs and issues handles for selected paths. There are no
   JavaScript filesystem/dialog/shell permissions or unrestricted home access.
   See [Tauri capabilities](https://v2.tauri.app/security/capabilities/).
