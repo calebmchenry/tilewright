@@ -16,7 +16,10 @@ product requirements. [INTENT.md](../INTENT.md) and the
 3. Install [rustup](https://rustup.rs/). `rust-toolchain.toml` pins Rust 1.100.0
    with rustfmt and Clippy. Run `rustup show` in the checkout to install/select
    that toolchain. This is a repository pin, not a global toolchain change.
-4. From the repository root:
+4. Install Python 3.9+ (`python3` on PATH) for the independent agent-export
+   consumer checks in `npm test`. The consumer uses only the standard library;
+   Python is not a dependency of the packaged app.
+5. From the repository root:
 
    ```sh
    npm ci

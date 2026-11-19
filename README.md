@@ -114,6 +114,9 @@ now capture every committed layer and area and emit deterministic UTF-8 bytes,
 independently of viewport, selection and visibility. [Export for Agent](docs/agent-export-format.md#native-export-workflow-tw-045)
 now provides a native JSON destination, progress, cancellation and atomic output
 replacement while preserving unsaved project and recovery state.
+The [independent Python consumer](docs/agent-export-format.md#independent-consumer-verification-tw-046)
+validates exports and reads every layer without the editor, with a golden semantic
+example and complete populated-map comparisons.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).

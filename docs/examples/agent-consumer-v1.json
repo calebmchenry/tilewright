@@ -1,0 +1,132 @@
+{
+  "areas": [
+    {
+      "bounds": {
+        "maxX": 3,
+        "maxY": 2,
+        "minX": 0,
+        "minY": 0
+      },
+      "description": "Oak worktables stand over grass and stone.\nKeep every underlying tile. 🔨",
+      "id": "house",
+      "name": "Blacksmith’s house",
+      "tier": "detail"
+    },
+    {
+      "bounds": {
+        "maxX": 6,
+        "maxY": 5,
+        "minX": -2,
+        "minY": -1
+      },
+      "description": "",
+      "id": "region",
+      "name": "Northern reach",
+      "tier": "region"
+    },
+    {
+      "bounds": {
+        "maxX": 6,
+        "maxY": 5,
+        "minX": -1,
+        "minY": 0
+      },
+      "description": "The eastern green swatches are unlabeled, even when one matches Meadow.\nWater is an unused registered meaning.",
+      "id": "village",
+      "name": "Starting village",
+      "tier": "locality"
+    }
+  ],
+  "bounds": {
+    "maxX": 6,
+    "maxY": 5,
+    "minX": -2,
+    "minY": -1
+  },
+  "colors": [
+    {
+      "kind": "raw",
+      "meaning": null,
+      "rgba": "#000000ff"
+    },
+    {
+      "kind": "raw",
+      "meaning": null,
+      "rgba": "#335c46ff"
+    },
+    {
+      "kind": "raw",
+      "meaning": null,
+      "rgba": "#629653ff"
+    },
+    {
+      "kind": "raw",
+      "meaning": null,
+      "rgba": "#ffffff00"
+    },
+    {
+      "kind": "registered",
+      "meaning": "Meadow",
+      "registryId": "grass",
+      "rgba": "#335c46ff"
+    },
+    {
+      "kind": "registered",
+      "meaning": "Stone wall",
+      "registryId": "stone",
+      "rgba": "#8d939cff"
+    },
+    {
+      "kind": "registered",
+      "meaning": "Oak table",
+      "registryId": "table",
+      "rgba": "#a7754cff"
+    },
+    {
+      "kind": "registered",
+      "meaning": "Water",
+      "registryId": "water",
+      "rgba": "#417aabff"
+    }
+  ],
+  "format": "tilewright-agent-map",
+  "layers": [
+    {
+      "id": "terrain",
+      "name": "Terrain",
+      "runs": [
+        [-2, -1, 1, 3],
+        [-1, 0, 6, 4],
+        [-1, 1, 6, 4],
+        [0, 2, 4, 4],
+        [4, 3, 1, 2],
+        [5, 3, 1, 1],
+        [5, 4, 1, 0]
+      ]
+    },
+    {
+      "id": "walls",
+      "name": "Walls",
+      "runs": [
+        [0, 0, 3, 5],
+        [0, 1, 1, 5]
+      ]
+    },
+    {
+      "id": "furniture",
+      "name": "Furniture",
+      "runs": [
+        [1, 0, 1, 6],
+        [1, 1, 1, 6],
+        [2, 1, 1, 0],
+        [3, 2, 1, 4]
+      ]
+    },
+    {
+      "id": "empty",
+      "name": "Furniture",
+      "runs": []
+    }
+  ],
+  "version": 1
+}

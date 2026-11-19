@@ -412,3 +412,115 @@ timer tasks; native I/O never runs on the UI thread. Target-scale correctness an
 cancellation tests do not establish latency percentiles or peak-memory budgets.
 Per AGENTS.md, those performance-only refinements remain TW-049/TW-050, with
 end-to-end export profiling in TW-051.
+
+## Independent consumer verification (TW-046)
+
+[`consume-agent-map.py`](../scripts/consume-agent-map.py) is a standalone Python
+3.9+ standard-library reader written against the public contract above. Copy it
+and an export to any directory; no installation, project decoder, TypeScript
+module, editor state, rendering cache or server is needed. Python is validation
+tooling, not a dependency of the packaged editor.
+
+```sh
+python3 scripts/consume-agent-map.py docs/examples/agent-consumer-v1.json
+python3 scripts/consume-agent-map.py docs/examples/agent-consumer-v1.json --at 1 0
+python3 scripts/consume-agent-map.py docs/examples/agent-consumer-v1.json --cells
+```
+
+The first command validates and reports full bounds, colors, areas and ordered
+layer summaries. `--at X Y` adds every layer's color at the address and all
+containing area IDs; a layer's `color: null` means empty, whereas a raw color
+object with `meaning: null` means occupied unlabeled paint. An outside-map query
+fails. `--cells` emits one JSON line per occupied cell, retaining `layerId`,
+zero-based `layerOrder`, world `x`/`y` and the complete resolved `color`. It is
+lazy but can produce millions of lines; use summaries or coordinate queries for
+large maps. Pass `-` instead of a path to read export bytes from standard input.
+
+The reader validates the entire input before emitting anything. Errors exit 1
+with a diagnostic on stderr and no partial output. It rejects duplicate keys
+(including escaped aliases), invalid UTF-8/BOM, fractional/exponent/unsafe numeric
+tokens, incorrect fields/types/version, duplicate identities or color owners,
+unresolved references, invalid bounds, unordered/overlapping runs and invalid
+areas. Python's exact integer arithmetic checks lexical range without rounding;
+booleans are not integers. The reader applies the published exporter capacity
+ceilings as its own input policy. Noncanonical key/color/area order, whitespace,
+and adjacent split runs remain valid. Names and descriptions are plain text;
+they are never evaluated or treated as instructions.
+
+The returned dictionary retains sparse horizontal runs. Validation and summaries
+take O(bytes + runs + metadata) work/storage, never width × height × layers.
+Coordinate lookup uses binary search in each layer's ordered runs plus an area
+scan. `iter_cells` expands only as requested. This reader loads JSON in memory;
+it is not a streaming JSON parser or a peak-memory guarantee at the capacity cap.
+
+### Reading the golden map as an agent
+
+[`agent-consumer-v1.json`](examples/agent-consumer-v1.json) is the actual production
+export of the independently authored
+[`consumerGoldenSession`](../tests/fixtures/agent-consumer.ts), pretty-printed.
+The source recolors Grass from `#629653ff` to `#335c46ff`, renames it Meadow,
+and hides Walls and Furniture before capture. The four layers retain **28
+occupied layer cells in 13 runs**: Terrain 20, Walls 4, Furniture 4, and an empty
+top layer also named Furniture. Layer IDs distinguish those equal display names.
+Compact production output is 1,520 bytes; SHA-256 is
+`95ad511e2a18b0c467fbe50f4541eb95d686f394b26533b1f76a28edf5e49d7b`.
+
+An agent can read the file in this order:
+
+1. `bounds` gives `[-2, 6) × [-1, 5)`, an 8 × 6 map. Addresses are world tiles,
+   x right/y down, with exclusive maxima; do not offset them by the negative minima.
+2. `layers` is bottom to top. For `(1, 0)`, Terrain's `[-1, 0, 6, 4]`, Walls'
+   `[0, 0, 3, 5]` and Furniture's `[1, 0, 1, 6]` all cover that position.
+   Resolve indices 4, 5 and 6 in `colors`: Meadow, Stone wall and Oak table.
+   Retain all three values, including the underlying and editor-hidden content.
+3. `colors[4]` retains `registryId: "grass"` with its current Meadow meaning and
+   `#335c46ff` color, also referenced on Furniture at `(3, 2)`. In contrast,
+   Terrain at `(5, 3)` uses raw `colors[1]`, the same RGBA with `meaning: null`.
+   `(4, 3)` remains raw old green, `(-2, -1)` is occupied transparent white,
+   and `(5, 4)` is occupied raw black. Never infer meanings from color equality.
+   `colors[7]` is Water, an unused authored meaning with no implied cells.
+4. `areas` locates `house`, `village` and `region` by ID, not array position or
+   layer membership. House bounds `[0, 3) × [0, 2)` cover six positions; its exact
+   description is `Oak worktables stand over grass and stone.\nKeep every underlying tile. 🔨`.
+   Village's independent description explains the raw swatches and unused Water;
+   Region's description is the empty string. All three tiers remain available.
+5. `(5, 0)` is empty on every layer; `(6, 0)` is outside. The empty top Furniture
+   layer remains present and does not erase lower layers. Areas can cover these
+   empty positions without creating tiles or an implicit parent-child relation.
+
+Thus coordinates come from bounds/runs, layer identity/order from `layers`,
+authored meaning and current appearance from `colors`, and names, descriptions,
+tiers and geometry from `areas`. None requires guessing editor state or game
+behavior such as walkability, height or collision.
+
+### Reproducible completeness checks
+
+Run `node --test tests/domain/agent-consumer.test.ts` with the pinned Node and
+Python 3.9+ on PATH; these checks also run in `npm test`. They compare every golden
+cell against the source document's cell iterator, all metadata against its source
+records, and the checked-in example against fresh production bytes. They test the
+original TW-043 example too, and run a copied reader/export in a temporary
+directory with Python isolated mode. A negative schema matrix requires nonzero
+exit and zero partial output, including for malformed content late in the file.
+
+Both complete populated source documents are exported and independently decoded:
+
+| Fixture      | Occupied layer cells | Canonical runs | Export bytes | Areas |
+| ------------ | -------------------: | -------------: | -----------: | ----: |
+| frontier-v1  |            6,620,700 |        123,870 |    2,306,718 | 1,089 |
+| heartland-v1 |           24,025,200 |        470,490 |    8,080,454 | 1,089 |
+
+The tests compare bounds, every color/meaning, ordered layer IDs/names/counts and
+all area records directly to the source document. A SHA-256 per layer compares
+every resolved run with the source model's independently read runs, covering all
+occupied addresses and hidden overlaps without constructing dense grids. Its
+diagnostic encoding is one ASCII JSON tuple plus LF per run:
+`[x,y,length,kind,registryIdOrNull,rgba,meaning]`, using Python `ensure_ascii=True`
+and compact separators. These are segmentation-sensitive run digests, not a new
+wire-format field or a canonical cell hash for arbitrary split runs.
+
+Maximum 65,536 × 65,536 empty/single-cell maps also decode with fewer than 400
+export bytes, including safe-coordinate extremes. Large fixture correctness and
+sparse representation are verified; native latency percentiles, peak memory and
+agent context limits are not measured here. Performance-only refinements remain
+TW-049/TW-050 and end-to-end export profiling TW-051.
