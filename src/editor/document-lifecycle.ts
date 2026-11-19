@@ -1,8 +1,15 @@
+import {
+  selectionFor,
+  validateRecoveryBytes,
+  type RecoveryMetadata,
+  type RecoveryReviewBridge,
+} from "./recovery-discovery.ts";
+import type { SavedContext } from "./recovery.ts";
 import { newMapBounds } from "../domain/canvas.ts";
 import type { ProjectFiles } from "./project-files.ts";
 import { Store } from "./store.ts";
 
-export type DocumentAction = "new" | "open" | "close";
+export type DocumentAction = "new" | "open" | "close" | "restore";
 export type UnsavedChoice = "save" | "discard" | "cancel";
 export interface LifecycleState {
   readonly busy: boolean;
@@ -140,6 +147,59 @@ export class DocumentLifecycle {
       if (!proceed) return false;
       proceed();
       return this.files.open(proceed);
+    });
+  }
+
+  restore(
+    metadata: RecoveryMetadata,
+    saved: SavedContext | null,
+    bridge: RecoveryReviewBridge,
+  ): Promise<boolean> {
+    return this.#run("restore", async () => {
+      const selection = selectionFor(metadata);
+      const bytes = await bridge.read(selection);
+      await validateRecoveryBytes(bytes, metadata);
+      const proceed = await this.#protect("restore");
+      if (!proceed) return false;
+      proceed();
+      const recovered = {
+        documentId: metadata.documentId,
+        writerId: globalThis.crypto.randomUUID(),
+        saved,
+        displayName: metadata.displayName,
+        capturedAt: metadata.capturedAt,
+      };
+      const owner = this;
+      let claimed = false;
+      try {
+        await this.files.workspace.openProject(bytes, {
+          recovered,
+          signal: {
+            get aborted() {
+              return owner.#closed;
+            },
+          },
+          beforeInstall: async () => {
+            proceed();
+            const session = this.files.workspace.state.getSnapshot().session;
+            const release = session.document.holdEdits();
+            try {
+              await bridge.claim(selection, recovered.writerId);
+              claimed = true;
+              await this.files.recovery?.resolve(session.history.state.dirty);
+              return release;
+            } catch (error) {
+              release();
+              throw error;
+            }
+          },
+        });
+        return true;
+      } catch (error) {
+        if (claimed)
+          await bridge.release(recovered.documentId, recovered.writerId);
+        throw error;
+      }
     });
   }
 

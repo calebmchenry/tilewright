@@ -1,3 +1,8 @@
+import { RecoveryPanel } from "./RecoveryPanel";
+import type {
+  RecoveryBrowser,
+  RecoveredProject,
+} from "./editor/recovery-discovery";
 import { useEffect, useId, useState } from "react";
 import { MapCanvas } from "./MapCanvas";
 import { focusOwner } from "./editor/focus";
@@ -433,12 +438,16 @@ export function Workspace({
   workspace,
   lifecycle,
   actions,
+  recoveryBrowser,
 }: {
+  recoveryBrowser?: RecoveryBrowser;
   workspace: EditorWorkspace;
   lifecycle: DocumentLifecycle;
   actions: ApplicationActions;
 }) {
-  const { session, generation, savedPath } = useStore(workspace.state);
+  const { session, generation, savedPath, recovered } = useStore(
+    workspace.state,
+  );
   const state = useStore(lifecycle.state);
   const newDialog = useStore(actions.newDialog);
   return (
@@ -449,6 +458,8 @@ export function Workspace({
         lifecycle={lifecycle}
         actions={actions}
         savedPath={savedPath}
+        recovered={recovered}
+        recoveryBrowser={recoveryBrowser}
         lifecycleBusy={state.busy}
         onCreateMap={(width, height) => {
           void lifecycle.newMap(width, height);
@@ -473,12 +484,16 @@ export function App({
   actions,
   lifecycleBusy = false,
   savedPath,
+  recovered,
+  recoveryBrowser,
 }: Props & {
   onCreateMap?: (width: number, height: number) => void;
   lifecycle?: DocumentLifecycle;
   actions?: ApplicationActions;
   lifecycleBusy?: boolean;
   savedPath?: string | null;
+  recovered?: RecoveredProject | null;
+  recoveryBrowser?: RecoveryBrowser;
 }) {
   useEffect(() => {
     const blur = () => session.focus.set("outside");
@@ -505,9 +520,20 @@ export function App({
           </span>
           <h1>Tilewright</h1>
         </div>
-        <div className="document-title" title={savedPath ?? undefined}>
+        <div
+          className="document-title"
+          title={
+            savedPath ??
+            (recovered
+              ? `Captured ${new Date(recovered.capturedAt).toLocaleString()}`
+              : undefined)
+          }
+        >
           <span className="project-filename">
-            {savedPath?.split("/").pop() ?? "Untitled map"}
+            {savedPath?.split("/").pop() ??
+              (recovered
+                ? `Recovered — ${recovered.displayName}`
+                : "Untitled map")}
           </span>{" "}
           <DocumentStatus session={session} />
         </div>
@@ -554,6 +580,7 @@ export function App({
         </aside>
       </div>
       <footer>
+        {recoveryBrowser && <RecoveryPanel browser={recoveryBrowser} />}
         <Readout session={session} />
         <Feedback session={session} />
         {lifecycle && (

@@ -8,8 +8,12 @@ export const nativeProjectFiles: ProjectFileBridge = {
   get available() {
     return isTauri();
   },
-  choose: (save, current) =>
-    invoke<ProjectFileHandle | null>("choose_project", { save, current }),
+  choose: (save, current, suggestedName) =>
+    invoke<ProjectFileHandle | null>("choose_project", {
+      save,
+      current,
+      suggestedName,
+    }),
   async read(token) {
     const bytes = await invoke<ArrayBuffer | number[]>("read_project", {
       token,

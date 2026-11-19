@@ -5,6 +5,11 @@
   "windows": ["main"],
   "platforms": ["macOS"],
   "permissions": [
+    "allow-discover-recovery",
+    "allow-read-recovery",
+    "allow-claim-recovery",
+    "allow-release-recovery",
+    "allow-discard-recovery",
     "allow-initialize-recovery",
     "allow-control-recovery",
     "allow-prepare-recovery",

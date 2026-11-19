@@ -83,6 +83,7 @@ pub async fn choose_project(
     app: tauri::AppHandle,
     save: bool,
     current: Option<String>,
+    suggested_name: Option<String>,
 ) -> Result<Option<ChosenProject>, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let files = app.state::<ProjectFiles>();
@@ -101,9 +102,11 @@ pub async fn choose_project(
             .file()
             .add_filter("Tilewright project", &["tilewright"]);
         if save {
-            dialog = dialog
-                .set_title("Save Tilewright project")
-                .set_file_name("Untitled.tilewright");
+            dialog = dialog.set_title("Save Tilewright project").set_file_name(
+                suggested_name
+                    .filter(|name| name.len() <= 4096 && !name.contains(['/', '\\', '\0']))
+                    .unwrap_or_else(|| "Untitled.tilewright".into()),
+            );
             if let Some(path) = previous {
                 if let Some(parent) = path.parent() {
                     dialog = dialog.set_directory(parent);

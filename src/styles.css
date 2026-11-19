@@ -802,3 +802,43 @@ footer {
   white-space: nowrap;
   max-width: 240px;
 }
+
+.recovery-entrypoint {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.recovery-dialog {
+  width: min(720px, calc(100vw - 32px));
+}
+.recovery-group,
+.recovery-row {
+  overflow-wrap: anywhere;
+}
+.recovery-group h3 {
+  font-size: 14px;
+}
+.recovery-row {
+  border-top: 1px solid #586d80;
+  padding: 12px 0;
+}
+.recovery-row h4 {
+  font-size: 15px;
+  margin: 0;
+}
+.recovery-identity {
+  color: #a5b4c6;
+  font-size: 11px;
+}
+.recovery-row select {
+  width: 100%;
+  min-width: 0;
+}
+.recovery-confirm {
+  padding: 12px;
+  background: #303743;
+  border-radius: 4px;
+}

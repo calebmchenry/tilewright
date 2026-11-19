@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-claim-recovery"
+description = "Enables the claim_recovery command without any pre-configured scope."
+commands.allow = ["claim_recovery"]
+
+[[permission]]
+identifier = "deny-claim-recovery"
+description = "Denies the claim_recovery command without any pre-configured scope."
+commands.deny = ["claim_recovery"]

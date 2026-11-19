@@ -18,6 +18,11 @@ fn main() {
         .on_menu_event(application_menu::dispatch);
     #[cfg(not(feature = "performance"))]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        recovery::discover_recovery,
+        recovery::read_recovery,
+        recovery::claim_recovery,
+        recovery::release_recovery,
+        recovery::discard_recovery,
         recovery::initialize_recovery,
         recovery::control_recovery,
         recovery::prepare_recovery,
@@ -33,6 +38,11 @@ fn main() {
     ]);
     #[cfg(feature = "performance")]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        recovery::discover_recovery,
+        recovery::read_recovery,
+        recovery::claim_recovery,
+        recovery::release_recovery,
+        recovery::discard_recovery,
         recovery::initialize_recovery,
         recovery::control_recovery,
         recovery::prepare_recovery,

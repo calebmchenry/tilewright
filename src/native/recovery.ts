@@ -20,3 +20,24 @@ export const nativeRecovery: RecoveryBridge = {
   commit: (ticket) => invoke("commit_recovery", { ticket }),
   cancel: (ticket) => invoke("cancel_recovery", { ticket }),
 };
+
+export const nativeRecoveryReview: import("../editor/recovery-discovery").RecoveryReviewBridge =
+  {
+    get available() {
+      return isTauri();
+    },
+    discover: () => invoke("discover_recovery"),
+    async read(selection, source = false) {
+      return new Uint8Array(
+        await invoke<ArrayBuffer | number[]>("read_recovery", {
+          selection,
+          source,
+        }),
+      );
+    },
+    claim: (selection, writer) =>
+      invoke("claim_recovery", { selection, writer }),
+    release: (documentId, writer) =>
+      invoke("release_recovery", { documentId, writer }),
+    discard: (documentId) => invoke("discard_recovery", { documentId }),
+  };

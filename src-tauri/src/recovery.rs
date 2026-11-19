@@ -16,6 +16,10 @@ use tauri::{
 };
 use uuid::Uuid;
 
+#[path = "recovery_discovery.rs"]
+mod discovery;
+pub use discovery::*;
+
 const RECORD: u64 = 65_536;
 const PAYLOAD: u64 = 268_435_456;
 const CAP: u64 = 1_073_741_824;
@@ -286,7 +290,7 @@ pub struct Capture {
     #[serde(deserialize_with = "required")]
     saved: Option<SavedContext>,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Metadata {
     format: String,
@@ -317,6 +321,8 @@ struct Pending {
 #[derive(Default)]
 pub struct Recovery(Mutex<Option<RecoveryStore>>);
 struct RecoveryStore {
+    live: std::collections::HashSet<String>,
+    startup_warning: Option<String>,
     retired: HashMap<String, State>,
     root: Directory,
     _lock: File,
@@ -341,6 +347,8 @@ impl RecoveryStore {
             invalid("Recovery unavailable: another Tilewright instance owns the recovery store")
         })?;
         let mut store = Self {
+            live: Default::default(),
+            startup_warning: None,
             retired: HashMap::new(),
             root,
             _lock: lock,
@@ -348,7 +356,9 @@ impl RecoveryStore {
             cap: CAP,
             lineages: 10,
         };
-        store.cleanup()?;
+        // Bad entries must remain reviewable without preventing discovery of
+        // independent valid work. Writes still require successful cleanup.
+        store.startup_warning = store.cleanup().err().map(|e| e.to_string());
         Ok(store)
     }
     fn state(&self, id: &str) -> io::Result<State> {
@@ -462,6 +472,11 @@ impl RecoveryStore {
             state.resolved_through = Some(state.next_sequence - 1);
         }
         self.write_state(&state, check)?; // durable marker precedes all deletion
+        if state.status == Status::Active {
+            self.live.insert(state.document_id.clone());
+        } else {
+            self.live.remove(&state.document_id);
+        }
         if self
             .pending
             .as_ref()

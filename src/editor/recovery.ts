@@ -130,23 +130,23 @@ export class RecoveryCoordinator {
   #bind() {
     this.#history();
     if (this.#lineage) this.#lineage.epoch++;
-    const session = this.workspace.state.getSnapshot().session;
+    const { session, recovered } = this.workspace.state.getSnapshot();
     const state = session.history.state;
     const now = this.#clock.now();
     this.#lineage = {
       session,
-      documentId: globalThis.crypto.randomUUID(),
-      writerId: globalThis.crypto.randomUUID(),
+      documentId: recovered?.documentId ?? globalThis.crypto.randomUUID(),
+      writerId: recovered?.writerId ?? globalThis.crypto.randomUUID(),
       epoch: 0,
-      saved: null,
-      touched: false,
+      saved: recovered?.saved ?? null,
+      touched: !!recovered,
       revision: state.revision,
       dirty: state.dirty,
       checkpoint: null,
       first: state.dirty ? now : null,
       last: now,
       lastStart: null,
-      lastCapture: null,
+      lastCapture: recovered?.capturedAt ?? null,
     };
     this.#failures = 0;
     this.#retryAt = 0;
@@ -323,6 +323,7 @@ export class RecoveryCoordinator {
         dirty: true,
         displayName:
           this.workspace.state.getSnapshot().savedPath?.split("/").at(-1) ??
+          this.workspace.state.getSnapshot().recovered?.displayName ??
           "Untitled",
         saved: l.saved,
       };
@@ -462,6 +463,9 @@ export class RecoveryCoordinator {
         `${this.state.getSnapshot().error}. Retry the document action or cancel.`,
       );
     }
+  }
+  get documentId(): string {
+    return this.#lineage.documentId;
   }
   retry(): void {
     this.#blocked = false;

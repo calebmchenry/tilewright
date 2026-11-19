@@ -1,6 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
 import { exampleProject } from "./fixtures/project";
 import type { RecoveryCapture, RecoveryTicket } from "../src/editor/recovery";
+import { createHash, randomUUID } from "node:crypto";
+import type {
+  RecoveryEntry,
+  RecoverySelection,
+} from "../src/editor/recovery-discovery";
+type RecoveryFixture = {
+  entry: RecoveryEntry;
+  project: typeof exampleProject;
+  original: typeof exampleProject | null;
+};
 import { trackGpu } from "./gpu";
 
 // Exercise the shipping UI and Tauri adapter; only OS IPC/dialogs are substituted.
@@ -9,6 +19,10 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript((projectText: string) => {
     const project = JSON.parse(projectText) as typeof exampleProject;
     const probe = {
+      recoveryEntries: JSON.parse(
+        sessionStorage.getItem("test-recovery") ?? "[]",
+      ) as RecoveryFixture[],
+      recoveryDiscards: [] as string[],
       recoveries: [] as { capture: RecoveryCapture; project: typeof project }[],
       recoveryControls: [] as {
         status: string;
@@ -62,6 +76,48 @@ test.beforeEach(async ({ page }) => {
         ) {
           if (probe.fail === command)
             throw `Could not ${command}: permission denied. Check folder permissions or use Save As.`;
+          if (command === "discover_recovery")
+            return {
+              entries: probe.recoveryEntries.map((r) => r.entry),
+              warnings: [],
+            };
+          if (command === "read_recovery") {
+            const { selection, source } = args as {
+              selection: RecoverySelection;
+              source: boolean;
+            };
+            const record = probe.recoveryEntries.find(
+              (r) => r.entry.documentId === selection.documentId,
+            )!;
+            if (source && !record.original)
+              throw new Error("Original file is missing");
+            return new TextEncoder().encode(
+              JSON.stringify(source ? record.original : record.project),
+            ).buffer;
+          }
+          if (command === "claim_recovery" || command === "release_recovery") {
+            const { selection, documentId } = args as {
+              selection?: RecoverySelection;
+              documentId?: string;
+            };
+            const record = probe.recoveryEntries.find(
+              (r) =>
+                r.entry.documentId === (selection?.documentId ?? documentId),
+            )!;
+            record.entry = {
+              ...record.entry,
+              current: command === "claim_recovery",
+            };
+            return;
+          }
+          if (command === "discard_recovery") {
+            const { documentId } = args as { documentId: string };
+            probe.recoveryDiscards.push(documentId);
+            probe.recoveryEntries = probe.recoveryEntries.filter(
+              (r) => r.entry.documentId !== documentId,
+            );
+            return null;
+          }
           if (command === "initialize_recovery") return;
           if (command === "control_recovery") {
             probe.recoveryControls.push(
@@ -333,6 +389,8 @@ test("close requested before listener registration is protected, and native clos
 declare global {
   interface Window {
     fileProbe: {
+      recoveryEntries: RecoveryFixture[];
+      recoveryDiscards: string[];
       recoveries: {
         capture: RecoveryCapture;
         project: typeof exampleProject;
@@ -341,7 +399,7 @@ declare global {
       cancel: boolean;
       fail: string;
       writes: { token: string; project: typeof exampleProject }[];
-      picks: { save: boolean; current?: string }[];
+      picks: { save: boolean; current?: string; suggestedName?: string }[];
       choice: number;
       closePending: boolean;
       closed: number;
@@ -727,4 +785,190 @@ test("recovery failure remains visible with Retry while explicit Save stays avai
   ).toContainText("checkpoint ready");
   expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(0);
   await expect(page.locator(".document-title")).toContainText("Unsaved");
+});
+
+function recoveryFixture(
+  source: string | null,
+  original: typeof exampleProject | null = null,
+): RecoveryFixture {
+  const project = structuredClone(exampleProject);
+  const sha256 = createHash("sha256")
+    .update(JSON.stringify(project))
+    .digest("hex");
+  const saved = source
+    ? {
+        path: source,
+        savedAt: Date.now() - 15000,
+        byteHash: "0".repeat(64),
+        canonicalHash: "0".repeat(64),
+      }
+    : null;
+  const documentId = randomUUID();
+  return {
+    project,
+    original,
+    entry: {
+      documentId,
+      saved,
+      error: null,
+      discardable: true,
+      current: false,
+      generations: [
+        {
+          sequence: 3,
+          error: null,
+          metadata: {
+            format: "tilewright-recovery",
+            version: 1,
+            documentId,
+            writerId: randomUUID(),
+            epoch: 6,
+            sequence: 3,
+            capturedAt: Date.now() - 10000,
+            completedAt: Date.now() - 9000,
+            historyRevision: 1,
+            documentVersion: 15,
+            savedRevision: 8,
+            dirty: true,
+            displayName: source?.split("/").at(-1) ?? "Untitled",
+            saved,
+            projectFormat: "tilewright-project",
+            projectVersion: 1,
+            byteLength: Buffer.byteLength(JSON.stringify(project)),
+            sha256,
+          },
+        },
+      ],
+    },
+  };
+}
+async function seedRecovery(page: Page, fixtures: RecoveryFixture[]) {
+  await page.evaluate(
+    (fixtures) => sessionStorage.setItem("test-recovery", fixtures),
+    JSON.stringify(fixtures),
+  );
+  await page.reload();
+  await expect(page.getByRole("status", { name: "Canvas status" })).toHaveText(
+    "Canvas ready",
+  );
+}
+
+test("startup recovery offers corrupt fallback, guards restore and saves exact captured content only after a picker", async ({
+  page,
+}) => {
+  const fixture = recoveryFixture("/missing/café 地図.tilewright");
+  fixture.entry = {
+    ...fixture.entry,
+    generations: [
+      { sequence: 4, metadata: null, error: "Recovery checksum mismatch" },
+      ...fixture.entry.generations,
+    ],
+  };
+  await seedRecovery(page, [fixture]);
+  const dialog = page.getByRole("dialog", { name: "Recover unsaved work" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("older fallback");
+  await expect(dialog).toContainText("Original file is missing");
+  await dialog.getByRole("button", { name: "Restore as unsaved copy" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Restore recovered map" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Restore as unsaved copy" }).click();
+  await page
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator(".document-title")).toContainText(
+    "Recovered — café 地図.tilewright",
+  );
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
+  expect(await page.evaluate(() => window.fileProbe.writes)).toEqual([]);
+  await page.getByRole("button", { name: "Review recovery…" }).click();
+  await expect(dialog).toContainText("Currently open");
+  await expect(
+    dialog.getByRole("button", { name: "Restore as unsaved copy" }),
+  ).toBeDisabled();
+  await expect(
+    dialog.getByRole("button", { name: "Discard recovery…" }),
+  ).toBeDisabled();
+  await dialog.getByRole("button", { name: "Not now" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  const written = await page.evaluate(() => ({
+    project: window.fileProbe.writes[0].project,
+    pick: window.fileProbe.picks[0],
+  }));
+  expect(written.project).toEqual(fixture.project);
+  expect(written.pick.current).toBeUndefined();
+  expect(written.pick.suggestedName).toBe("café 地図 (Recovered).tilewright");
+});
+
+test("stale recovery is reviewable without prompting and Escape keeps it at narrow size", async ({
+  page,
+}) => {
+  await seedRecovery(page, [
+    recoveryFixture("/maps/already-saved.tilewright", exampleProject),
+  ]);
+  const dialog = page.getByRole("dialog", { name: "Recover unsaved work" });
+  await expect(
+    page.getByRole("button", { name: "Review recovery…" }),
+  ).toBeEnabled();
+  await expect(dialog).toBeHidden();
+  await page.setViewportSize({ width: 640, height: 480 });
+  await page.getByRole("button", { name: "Review recovery…" }).click();
+  await expect(dialog).toContainText("Already matches saved file");
+  const size = await dialog.boundingBox();
+  expect(size!.x).toBeGreaterThanOrEqual(0);
+  expect(size!.x + size!.width).toBeLessThanOrEqual(640);
+  await dialog.getByRole("button", { name: "Not now" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  expect(
+    await page.evaluate(() => window.fileProbe.recoveryEntries.length),
+  ).toBe(1);
+  expect(await page.evaluate(() => window.fileProbe.recoveryDiscards)).toEqual(
+    [],
+  );
+});
+
+test("multiple same-source maps remain distinct and corrupt recovery discard is named, confirmed and scoped", async ({
+  page,
+}) => {
+  const first = recoveryFixture("/maps/shared.tilewright"),
+    second = recoveryFixture("/maps/shared.tilewright"),
+    bad = recoveryFixture(null);
+  bad.entry = {
+    ...bad.entry,
+    generations: [
+      { sequence: 1, metadata: null, error: "Unsupported recovery metadata" },
+    ],
+  };
+  await seedRecovery(page, [first, second, bad]);
+  const dialog = page.getByRole("dialog", { name: "Recover unsaved work" });
+  await expect(dialog).toContainText("2 separate maps with this source");
+  const row = dialog.getByRole("article", {
+    name: `Unavailable recovery — ${bad.entry.documentId}`,
+  });
+  await expect(
+    row.getByRole("button", { name: "Restore as unsaved copy" }),
+  ).toBeDisabled();
+  await row.getByRole("button", { name: "Discard recovery…" }).click();
+  await expect(row).toContainText(bad.entry.documentId);
+  await expect(row).toContainText(
+    "The saved project and other recovery maps will remain",
+  );
+  await row.getByRole("button", { name: "Keep recovery" }).click();
+  expect(await page.evaluate(() => window.fileProbe.recoveryDiscards)).toEqual(
+    [],
+  );
+  await row.getByRole("button", { name: "Discard recovery…" }).click();
+  await row.getByRole("button", { name: "Discard this recovery" }).click();
+  await expect(row).toBeHidden();
+  expect(await page.evaluate(() => window.fileProbe.recoveryDiscards)).toEqual([
+    bad.entry.documentId,
+  ]);
+  await expect(dialog.getByRole("article")).toHaveCount(2);
+  expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(0);
 });

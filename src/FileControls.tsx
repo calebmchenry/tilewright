@@ -36,7 +36,9 @@ function UnsavedDialog({
       ? "Create another map"
       : action === "open"
         ? "Open another project"
-        : "Close Tilewright";
+        : action === "restore"
+          ? "Restore recovered map"
+          : "Close Tilewright";
   return (
     <dialog
       ref={dialog}

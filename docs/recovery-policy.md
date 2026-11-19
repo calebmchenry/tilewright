@@ -4,7 +4,7 @@ Decision record for [TW-039](../.wrk/wrk-dbdc0004.md), subordinate to
 [INTENT.md](../INTENT.md#local-operation). The values and interactions below are
 implementation choices, not additional confirmed product requirements. This is
 a policy with [TW-040 writing and lifecycle integration](#writer-implementation-tw-040)
-now implemented. TW-041 implements discovery/restore/discard; TW-042 proves
+now implemented. [TW-041 implements discovery/restore/discard](#discovery-and-restoration-implementation-tw-041); TW-042 proves
 interruption behavior in the packaged app.
 
 ## Safety boundary and ownership
@@ -448,3 +448,74 @@ fault tests establish foreground-frame, p95 latency or physical-memory budgets.
 Those measurements and refinement remain TW-049/TW-050 (persistence profiling in
 TW-051), as directed by AGENTS.md. Packaged force-quit/restore validation remains
 TW-042; full discovery and restoration remain TW-041.
+
+## Discovery and restoration implementation (TW-041)
+
+`src-tauri/src/recovery_discovery.rs` adds five narrow native commands: discover,
+read checkpoint/source, claim a lineage, release an uninstalled claim, and discard.
+The existing process lock and blocking-worker serialization cover every operation.
+Discovery lists unresolved lineages independently and orders their generations by
+sequence. Cleanup failures become review warnings; corrupt entries do not prevent
+other maps from being offered or the editor from launching. Unknown store versions
+and unknown layouts remain untouched. A malformed v1 state can be deliberately
+discarded using a new durable marker; an explicitly unsupported state version cannot.
+
+Native reads validate closed metadata, required nullable fields, IDs, safe counters,
+payload size and SHA-256. The saved-source read follows only the latest known path
+from that lineage's state, checks every directory and final regular file without
+following symlinks, is bounded to the project ceiling, and grants no project handle.
+`src/editor/recovery-discovery.ts` sequentially reads and fully decodes each valid
+checkpoint before enabling Restore. It canonicalizes validated source content to
+identify matching saved files, unchanged baselines despite formatting differences,
+conflicts and unavailable/unknown relationships. Only summaries remain in the list;
+it does not retain multiple decoded maps. Checks are advisory, not write authority.
+
+`src/RecoveryPanel.tsx` shows capture/save times, full source and latest destination,
+lineage IDs, old/unknown age, unavailable reasons and a checkpoint selector. It
+selects the newest valid fallback when a newer checkpoint is invalid. Rows sharing
+a source are grouped but never merged. A matching newest checkpoint stays reviewable
+without an urgent startup prompt. **Not now** and Escape keep the entries, including
+while a read-only scan finishes; **Review recovery…** remains available in the footer.
+Discard confirmation identifies the map, its lineage and captures. Native discard
+records its marker before deleting only covered recovery generations. The live map's
+Restore/Discard list actions are disabled in both the UI and native store.
+
+`DocumentLifecycle.restore` rechecks the payload checksum, uses the existing
+Save/Discard/Cancel guard, and privately constructs a completely decoded session.
+Only after the final authorized-version check does it hold outgoing edits, claim the
+incoming lineage with a new writer, resolve outgoing recovery, and install. If the
+outgoing marker fails, the claim is released and both checkpoints remain; the
+incoming durable bytes are never consumed by claim. Claims resume the existing
+sequence/retention slot and record `restoredFrom`; old writer tokens are fenced.
+
+`EditorWorkspace.openProject` has an explicit recovered-install option that forces
+`initiallySaved: false` and `savedPath: null`; it restores the captured active/hidden
+layers and resets transient state/history/camera as for Open. The coordinator binds
+to the selected lineage with fresh history, retains its saved-file context for
+advisory comparison, and schedules a new checkpoint. The header identifies the
+recovered source and capture time. `ProjectFiles` has no file association for this
+session. Its first Save uses the native picker with a sanitized
+`<name> (Recovered).tilewright` suggestion. Only that deliberate write can update
+any selected project path. Canceled saves leave the recovered copy dirty.
+
+Validation locations:
+
+- Native discovery tests cover relaunch, claim and a second crash, selected discard,
+  marker/cleanup failures, original-byte preservation, independent candidates,
+  checksum fallback, malformed state, missing/symlink sources and unknown versions.
+- `tests/domain/recovery-discovery.test.ts` covers complete model/preference equality,
+  fresh history, lineage reuse, saved-file content comparisons, semantic corruption,
+  valid fallback, age labels, unsaved guard races, canceled saves and failed markers.
+- `tests/project-files.spec.ts` exercises the shipping review/restore/discard UI and
+  native adapter with substituted IPC, including startup offers, same-path grouping,
+  named confirmation, unavailable sources, stale matches, Escape at 640 × 480,
+  current-lineage action protection and exact content through explicit Save.
+- The TW-041 ticket records actual release WKWebView SIGKILL/relaunch, pre-save
+  recovered-model comparison, picker behavior, explicit saving and original-file
+  preservation. TW-042 remains the broader interruption/failure campaign.
+
+Discovery re-reads/decodes complete checkpoints, and canonical source comparison
+adds another decode/encode. It is bounded and sequential but is not a measured
+latency or peak-memory pass. Background WKWebView timers may defer validation until
+the window is activated. Performance work remains deferred to TW-049/TW-050 and
+persistence profiling to TW-051 under the project's delivery priority.

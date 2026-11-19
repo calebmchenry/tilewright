@@ -1,3 +1,4 @@
+import type { RecoveredProject } from "./recovery-discovery.ts";
 import { newMapBounds } from "../domain/canvas.ts";
 import { MapDocument } from "../domain/document.ts";
 import {
@@ -17,6 +18,7 @@ export class EditorWorkspace {
       session: EditorSession;
       generation: number;
       savedPath: string | null;
+      recovered: RecoveredProject | null;
     }>
   >;
   #closed = false;
@@ -25,7 +27,12 @@ export class EditorWorkspace {
 
   constructor(session = new EditorSession()) {
     this.state = new Store(
-      Object.freeze({ session, generation: 0, savedPath: null }),
+      Object.freeze({
+        session,
+        generation: 0,
+        savedPath: null,
+        recovered: null,
+      }),
     );
   }
 
@@ -58,6 +65,7 @@ export class EditorWorkspace {
               session,
               generation: previous.generation + 1,
               savedPath: null,
+              recovered: null,
             }),
           );
         } catch (error) {
@@ -84,13 +92,14 @@ export class EditorWorkspace {
     bytes: Uint8Array,
     options: ProjectDecodeOptions & {
       readonly savedPath?: string | null;
+      readonly recovered?: RecoveredProject;
       readonly beforeInstall?: () => Promise<() => void>;
     } = {},
   ): Promise<
     Readonly<{ session: EditorSession; observerErrors: readonly unknown[] }>
   > {
     this.#assertAvailable();
-    const savedPath = options.savedPath ?? null;
+    const savedPath = options.recovered ? null : (options.savedPath ?? null);
     if (
       savedPath !== null &&
       (typeof savedPath !== "string" || !savedPath.trim())
@@ -140,7 +149,7 @@ export class EditorWorkspace {
     let session: EditorSession | undefined;
     try {
       session = new EditorSession(decoded.document, {
-        initiallySaved: true,
+        initiallySaved: !options.recovered,
         fitOnFirstSize: true,
       });
       session.activeLayer.set(layerId(decoded.preferences.activeLayerId));
@@ -182,6 +191,7 @@ export class EditorWorkspace {
           session,
           generation: previous.generation + 1,
           savedPath,
+          recovered: options.recovered ?? null,
         }),
       );
     } catch (error) {
@@ -219,7 +229,9 @@ export class EditorWorkspace {
     try {
       errors.push(...session.history.markSaved(checkpoint));
       try {
-        this.state.set(Object.freeze({ ...previous, savedPath: path }));
+        this.state.set(
+          Object.freeze({ ...previous, savedPath: path, recovered: null }),
+        );
       } catch (error) {
         errors.push(error);
       }

@@ -11,7 +11,11 @@ export interface ProjectFileHandle {
 /** Native code alone issues handles from the file picker. No arbitrary path I/O. */
 export interface ProjectFileBridge {
   readonly available: boolean;
-  choose(save: boolean, current?: string): Promise<ProjectFileHandle | null>;
+  choose(
+    save: boolean,
+    current?: string,
+    suggestedName?: string,
+  ): Promise<ProjectFileHandle | null>;
   read(token: string): Promise<Uint8Array>;
   write(token: string, bytes: Uint8Array): Promise<string | null>;
 }
@@ -181,7 +185,13 @@ export class ProjectFiles {
       const file =
         !as && existing
           ? existing
-          : await this.bridge.choose(true, existing?.token);
+          : await this.bridge.choose(
+              true,
+              existing?.token,
+              before.recovered
+                ? `${before.recovered.displayName.replace(/\.tilewright$/i, "")} (Recovered).tilewright`
+                : undefined,
+            );
       if (!file) return null;
       const owner = this;
       const signal = {

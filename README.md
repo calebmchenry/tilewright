@@ -102,7 +102,9 @@ The [recovery policy](docs/recovery-policy.md) defines separate local snapshots,
 cadence, identity, bounded retention, save/discard ordering and restoration as an
 unsaved copy. [Recovery writing](docs/recovery-policy.md#writer-implementation-tw-040) now preserves
 committed revisions with atomic local generations, bounded retention and separate
-feedback. Startup discovery and restore controls follow in TW-041.
+feedback. [Startup recovery review](docs/recovery-policy.md#discovery-and-restoration-implementation-tw-041)
+offers validated checkpoints, safe restoration as unsaved copies and selected
+recovery discard while preserving explicit project files.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).
