@@ -63,8 +63,10 @@ exception to the active-layer editing rule: it samples the topmost occupied visi
 cell, even if the active layer is hidden. Hidden layers never supply a sample.
 The eraser still targets only the active visible layer and reveals underlying tiles.
 
-Visibility and active selection are outside document history and are not a file
-format decision. Removal drops that layer's hidden preference; undo restores the
+Visibility and active selection are outside document history. The
+[TW-033 format](project-format.md#persisted-preferences-and-session-reset) chooses
+to persist them as separate editor preferences once file I/O is implemented.
+Removal drops that layer's hidden preference; undo restores the
 layer **visible**, at its original position with its original ID, name, and all
 tiles. New Map resets these preferences with the session. Low-level document
 commands can still change hidden data (e.g. undo or a registered-color change);

@@ -18,8 +18,10 @@ dimension guardrails and undoable bounds changes.
 stores for active tool/layer, current color, viewport, pointer, focus, renderer
 readiness, rectangle measurement and feedback. React component drafts (layer name, hex input and area
 search) stay local to their panel. None of these values are copied into document
-content, commands, saved revisions or recovery data. Persisting editor preferences
-remains a future file-format decision. `execute` and `perform` are the shared
+content, commands, saved revisions or recovery data in the current implementation.
+The [TW-033 project format](project-format.md#persisted-preferences-and-session-reset)
+chooses to snapshot active/hidden layers separately when persistence is implemented;
+other editor preferences remain session-local. `execute` and `perform` are the shared
 command/action entry points; tools can build domain commands outside React.
 
 `Store` exposes cached `getSnapshot` and idempotent `subscribe` seams for

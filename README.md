@@ -84,6 +84,11 @@ bounds at every zoom, independently of tile selection.
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).
 
+The [versioned editable-project format](docs/project-format.md) specifies sparse
+ordered layers, stable paint identity, complete named areas, persisted preferences,
+validation and compatibility policy, with an annotated example. Encoding, file
+I/O and recovery implementation follow in the project tickets.
+
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).
 

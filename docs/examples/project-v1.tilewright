@@ -1,0 +1,73 @@
+{
+  "format": "tilewright-project",
+  "version": 1,
+  "document": {
+    "bounds": { "minX": -64, "minY": -64, "maxX": 6336, "maxY": 6336 },
+    "palette": [
+      { "kind": "raw", "rgba": "#00000000" },
+      { "kind": "raw", "rgba": "#000000ff" },
+      { "kind": "raw", "rgba": "#629653ff" },
+      { "kind": "registered", "registryId": "registry-grass" },
+      { "kind": "registered", "registryId": "registry-stone" }
+    ],
+    "layers": [
+      {
+        "id": "terrain",
+        "name": "Terrain",
+        "runs": [
+          [-1, -1, 2, 3],
+          [62, 63, 4, 3],
+          [62, 64, 1, 2],
+          [64, 64, 1, 0],
+          [6335, 6335, 1, 1]
+        ]
+      },
+      {
+        "id": "buildings",
+        "name": "Buildings",
+        "runs": [
+          [63, 63, 1, 1],
+          [64, 63, 2, 4],
+          [63, 64, 3, 4],
+          [66, 64, 1, 2]
+        ]
+      },
+      { "id": "notes", "name": "Notes", "runs": [] }
+    ],
+    "registry": [
+      { "id": "registry-grass", "name": "Grass", "rgba": "#629653ff" },
+      { "id": "registry-stone", "name": "Stone", "rgba": "#8d939cff" },
+      { "id": "registry-water", "name": "Water", "rgba": "#417aabff" }
+    ],
+    "annotations": [
+      {
+        "id": "area-house",
+        "name": "Blacksmith’s house",
+        "description": "Forge downstairs.\nHome upstairs.  ",
+        "tier": "detail",
+        "bounds": { "minX": 60, "minY": 60, "maxX": 68, "maxY": 68 },
+        "label": { "placement": "center" }
+      },
+      {
+        "id": "area-region",
+        "name": "Green Reach",
+        "description": "Settled valley and surrounding hills.",
+        "tier": "region",
+        "bounds": { "minX": -64, "minY": -64, "maxX": 1024, "maxY": 1024 },
+        "label": { "placement": "center" }
+      },
+      {
+        "id": "area-village",
+        "name": "Willow Village",
+        "description": "",
+        "tier": "locality",
+        "bounds": { "minX": 0, "minY": 0, "maxX": 128, "maxY": 128 },
+        "label": { "placement": "center" }
+      }
+    ]
+  },
+  "editor": {
+    "activeLayerId": "buildings",
+    "hiddenLayerIds": ["buildings"]
+  }
+}

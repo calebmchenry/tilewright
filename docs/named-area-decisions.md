@@ -7,7 +7,8 @@ TW-030 authoring, TW-031 zoom-dependent labels and TW-032 browsing/focus now shi
 as documented below. They extend the
 [coordinate](foundation-decisions.md), [camera](navigation.md),
 [history](command-history.md), and [selection](selection-decisions.md) contracts.
-TW-033 and TW-043 still own the complete, separate project and export schemas.
+The [TW-033 project format](project-format.md) specifies the complete editable
+schema; TW-043 owns the separate agent export schema.
 
 ## Geometry and document data
 
