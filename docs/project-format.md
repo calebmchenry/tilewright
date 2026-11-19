@@ -6,8 +6,8 @@ choices, not additional product requirements. This specifies the contract for
 TW-034 encoding, TW-035 decoding and subsequent native save/open/recovery work.
 The [TW-034 snapshot and encoder](#snapshot-and-encoder-implementation-tw-034)
 implement the writing side; the [TW-035 decoder and safe load boundary](#decoder-and-safe-load-implementation-tw-035)
-implement validated reconstruction and session replacement. Native file workflows
-follow in subsequent tickets.
+implement validated reconstruction and session replacement. The
+[TW-036 native file workflow](#native-file-workflow-tw-036) connects them to macOS files.
 
 ## Container and version
 
@@ -528,3 +528,99 @@ wall-clock latency or physical memory; JavaScript OOM is not a recoverable promi
 Node tests with immediate scheduling measure correctness, not end-to-end native
 Open, first-frame presentation, cold trials or peak physical footprint. Those
 performance measurements/refinements remain TW-050/TW-049 under AGENTS.md.
+
+## Native file workflow (TW-036)
+
+The toolbar exposes **Open…**, **Save**, and **Save As…**. Cmd+O, Cmd+S and
+Cmd+Shift+S work throughout the workspace, including text fields and after a
+native dialog returns focus to the webview root. Editor modal dialogs keep their
+existing shortcut isolation. Frontend-only development reports that local files
+require the desktop app. The packaged app uses embedded assets and native IPC;
+no account, network request or runtime server participates in a file operation.
+
+[`project-files.ts`](../src/editor/project-files.ts) coordinates one file operation
+at a time through [`native/project-files.ts`](../src/native/project-files.ts).
+Save captures a committed snapshot before the first asynchronous step, including
+the picker. New files use the Save dialog; subsequent Save uses the successfully
+associated handle. Even clean content is written so current layer preferences
+persist. Edits during encoding/writing remain dirty when the captured checkpoint
+is acknowledged. Save As changes the active path only after successful write.
+Cancellation restores the preceding file feedback and never acknowledges history
+or changes the document/path. Errors are plain-text actionable feedback.
+
+Open reads and validates a detached candidate before replacing the workspace.
+Changes to the session, content, preferences or checkpoints during the picker/read
+supersede the request; the existing decoder protects the later decoding stage.
+An operation that finishes writing after New Map cannot mark the new map saved or
+associate its path. Interface observer exceptions after a successful write are
+reported as warnings, not a false I/O failure. The UI has a basic discard/cancel
+confirmation before replacing dirty content; the full Save/Discard/Cancel,
+window-close lifecycle, recovery and native menu coordination remain TW-037 and
+subsequent tickets.
+
+### Native authority and paths
+
+[`project_files.rs`](../src-tauri/src/project_files.rs) exposes exactly three production app
+commands, explicitly listed by `build.rs` and the local macOS main-window
+capability. `choose_project` uses the Rust Tauri dialog plugin to select one
+`.tilewright` file or save destination, and issues an in-memory opaque handle.
+`read_project` and `write_project` accept only such handles; neither accepts an
+arbitrary webview path. The dialog plugin's JavaScript commands and its transitive
+filesystem plugin have no granted permissions. There is no home-directory scope,
+shell permission or remote capability. The separate performance build retains
+its two benchmark commands through its own configuration-only capability. Native I/O runs on blocking workers,
+serialized by a native mutex as well as the frontend operation gate.
+
+Save dialogs default to `Untitled.tilewright`, then the active directory/name.
+The native panel controls extension and overwrite confirmation; a different
+extension is rejected rather than silently changing the confirmed destination.
+Paths with spaces and Unicode pass intact through IPC. Existing symlinks and
+parent symlinks resolve to their target at selection; subsequent substitution of the selected file
+by a symlink is rejected. Invalid Unicode paths, unavailable parents and
+nonregular files reject with feedback. Permissions and inaccessible disks are
+reported with retry/Save As guidance. No directory is implicitly created.
+Handles are session-local grants retained until app exit, never serialized into a
+project; they do not establish bookmarks or recent-file persistence.
+
+Reads require regular files, reject files over the shared 256 MiB policy before
+reading, and enforce that limit again while reading to cover growing sources.
+Nonblocking/no-follow open flags avoid hanging on a replaced FIFO or following a
+substituted file symlink. Read failures never modify the source. Binary IPC avoids
+JSON arrays/base64 for complete project bytes.
+
+### Atomic replacement and limits of the guarantee
+
+Save creates a private `.tilewright-*.tmp` sibling using exclusive temporary-file
+creation. It writes the complete bytes, preserves an existing regular file's Unix
+mode (new files start private), and calls `sync_all` before committing with one
+same-directory atomic rename. It never opens the destination with truncation.
+Write, flush and rename failures leave the previous destination intact and remove
+the temporary file. Process exit before rename can leave an orphan temporary file;
+that file is never treated as the explicit project or recovery data. Recovery
+cleanup/discovery is separate work.
+
+After rename, the destination is already the complete new project. The parent
+directory is then synced; a failure at that point is explicitly a successful
+commit with a durability warning, not a false failure claiming the path was
+unchanged. Physical power-loss guarantees for every disk/controller or network
+filesystem are not claimed. Atomic replacement changes the inode, does not update
+other hard links, and does not preserve arbitrary extended attributes/ACLs. This
+baseline does not detect another application's concurrent edits. Peak IPC/codec
+memory and large native-save latency remain unmeasured and are deferred to TW-050
+(TW-049 for presentation), per AGENTS.md.
+
+### Validation locations
+
+Rust tests in `project_files.rs` exercise Unicode paths, real and injected
+write/sync/rename/read failures, read-only/unavailable/nonregular paths, byte
+limits including growing streams, handle rejection, symlinks, mode preservation,
+temporary cleanup and a child process exiting during a partial write. Original
+files are compared byte for byte after failures.
+[`project-files.test.ts`](../tests/domain/project-files.test.ts) verifies native
+bridge failure/cancellation against complete workspace/history snapshots,
+checkpoint capture, preference saves, operation serialization, concurrent edits
+and replacement, Save As association and post-commit warnings.
+[`project-files.spec.ts`](../tests/project-files.spec.ts) tests the shipping UI and
+binary adapter with substituted IPC, including keyboard focus and a 640-pixel
+window. The ticket records actual packaged macOS picker/read/write checks;
+browser tests alone do not claim native dialog coverage.

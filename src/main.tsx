@@ -4,11 +4,15 @@ import { Workspace } from "./App";
 import "./styles.css";
 import { EditorWorkspace } from "./editor/workspace";
 
+import { ProjectFiles } from "./editor/project-files";
+import { nativeProjectFiles } from "./native/project-files";
+
 const root = createRoot(document.getElementById("root")!);
 const workspace = new EditorWorkspace();
+const files = new ProjectFiles(workspace, nativeProjectFiles);
 root.render(
   <StrictMode>
-    <Workspace workspace={workspace} />
+    <Workspace workspace={workspace} files={files} />
   </StrictMode>,
 );
 
@@ -16,6 +20,7 @@ root.render(
 function dispose() {
   window.removeEventListener("pagehide", dispose);
   root.unmount();
+  files.dispose();
   workspace.dispose();
 }
 window.addEventListener("pagehide", dispose, { once: true });

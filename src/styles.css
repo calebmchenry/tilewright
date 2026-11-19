@@ -113,6 +113,9 @@ h3 {
   font-size: 25px;
 }
 .document-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
   flex: 1;
   color: #c4cfdd;
   font-size: 13px;
@@ -125,6 +128,7 @@ h3 {
 }
 .history-controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 .action {
@@ -785,4 +789,16 @@ footer {
 .area-details output {
   display: block;
   margin-bottom: 10px;
+}
+
+.file-controls {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.project-filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
 }

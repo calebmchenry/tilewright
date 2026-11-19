@@ -5,6 +5,7 @@ import {
   type ProjectDecodeOptions,
 } from "../domain/project-decoding.ts";
 import { ProjectDecodingError } from "../domain/project-format.ts";
+import type { RevisionCheckpoint } from "../domain/history.ts";
 import { layerId } from "../domain/values.ts";
 import { EditorSession } from "./session.ts";
 import { Store } from "./store.ts";
@@ -158,6 +159,32 @@ export class EditorWorkspace {
       session,
       observerErrors: Object.freeze(observerErrors),
     });
+  }
+
+  /** Disk acknowledgement belongs only to the session whose bytes were written. */
+  acknowledgeProjectSave(
+    session: EditorSession,
+    path: string,
+    checkpoint: RevisionCheckpoint,
+  ): readonly unknown[] {
+    this.#assertAvailable();
+    const previous = this.state.getSnapshot();
+    if (previous.session !== session)
+      throw new Error("The saved session is no longer active.");
+    if (!path.trim()) throw new Error("The saved path is missing.");
+    const errors: unknown[] = [];
+    this.#publishing = true;
+    try {
+      errors.push(...session.history.markSaved(checkpoint));
+      try {
+        this.state.set(Object.freeze({ ...previous, savedPath: path }));
+      } catch (error) {
+        errors.push(error);
+      }
+    } finally {
+      this.#publishing = false;
+    }
+    return Object.freeze(errors);
   }
 
   #assertAvailable(): void {

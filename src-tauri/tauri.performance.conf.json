@@ -16,6 +16,18 @@
         "resizable": false,
         "alwaysOnTop": true
       }
-    ]
+    ],
+    "security": {
+      "capabilities": [
+        "main",
+        {
+          "identifier": "performance",
+          "description": "Dedicated local performance build only; read benchmark mode and emit measurements.",
+          "windows": ["main"],
+          "platforms": ["macOS"],
+          "permissions": ["allow-performance-mode", "allow-performance-event"]
+        }
+      ]
+    }
   }
 }

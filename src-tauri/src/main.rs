@@ -1,7 +1,20 @@
+mod project_files;
+
 fn main() {
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .manage(project_files::ProjectFiles::default());
+    #[cfg(not(feature = "performance"))]
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        project_files::choose_project,
+        project_files::read_project,
+        project_files::write_project
+    ]);
     #[cfg(feature = "performance")]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        project_files::choose_project,
+        project_files::read_project,
+        project_files::write_project,
         performance_mode,
         performance_event
     ]);

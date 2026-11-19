@@ -51,7 +51,7 @@ than silently choosing a different port. Stop the command with Ctrl-C.
 | `npm run perf:baseline`                                                     | Generate both populated fixtures twice and record harness metrics  |
 | `npm run format:check`                                                      | Check app/test formatting and Rust formatting                      |
 | `npm run format`                                                            | Format app/test code and Rust code                                 |
-| `cargo test --locked --manifest-path src-tauri/Cargo.toml`                  | Compile/test the native shell (currently zero Rust unit tests)     |
+| `cargo test --locked --manifest-path src-tauri/Cargo.toml`                  | Compile/test native project I/O and failure preservation           |
 | `cargo clippy --locked --manifest-path src-tauri/Cargo.toml -- -D warnings` | Lint the native shell                                              |
 
 The [editor shell](editor-shell.md) now integrates the document/history controller,
@@ -87,7 +87,7 @@ for this baseline. Do not claim notarized distribution from this command.
 
 - React owns the shell and status/retry controls (`src/App.tsx`,
   `src/MapCanvas.tsx`). Map data and future editing algorithms remain outside
-  React. Rust currently does nothing beyond starting Tauri.
+  React. Rust owns the narrow [native project file bridge](project-format.md#native-file-workflow-tw-036).
 - `src/renderer/createRenderer.ts` explicitly constructs Pixi's `WebGLRenderer`
   with a WebGL 2 context. WebGPU and Canvas2D are not fallback renderers. WebGL 2
   is the chosen bootstrap path for the macOS system webview. Initialization
@@ -107,9 +107,9 @@ for this baseline. Do not claim notarized distribution from this command.
   React root on `pagehide` and Vite module disposal.
 - The native identifier is `app.tilewright.desktop`; the window label is `main`.
   `src-tauri/capabilities/main.json` applies only to the local macOS main window
-  and grants zero commands. No filesystem/dialog/shell plugin is installed.
-  TW-036 should add explicit file-dialog and selected-path permissions or narrow
-  atomic file commands there; it must not start with unrestricted home access.
+  and grants only `choose_project`, `read_project`, and `write_project`. Rust
+  opens native dialogs and issues handles for selected paths. There are no
+  JavaScript filesystem/dialog/shell permissions or unrestricted home access.
   See [Tauri capabilities](https://v2.tauri.app/security/capabilities/).
 - Production CSP restricts scripts/assets to the bundled origin and connections
   to native IPC. The development CSP additionally permits Vite's local HMR and

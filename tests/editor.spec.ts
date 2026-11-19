@@ -90,8 +90,8 @@ test("shell displays state, explains unavailable actions, and keeps native text 
   await canvas.click();
   await canvas.press("ControlOrMeta+s");
   await expect(
-    page.getByRole("status", { name: "Action feedback" }),
-  ).toContainText("saving is not available");
+    page.getByRole("alert", { name: "Project file feedback" }),
+  ).toContainText("Tilewright desktop app");
 });
 
 for (const dpr of [1, 2]) {

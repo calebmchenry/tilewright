@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-performance-event"
+description = "Enables the performance_event command without any pre-configured scope."
+commands.allow = ["performance_event"]
+
+[[permission]]
+identifier = "deny-performance-event"
+description = "Denies the performance_event command without any pre-configured scope."
+commands.deny = ["performance_event"]

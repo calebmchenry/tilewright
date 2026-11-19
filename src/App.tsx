@@ -12,6 +12,8 @@ import { LayerPanel } from "./LayerPanel";
 import { RegistryControls } from "./RegistryControls";
 import { AnnotationPanel } from "./AnnotationPanel";
 export { AnnotationPanel } from "./AnnotationPanel";
+import { FileControls, FileFeedback } from "./FileControls";
+import type { ProjectFiles } from "./editor/project-files";
 import { SelectionPanel } from "./SelectionPanel";
 import {
   parseRgbFields,
@@ -420,12 +422,20 @@ function Feedback({ session }: Props) {
   );
 }
 
-export function Workspace({ workspace }: { workspace: EditorWorkspace }) {
-  const { session, generation } = useStore(workspace.state);
+export function Workspace({
+  workspace,
+  files,
+}: {
+  workspace: EditorWorkspace;
+  files?: ProjectFiles;
+}) {
+  const { session, generation, savedPath } = useStore(workspace.state);
   return (
     <App
       key={generation}
       session={session}
+      files={files}
+      savedPath={savedPath}
       onCreateMap={(width, height) => workspace.createMap(width, height)}
     />
   );
@@ -434,7 +444,13 @@ export function Workspace({ workspace }: { workspace: EditorWorkspace }) {
 export function App({
   session,
   onCreateMap,
-}: Props & { onCreateMap?: (width: number, height: number) => void }) {
+  files,
+  savedPath,
+}: Props & {
+  onCreateMap?: (width: number, height: number) => void;
+  files?: ProjectFiles;
+  savedPath?: string | null;
+}) {
   useEffect(() => {
     const blur = () => session.focus.set("outside");
     window.addEventListener("blur", blur);
@@ -460,8 +476,11 @@ export function App({
           </span>
           <h1>Tilewright</h1>
         </div>
-        <div className="document-title">
-          Untitled map <DocumentStatus session={session} />
+        <div className="document-title" title={savedPath ?? undefined}>
+          <span className="project-filename">
+            {savedPath?.split("/").pop() ?? "Untitled map"}
+          </span>{" "}
+          <DocumentStatus session={session} />
         </div>
         <div className="history-controls">
           {onCreateMap && (
@@ -469,7 +488,11 @@ export function App({
           )}
           <ActionButton session={session} action="undo" />
           <ActionButton session={session} action="redo" />
-          <ActionButton session={session} action="save" />
+          {files ? (
+            <FileControls files={files} />
+          ) : (
+            <ActionButton session={session} action="save" />
+          )}
         </div>
       </header>
       <div className="editor-body">
@@ -490,6 +513,7 @@ export function App({
       <footer>
         <Readout session={session} />
         <Feedback session={session} />
+        {files && <FileFeedback files={files} />}
       </footer>
     </main>
   );
