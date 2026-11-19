@@ -98,7 +98,9 @@ Cmd+O, Cmd+S and Cmd+Shift+S. [Document lifecycle](docs/project-format.md#docume
 protects New/Open/window close/Quit with Save, Discard and Cancel, including edits
 during saves and fresh session/cache installation. [File/Edit menus](docs/project-format.md#fileedit-menus-and-shortcuts-tw-038)
 share those actions, with focus-aware native text editing and Cmd+N/O/S/Z/X/C/V.
-Recovery follows in the project tickets.
+The [recovery policy](docs/recovery-policy.md) defines separate local snapshots,
+cadence, identity, bounded retention, save/discard ordering and restoration as an
+unsaved copy. Recovery writing and restore controls follow in TW-040/TW-041.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).

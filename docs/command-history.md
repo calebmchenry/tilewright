@@ -140,6 +140,9 @@ Recovery can capture its own token and call `markRecovery` on successful recover
 write. This updates only `recoveryRevision`, never the explicit save checkpoint or
 dirty flag. These acknowledgements do not add undo steps or mutate the document.
 No recovery scheduler, filesystem operation, or file format is implemented here.
+The [TW-039 recovery policy](recovery-policy.md) defines independent capture
+sequences and lifecycle epochs for scheduling/publication; history revision
+numbers cannot order recovery captures across undo, branching or controllers.
 
 ## History limits and memory
 

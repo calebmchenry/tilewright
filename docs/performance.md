@@ -210,8 +210,11 @@ timeouts. Do not discard slow samples. Cold starts are separate from warm runs.
 | Whole-map agent export                                                | p95 ≤ 8 s                                                                                                                                                             | Request→encode every layer and metadata→native completed write. Validate semantic content and occupied counts, record bytes/schema. No visible-subset shortcut.                                                                                                                                                                                                                              |
 | Recovery overhead                                                     | Incremental capture/write p95 ≤ 250 ms per checkpoint; foreground frame p95 increase ≤ 2 ms; main-thread task ≤ 50 ms; extra peak memory ≤ 256 MiB; restore p95 ≤ 5 s | Benchmark at a provisional 5 s dirty checkpoint interval with 1,000 deterministic pencil edits per interval. Compare identical 60 s navigation traces with recovery on/off. Measure initial full snapshot separately (≤ 5 s). Recovery destination is separate; kill after confirmed checkpoint, relaunch, and verify unsaved edits while the explicit project stays unchanged.              |
 
-The 5-second recovery interval is a benchmark workload, not a final recovery UX
-decision. The memory limits leave room on a 16 GiB Mac for macOS and other work;
+The 5-second recovery interval is a forced-checkpoint benchmark workload. The
+[TW-039 recovery policy](recovery-policy.md#cadence-and-coherent-publication)
+chooses a 2-second debounce, 10-second maximum scheduling delay, and at least
+5 seconds between capture starts for production; measure both workloads separately.
+The memory limits leave room on a 16 GiB Mac for macOS and other work;
 the frame/latency limits target smooth 60 Hz feedback, while large operations get
 explicit bounded completion times. Streaming, sparse storage, and overview caches
 are hypotheses to test against this workload, not proof that it already passes.

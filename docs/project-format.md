@@ -312,10 +312,13 @@ Native atomic replacement/dialogs remain save implementation work. See
 Recovery may reuse validated project snapshot bytes, at a **separate local
 destination** with its own versioned envelope/sidecar. Ownership/session identity,
 originating explicit path, capture time, checkpoint provenance and discovery status
-belong there, not in `ProjectV1` or annotations. Its exact schema, cadence and
-restore UI belong to recovery tickets. Never reuse serialized history tokens
+belong there, not in `ProjectV1` or annotations. The
+[TW-039 recovery policy](recovery-policy.md) defines the metadata contract,
+cadence, retention, save/discard ordering and restore interface; TW-040/TW-041
+implement them. Never reuse serialized history tokens
 across sessions; they are controller-bound. Restoring recovery creates fresh
-history marked **dirty**. Recovery write acknowledges only `markRecovery`, never
+history marked **dirty**, with no saved path or native file handle; its first Save
+requests a destination. Recovery write acknowledges only `markRecovery`, never
 `markSaved`; it must not silently replace an explicit file or masquerade as an
 explicit Open acknowledgement. Preferences may ride with a recovery snapshot
 without becoming map meaning.
