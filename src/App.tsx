@@ -20,6 +20,7 @@ import { AnnotationPanel } from "./AnnotationPanel";
 export { AnnotationPanel } from "./AnnotationPanel";
 import {
   FileControls,
+  AgentExportFeedback,
   FileFeedback,
   RecoveryFeedback,
   UnsavedChanges,
@@ -586,6 +587,9 @@ export function App({
         {lifecycle && (
           <>
             <FileFeedback files={lifecycle.files} />
+            {lifecycle.agentExport && (
+              <AgentExportFeedback exports={lifecycle.agentExport} />
+            )}
             <LifecycleFeedback lifecycle={lifecycle} />
             {lifecycle.files.recovery && (
               <RecoveryFeedback recovery={lifecycle.files.recovery} />

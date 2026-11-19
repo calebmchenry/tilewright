@@ -42,6 +42,8 @@ export interface AgentExportCaptureOptions {
   readonly limits?: Partial<AgentExportLimits>;
 }
 export interface AgentExportEncodeOptions {
+  /** Actual UTF-8 bytes encoded so far; total size is not known until encoding completes. */
+  readonly onProgress?: (bytes: number) => void;
   readonly signal?: { readonly aborted: boolean };
   /** Host/test scheduling seam; defaults to yielding to a timer task. */
   readonly yieldControl?: () => Promise<void>;
@@ -313,6 +315,7 @@ export async function encodeAgentExportSnapshot(
     capacity(total, limits.maxBytes, "export.bytes");
     chunks.push(bytes);
     pending = "";
+    options.onProgress?.(total);
   };
   for (const token of canonicalTokens(snapshot.map)) {
     pending += token;

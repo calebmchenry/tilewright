@@ -6,6 +6,7 @@ import {
 } from "./recovery-discovery.ts";
 import type { SavedContext } from "./recovery.ts";
 import { newMapBounds } from "../domain/canvas.ts";
+import type { AgentExports } from "./agent-export.ts";
 import type { ProjectFiles } from "./project-files.ts";
 import { Store } from "./store.ts";
 
@@ -13,7 +14,7 @@ export type DocumentAction = "new" | "open" | "close" | "restore";
 export type UnsavedChoice = "save" | "discard" | "cancel";
 export interface LifecycleState {
   readonly busy: boolean;
-  readonly action: DocumentAction | "save" | null;
+  readonly action: DocumentAction | "save" | "export" | null;
   readonly prompt: DocumentAction | null;
   readonly error: string;
 }
@@ -21,6 +22,7 @@ export interface LifecycleState {
 /** Single application entry point for file actions and destructive transitions. */
 export class DocumentLifecycle {
   readonly files: ProjectFiles;
+  readonly agentExport?: AgentExports;
   readonly state = new Store<LifecycleState>({
     busy: false,
     action: null,
@@ -31,8 +33,9 @@ export class DocumentLifecycle {
   #busy = false;
   #answer: ((choice: UnsavedChoice) => void) | null = null;
 
-  constructor(files: ProjectFiles) {
+  constructor(files: ProjectFiles, agentExport?: AgentExports) {
     this.files = files;
+    this.agentExport = agentExport;
   }
 
   #publish(state: LifecycleState) {
@@ -55,13 +58,22 @@ export class DocumentLifecycle {
     this.choose("cancel");
   }
 
-  async #run(action: DocumentAction | "save", task: () => Promise<boolean>) {
+  async #run(
+    action: DocumentAction | "save" | "export",
+    task: () => Promise<boolean>,
+  ) {
     // Never queue a destructive request against a document that may be replaced
     // by an earlier request. Native close remains prevented and can be retried.
-    if (this.#closed || this.#busy || this.files.state.getSnapshot().busy)
+    if (
+      this.#closed ||
+      this.#busy ||
+      this.files.state.getSnapshot().busy ||
+      this.agentExport?.state.getSnapshot().busy
+    )
       return false;
     this.#busy = true;
-    const resume = this.files.recovery?.pause();
+    const resume =
+      action === "export" ? undefined : this.files.recovery?.pause();
     this.#publish({ busy: true, action, prompt: null, error: "" });
     let error = "";
     try {
@@ -114,6 +126,13 @@ export class DocumentLifecycle {
         "New edits were made while saving. They are still unsaved; try the action again to keep them.",
       );
     return permission();
+  }
+
+  exportForAgent(): Promise<boolean> {
+    return this.#run(
+      "export",
+      () => this.agentExport?.export() ?? Promise.resolve(false),
+    );
   }
 
   save(as = false): Promise<boolean> {

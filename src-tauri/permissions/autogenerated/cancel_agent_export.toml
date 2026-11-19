@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cancel-agent-export"
+description = "Enables the cancel_agent_export command without any pre-configured scope."
+commands.allow = ["cancel_agent_export"]
+
+[[permission]]
+identifier = "deny-cancel-agent-export"
+description = "Denies the cancel_agent_export command without any pre-configured scope."
+commands.deny = ["cancel_agent_export"]

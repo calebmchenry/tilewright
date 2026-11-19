@@ -3,11 +3,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{Emitter, Manager};
 
-const ACTIONS: [(&str, &str, &str); 9] = [
+const ACTIONS: [(&str, &str, &str); 10] = [
     ("new", "New…", "Cmd+N"),
     ("open", "Open…", "Cmd+O"),
     ("save", "Save", "Cmd+S"),
     ("save-as", "Save As…", "Cmd+Shift+S"),
+    ("export-agent", "Export for Agent…", "Cmd+Shift+E"),
     ("undo", "Undo", "Cmd+Z"),
     ("redo", "Redo", "Cmd+Shift+Z"),
     ("cut", "Cut", "Cmd+X"),
@@ -20,8 +21,8 @@ pub fn menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let file = Submenu::with_id(app, "document-file", "File", true)?;
     let edit = Submenu::with_id(app, "document-edit", "Edit", true)?;
     for (index, (id, label, accelerator)) in ACTIONS.iter().enumerate() {
-        let submenu = if index < 4 { &file } else { &edit };
-        if index == 2 || index == 6 {
+        let submenu = if index < 5 { &file } else { &edit };
+        if index == 2 || index == 7 {
             submenu.append(&PredefinedMenuItem::separator(app)?)?;
         }
         // Enable only after the frontend action listener is installed.
@@ -101,7 +102,7 @@ pub fn update_application_menu(
     }
     let menus = app.state::<MenuState>();
     for item in items {
-        let submenu = if ACTIONS[..4].iter().any(|(id, _, _)| *id == item.id) {
+        let submenu = if ACTIONS[..5].iter().any(|(id, _, _)| *id == item.id) {
             &menus.file
         } else {
             &menus.edit

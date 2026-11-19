@@ -62,7 +62,7 @@ fn io_message(action: &str, path: &Path, error: io::Error) -> String {
 
 // Resolve a selected symlink to its target, including parent directory symlinks.
 // Never create directories or infer an extension after the overwrite confirmation.
-fn selected_path(path: PathBuf) -> io::Result<PathBuf> {
+pub(crate) fn selected_path(path: PathBuf) -> io::Result<PathBuf> {
     match fs::symlink_metadata(&path) {
         Ok(_) => path.canonicalize(),
         Err(e) if e.kind() == io::ErrorKind::NotFound => {

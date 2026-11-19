@@ -346,3 +346,69 @@ coexist transiently; peak memory and native responsiveness are not measured here
 The current delivery policy defers performance-only refinement to TW-049/TW-050
 and export profiling to TW-051. TW-045 still owns native dialogs, progress,
 destination handling and atomic writes; this codec performs no file I/O.
+
+## Native export workflow (TW-045)
+
+**Export for Agent…** appears in the toolbar and native File menu, with
+Cmd+Shift+E. The native save panel suggests `<project-name>.agent-map.json`
+(or `Untitled.agent-map.json`) and filters JSON. The confirmed name must end in
+`.json`; the panel handles extension and existing-file replacement confirmation.
+No extension is silently changed after confirmation. Export works with the
+packaged app's embedded assets and local IPC, without a server or network service.
+
+[`editor/agent-export.ts`](../src/editor/agent-export.ts) captures the entire
+committed map, including unsaved edits, before opening the picker. Later edits
+remain in the editor and belong to the next export. Drafts and previews remain
+excluded by the existing snapshot contract. This coordinator owns separate
+feedback and never changes the project path, save/recovery checkpoints, undo/redo
+or recovery lineage. The shared document-action gate prevents overlapping
+New/Open/Save/restore/close operations; normal editing and recovery scheduling
+continue during export. Menu, button and shortcut dispatch use that same gate.
+
+The footer reports capture, destination selection, encoding with actual KiB
+encoded, temporary writing, and final publication. Its indeterminate progress bar
+does not invent a total before encoding finishes. Cancel is available during
+encoding and temporary writing; the native panel has its own Cancel. A cancel
+while native I/O is pending waits for it to settle, then deletes the unpublished
+temporary file. The short final atomic publication phase is noncancelable.
+Success is reported only after native publication; directory-sync failure is a
+success with an explicit durability warning. Errors and cancellation have distinct
+plain-text feedback, and allow retry without changing project state.
+
+[`native/agent-export.ts`](../src/native/agent-export.ts) uses four narrowly
+permitted Rust commands in [`agent_export.rs`](../src-tauri/src/agent_export.rs).
+The picker issues a separate, single-use export handle. Preparation accepts binary
+IPC (1 byte–256 MiB), validates the destination, creates an exclusive private
+`.tilewright-agent-*.tmp` sibling, writes complete bytes and syncs them. Commit
+rechecks the destination and atomically renames the sibling, then syncs the parent.
+Cancel drops the handle and its unpublished sibling. Native I/O uses blocking
+workers and a serialized export mutex; no filesystem, shell or general dialog
+permission is granted to the webview. A new grant drops abandoned unpublished
+export state rather than accumulating handles or temporary files.
+
+Paths are resolved at selection, including symlinks, and checked again before
+writing and publication. JSON destinations that resolve to a different extension
+are rejected. The active project path is protected by canonical path and device /
+inode equality, including symlink and hard-link aliases even when an opened
+project has a `.json` name. Substituted final symlinks/nonregular files, read-only
+files, missing parents and unwritable locations fail without truncating the
+existing destination. Existing Unix modes survive replacement; new files are
+private. The same local atomic-rename limits as project Save apply: no claim of
+power-loss durability for every filesystem, no preservation of arbitrary ACLs or
+extended attributes, and no detection of another application's concurrent edits.
+Abrupt process termination can leave a clearly temporary sibling; it is never a
+completed export or recovery checkpoint.
+
+Validation lives in `tests/domain/agent-export-files.test.ts`, the export cases in
+`tests/project-files.spec.ts`, and the native `agent_export.rs` tests. These cover
+unsaved content, state isolation, original bytes, active-path aliases, overwrite,
+write/sync/rename failures, read-only destinations, cancellation and late edits,
+menu/shortcut gating, continued recovery, and target-scale encoding progress.
+Actual packaged-app results and command evidence are recorded in TW-045's ticket.
+
+Capture and final byte assembly still have synchronous portions, and snapshot,
+codec chunks, IPC bytes and native staging coexist in memory. Encoding yields to
+timer tasks; native I/O never runs on the UI thread. Target-scale correctness and
+cancellation tests do not establish latency percentiles or peak-memory budgets.
+Per AGENTS.md, those performance-only refinements remain TW-049/TW-050, with
+end-to-end export profiling in TW-051.

@@ -1,3 +1,4 @@
+mod agent_export;
 #[cfg(all(target_os = "macos", not(feature = "performance")))]
 mod application_menu;
 mod atomic_io;
@@ -11,6 +12,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .manage(document_lifecycle::CloseGuard::default())
         .manage(project_files::ProjectFiles::default())
+        .manage(agent_export::AgentExports::default())
         .manage(recovery::Recovery::default());
     #[cfg(all(target_os = "macos", not(feature = "performance")))]
     let builder = builder
@@ -28,6 +30,10 @@ fn main() {
         recovery::prepare_recovery,
         recovery::commit_recovery,
         recovery::cancel_recovery,
+        agent_export::choose_agent_export,
+        agent_export::prepare_agent_export,
+        agent_export::commit_agent_export,
+        agent_export::cancel_agent_export,
         project_files::choose_project,
         project_files::read_project,
         project_files::write_project,
@@ -48,6 +54,10 @@ fn main() {
         recovery::prepare_recovery,
         recovery::commit_recovery,
         recovery::cancel_recovery,
+        agent_export::choose_agent_export,
+        agent_export::prepare_agent_export,
+        agent_export::commit_agent_export,
+        agent_export::cancel_agent_export,
         project_files::choose_project,
         project_files::read_project,
         project_files::write_project,

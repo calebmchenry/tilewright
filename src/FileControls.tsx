@@ -110,6 +110,13 @@ export function FileControls({ actions }: { actions: ApplicationActions }) {
       >
         Save As…
       </button>
+      <button
+        type="button"
+        disabled={!actions.state("export-agent").enabled}
+        onClick={() => actions.perform("export-agent")}
+      >
+        Export for Agent…
+      </button>
     </span>
   );
 }
@@ -129,7 +136,7 @@ export function LifecycleFeedback({
         {error}
       </div>
     );
-  if (busy && !prompt)
+  if (busy && !prompt && action !== "export")
     return (
       <div
         className="feedback info"
@@ -182,6 +189,33 @@ export function RecoveryFeedback({
       {error && (
         <button type="button" onClick={() => recovery.retry()}>
           Retry recovery
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function AgentExportFeedback({
+  exports,
+}: {
+  exports: import("./editor/agent-export").AgentExports;
+}) {
+  const { message, busy, cancelable, error } = useStore(exports.state);
+  if (!message) return null;
+  return (
+    <div
+      className={`feedback ${error ? "error" : "info"}`}
+      role={error ? "alert" : "status"}
+      aria-label="Agent export feedback"
+    >
+      {busy && <progress aria-label="Agent export progress" />} {message}{" "}
+      {busy && (
+        <button
+          type="button"
+          disabled={!cancelable}
+          onClick={() => exports.cancel()}
+        >
+          Cancel export
         </button>
       )}
     </div>

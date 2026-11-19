@@ -29,6 +29,15 @@ test.beforeEach(async ({ page }) => {
         documentId: string;
         epoch: number;
       }[],
+      exportPicks: [] as {
+        protectedPath: string | null;
+        suggestedName: string;
+      }[],
+      exports: [] as string[],
+      pendingExport: null as string | null,
+      holdExport: false,
+      releaseExport: null as (() => void) | null,
+      canceledExports: 0,
       cancel: false,
       fail: "",
       writes: [] as { token: string; project: typeof project }[],
@@ -180,6 +189,35 @@ test.beforeEach(async ({ page }) => {
           }
           if (command === "finish_document_close") {
             probe.closed++;
+            return;
+          }
+          if (command === "choose_agent_export") {
+            probe.exportPicks.push(
+              args as { protectedPath: string | null; suggestedName: string },
+            );
+            return probe.cancel
+              ? null
+              : { token: "agent-1", path: "/maps/café 地図.agent-map.json" };
+          }
+          if (command === "prepare_agent_export") {
+            if (options?.headers["x-export-token"] !== "agent-1")
+              throw new Error("Wrong export handle");
+            probe.pendingExport = new TextDecoder().decode(args as Uint8Array);
+            if (probe.holdExport)
+              await new Promise<void>((resolve) => {
+                probe.releaseExport = resolve;
+              });
+            return;
+          }
+          if (command === "commit_agent_export") {
+            if (!probe.pendingExport) throw new Error("Export not prepared");
+            probe.exports.push(probe.pendingExport);
+            probe.pendingExport = null;
+            return null;
+          }
+          if (command === "cancel_agent_export") {
+            probe.canceledExports++;
+            probe.pendingExport = null;
             return;
           }
           if (command === "choose_project") {
@@ -396,6 +434,12 @@ declare global {
         project: typeof exampleProject;
       }[];
       recoveryControls: { status: string; documentId: string; epoch: number }[];
+      exportPicks: { protectedPath: string | null; suggestedName: string }[];
+      exports: string[];
+      pendingExport: string | null;
+      holdExport: boolean;
+      releaseExport: (() => void) | null;
+      canceledExports: number;
       cancel: boolean;
       fail: string;
       writes: { token: string; project: typeof exampleProject }[];
@@ -971,4 +1015,140 @@ test("multiple same-source maps remain distinct and corrupt recovery discard is 
   ]);
   await expect(dialog.getByRole("article")).toHaveCount(2);
   expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(0);
+});
+
+test("agent export includes unsaved edits and retains explicit save, path and recovery data", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator(".document-title")).toContainText("Saved");
+  const name = page.getByLabel("Layer name", { exact: true });
+  await name.fill("Unsaved export layer");
+  await name.press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.recoveries.length), {
+      timeout: 12000,
+    })
+    .toBeGreaterThan(0);
+  const before = await page.evaluate(() =>
+    JSON.stringify({
+      writes: window.fileProbe.writes,
+      recoveries: window.fileProbe.recoveries,
+      controls: window.fileProbe.recoveryControls,
+    }),
+  );
+  await page
+    .getByRole("button", { name: "Export for Agent…", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status", { name: "Agent export feedback" }),
+  ).toContainText("Exported the whole map");
+  const exported = await page.evaluate(() =>
+    JSON.parse(window.fileProbe.exports[0]),
+  );
+  expect(exported.format).toBe("tilewright-agent-map");
+  expect(exported.layers[0].name).toBe("Unsaved export layer");
+  expect(await page.evaluate(() => window.fileProbe.exportPicks[0])).toEqual({
+    protectedPath: "/maps/café 地図 1.tilewright",
+    suggestedName: "café 地図 1.agent-map.json",
+  });
+  await expect(page.locator(".document-title")).toContainText(
+    "café 地図 1.tilewright",
+  );
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
+  expect(
+    await page.evaluate(() =>
+      JSON.stringify({
+        writes: window.fileProbe.writes,
+        recoveries: window.fileProbe.recoveries,
+        controls: window.fileProbe.recoveryControls,
+      }),
+    ),
+  ).toBe(before);
+  await page.setViewportSize({ width: 640, height: 480 });
+  await expect(
+    page.getByRole("button", { name: "Export for Agent…", exact: true }),
+  ).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    640,
+  );
+});
+
+test("agent export progress stays interactive, gates file actions and cancels prepared output", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.fileProbe.holdExport = true;
+    window.fileProbe.requestAction("export-agent");
+  });
+  const feedback = page.getByRole("status", { name: "Agent export feedback" });
+  await expect(feedback).toContainText("temporary file");
+  await expect(
+    page.getByRole("progressbar", { name: "Agent export progress" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Save", exact: true }),
+  ).toBeDisabled();
+  const name = page.getByLabel("Layer name", { exact: true });
+  await name.fill("Edited while exporting");
+  await name.press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.recoveries.length), {
+      timeout: 12000,
+    })
+    .toBeGreaterThan(0);
+  await page.evaluate(() => {
+    window.fileProbe.requestClose();
+    window.fileProbe.requestAction("save");
+  });
+  expect(await page.evaluate(() => window.fileProbe.closed)).toBe(0);
+  expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(0);
+  await page
+    .getByRole("button", { name: "Cancel export", exact: true })
+    .click();
+  await expect(feedback).toContainText("Canceling");
+  await page.evaluate(() => window.fileProbe.releaseExport!());
+  await expect(feedback).toContainText("Export canceled");
+  expect(await page.evaluate(() => window.fileProbe.exports.length)).toBe(0);
+  expect(await page.evaluate(() => window.fileProbe.pendingExport)).toBeNull();
+  expect(await page.evaluate(() => window.fileProbe.canceledExports)).toBe(1);
+  await expect(name).toHaveValue("Edited while exporting");
+  await expect(
+    page.getByRole("button", { name: "Save", exact: true }),
+  ).toBeEnabled();
+});
+
+test("agent export shortcut, canceled picker, failed write and retry give distinct feedback", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.fileProbe.cancel = true;
+  });
+  await page.getByLabel("Layer name", { exact: true }).press("Meta+Shift+e");
+  await expect(
+    page.getByRole("status", { name: "Agent export feedback" }),
+  ).toContainText("Export canceled");
+  expect(await page.evaluate(() => window.fileProbe.exports.length)).toBe(0);
+  await page.evaluate(() => {
+    window.fileProbe.cancel = false;
+    window.fileProbe.fail = "prepare_agent_export";
+  });
+  await page
+    .getByRole("button", { name: "Export for Agent…", exact: true })
+    .click();
+  await expect(
+    page.getByRole("alert", { name: "Agent export feedback" }),
+  ).toContainText("permission denied");
+  expect(await page.evaluate(() => window.fileProbe.exports.length)).toBe(0);
+  await page.evaluate(() => {
+    window.fileProbe.fail = "";
+  });
+  await page
+    .getByRole("button", { name: "Export for Agent…", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status", { name: "Agent export feedback" }),
+  ).toContainText("Exported the whole map");
+  expect(await page.evaluate(() => window.fileProbe.exports.length)).toBe(1);
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
 });

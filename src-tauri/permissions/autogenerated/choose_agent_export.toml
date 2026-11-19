@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-choose-agent-export"
+description = "Enables the choose_agent_export command without any pre-configured scope."
+commands.allow = ["choose_agent_export"]
+
+[[permission]]
+identifier = "deny-choose-agent-export"
+description = "Denies the choose_agent_export command without any pre-configured scope."
+commands.deny = ["choose_agent_export"]

@@ -7,6 +7,7 @@ export const applicationActionIds = [
   "open",
   "save",
   "save-as",
+  "export-agent",
   "undo",
   "redo",
   "cut",
@@ -29,6 +30,7 @@ const fileLabels = {
   open: "Open…",
   save: "Save",
   "save-as": "Save As…",
+  "export-agent": "Export for Agent…",
 };
 export function isEditAction(id: ApplicationAction): id is EditAction {
   return !(id in fileLabels);
@@ -51,6 +53,9 @@ export class ApplicationActions {
       lifecycle.state.subscribe(refresh),
       lifecycle.files.state.subscribe(refresh),
       this.newDialog.subscribe(refresh),
+      ...(lifecycle.agentExport
+        ? [lifecycle.agentExport.state.subscribe(refresh)]
+        : []),
       lifecycle.files.workspace.state.subscribe(() => this.#bindSession()),
     ];
     this.#bindSession();
@@ -95,7 +100,8 @@ export class ApplicationActions {
       this.#closed ||
       this.#modal() ||
       this.lifecycle.state.getSnapshot().busy ||
-      this.lifecycle.files.state.getSnapshot().busy
+      this.lifecycle.files.state.getSnapshot().busy ||
+      !!this.lifecycle.agentExport?.state.getSnapshot().busy
     );
   }
   state(id: ApplicationAction): MenuActionState {
@@ -106,7 +112,10 @@ export class ApplicationActions {
         label: fileLabels[id],
         enabled:
           !this.#fileBlocked() &&
-          (id === "new" || this.lifecycle.files.available),
+          (id === "new" ||
+            (id === "export-agent"
+              ? !!this.lifecycle.agentExport?.available
+              : this.lifecycle.files.available)),
       };
     // Native text edits are handled by the first responder, never map history or
     // the tile clipboard. This remains true inside a modal's editable fields.
@@ -131,6 +140,7 @@ export class ApplicationActions {
     if (isEditAction(id) ? !this.state(id).enabled : this.#fileBlocked())
       return false;
     if (id === "new") this.newDialog.set(true);
+    else if (id === "export-agent") void this.lifecycle.exportForAgent();
     else if (id === "open") void this.lifecycle.open();
     else if (id === "save" || id === "save-as")
       void this.lifecycle.save(id === "save-as");
@@ -156,25 +166,27 @@ export class ApplicationActions {
       return false;
     const key = input.key.toLowerCase();
     const id =
-      key === "s"
-        ? input.shiftKey
-          ? "save-as"
-          : "save"
-        : key === "z"
+      key === "e" && input.shiftKey
+        ? "export-agent"
+        : key === "s"
           ? input.shiftKey
-            ? "redo"
-            : "undo"
-          : !input.shiftKey
-            ? (
-                {
-                  n: "new",
-                  o: "open",
-                  x: "cut",
-                  c: "copy",
-                  v: "paste",
-                } as Partial<Record<string, ApplicationAction>>
-              )[key]
-            : undefined;
+            ? "save-as"
+            : "save"
+          : key === "z"
+            ? input.shiftKey
+              ? "redo"
+              : "undo"
+            : !input.shiftKey
+              ? (
+                  {
+                    n: "new",
+                    o: "open",
+                    x: "cut",
+                    c: "copy",
+                    v: "paste",
+                  } as Partial<Record<string, ApplicationAction>>
+                )[key]
+              : undefined;
     if (!id || (isEditAction(id) && this.#context.owner === "text"))
       return false;
     this.perform(id);

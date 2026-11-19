@@ -5,6 +5,8 @@ import "./styles.css";
 import { EditorWorkspace } from "./editor/workspace";
 
 import { ProjectFiles } from "./editor/project-files";
+import { AgentExports } from "./editor/agent-export";
+import { nativeAgentExport } from "./native/agent-export";
 import { nativeProjectFiles } from "./native/project-files";
 import { DocumentLifecycle } from "./editor/document-lifecycle";
 import { bindNativeDocumentLifecycle } from "./native/document-lifecycle";
@@ -18,7 +20,8 @@ const root = createRoot(document.getElementById("root")!);
 const workspace = new EditorWorkspace();
 const recovery = new RecoveryCoordinator(workspace, nativeRecovery);
 const files = new ProjectFiles(workspace, nativeProjectFiles, recovery);
-const lifecycle = new DocumentLifecycle(files);
+const agentExport = new AgentExports(workspace, nativeAgentExport);
+const lifecycle = new DocumentLifecycle(files, agentExport);
 const actions = new ApplicationActions(lifecycle);
 const recoveryBrowser = new RecoveryBrowser(lifecycle, nativeRecoveryReview);
 void recoveryBrowser.refresh(true);
@@ -44,6 +47,7 @@ function dispose() {
   unbindNative();
   recoveryBrowser.dispose();
   lifecycle.dispose();
+  agentExport.dispose();
   files.dispose();
   recovery.dispose();
   workspace.dispose();
