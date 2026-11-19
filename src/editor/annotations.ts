@@ -200,6 +200,33 @@ export class AnnotationController {
     );
     this.#session.reportError(error, "Named area");
   }
+  focusReason(): string | null {
+    if (this.#closed || this.#session.canvasState.getSnapshot() !== "ready")
+      return "Wait for the map canvas to be ready.";
+    if (!this.selected.getSnapshot()) return "Select an area to focus.";
+    return this.overlayBounds(false)
+      ? null
+      : "Enter valid bounds to focus the area.";
+  }
+  focus(): boolean {
+    const reason = this.focusReason();
+    if (reason) {
+      this.#session.report(reason);
+      return false;
+    }
+    try {
+      // Revalidate identity so a stale action cannot reveal a removed record.
+      namedArea(this.#session.document, this.selected.getSnapshot()!);
+      this.cancelGesture();
+      this.drawingBounds.set(false);
+      this.#session.revealBounds(this.overlayBounds()!);
+      this.#session.report("Area focused. Bounds and tiles are unchanged.");
+      return true;
+    } catch (error) {
+      this.#error(error);
+      return false;
+    }
+  }
   drawReason(): string | null {
     if (this.#closed || this.#session.canvasState.getSnapshot() !== "ready")
       return "Wait for the map canvas to be ready.";
@@ -282,8 +309,8 @@ export class AnnotationController {
     this.selected.set(null);
   }
   /** Invalid draft geometry has no overlay; never fall back to misleading old bounds. */
-  overlayBounds(): Bounds | null {
-    const preview = this.preview.getSnapshot();
+  overlayBounds(includePreview = true): Bounds | null {
+    const preview = includePreview ? this.preview.getSnapshot() : null;
     if (preview) return preview;
     const draft = this.draft.getSnapshot();
     try {

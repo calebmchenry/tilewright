@@ -779,3 +779,10 @@ footer {
 .area-actions {
   margin-top: 12px;
 }
+.area-focus {
+  margin-top: 10px;
+}
+.area-details output {
+  display: block;
+  margin-bottom: 10px;
+}

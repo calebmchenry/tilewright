@@ -126,6 +126,11 @@ export function fitToMap(bounds: Bounds, size: ViewSize): Viewport {
     zoom,
   });
 }
+/** Reveal an area with Fit padding, without magnifying small features past 100%. */
+export function focusOnBounds(bounds: Bounds, size: ViewSize): Viewport {
+  const fitted = fitToMap(bounds, size);
+  return zoomAt(fitted, Math.min(1, fitted.zoom), viewCenter(size));
+}
 /** Constrain pan only. Zoom anchoring must not be shifted by a second clamp. */
 export function panBy(
   view: Viewport,

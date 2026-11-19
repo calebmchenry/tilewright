@@ -77,6 +77,9 @@ bounds, selected/draft overlays, and explicit Apply/Cancel/Delete with undo/redo
 [Zoom-dependent labels](docs/named-area-decisions.md#label-rendering-implementation-tw-031)
 show one tier at a time, with deterministic overlap suppression, readable Pixi text,
 and a selected-area exception. Labels stay fixed during tile transformations.
+[Area browsing and focus](docs/named-area-decisions.md#browsing-and-scale-inspection-tw-032)
+reveal distant areas from the searchable panel and show exact tile dimensions and
+bounds at every zoom, independently of tile selection.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).

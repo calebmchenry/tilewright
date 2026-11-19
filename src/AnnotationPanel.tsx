@@ -24,6 +24,7 @@ export function AnnotationPanel({ session }: { session: EditorSession }) {
   );
   const bounds = preview ?? areas.overlayBounds();
   const reason = areas.drawReason();
+  const focusReason = areas.focusReason();
   const record = annotations.find(([id]) => id === selected)?.[1];
   const feedback = (field: keyof typeof errors) =>
     errors[field] && (
@@ -73,6 +74,26 @@ export function AnnotationPanel({ session }: { session: EditorSession }) {
       <button type="button" onClick={() => areas.newArea()}>
         New area
       </button>
+      {selected && (
+        <div className="area-focus">
+          <button
+            type="button"
+            disabled={!!focusReason}
+            title={focusReason ?? "Center and fit this area in the map"}
+            aria-describedby={
+              focusReason ? `${formId}-focus-reason` : undefined
+            }
+            onClick={() => areas.focus()}
+          >
+            Focus area
+          </button>
+          {focusReason && (
+            <p className="hint" id={`${formId}-focus-reason`}>
+              {focusReason}
+            </p>
+          )}
+        </div>
+      )}
       {draft ? (
         <form
           className="area-form"
@@ -204,10 +225,16 @@ export function AnnotationPanel({ session }: { session: EditorSession }) {
             </p>
             <p>Tier: {String(record.tier)}</p>
             {bounds && (
-              <p>
-                X [{bounds.minX}, {bounds.maxX}) · Y [{bounds.minY},{" "}
-                {bounds.maxY})
-              </p>
+              <>
+                <p aria-label="Area bounds">
+                  X [{bounds.minX}, {bounds.maxX}) · Y [{bounds.minY},{" "}
+                  {bounds.maxY}) · tiles (maximums exclusive)
+                </p>
+                <output aria-label="Area dimensions">
+                  {bounds.maxX - bounds.minX} × {bounds.maxY - bounds.minY}{" "}
+                  tiles
+                </output>
+              </>
             )}
             <button type="button" onClick={() => areas.select(selected!)}>
               Edit area

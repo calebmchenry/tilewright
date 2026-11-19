@@ -41,6 +41,7 @@ import {
   canEditTiles,
   clampZoom,
   fitToMap,
+  focusOnBounds,
   OVERVIEW_MESSAGE,
   panBy,
   screenToTile,
@@ -717,6 +718,13 @@ export class EditorSession {
       fitToMap(this.document.bounds, this.canvasSize.getSnapshot()),
     );
     this.report("Map fitted to the canvas. Zoom in for tile detail.");
+  }
+  /** Navigation only: no command, document notification or history checkpoint. */
+  revealBounds(bounds: Bounds): void {
+    assertBounds(bounds);
+    if (!this.#containsRectangle(bounds))
+      throw new RangeError("Area must be inside the map.");
+    this.#setView(focusOnBounds(bounds, this.canvasSize.getSnapshot()));
   }
   /** Shared tool gate: never clamp an outside pointer onto an editable edge. */
   editableTileAt(point: Point): Point | null {

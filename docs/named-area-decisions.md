@@ -3,8 +3,8 @@
 Decision record for [TW-029](../.wrk/wrk-353fa9ca.md), subordinate to
 [INTENT.md](../INTENT.md#named-areas-and-labels). These are implementation choices
 for TW-030–TW-032, not additional confirmed product requirements.
-TW-030 authoring and TW-031 zoom-dependent labels now ship as documented below;
-browsing/focus remains TW-032. They extend the
+TW-030 authoring, TW-031 zoom-dependent labels and TW-032 browsing/focus now ship
+as documented below. They extend the
 [coordinate](foundation-decisions.md), [camera](navigation.md),
 [history](command-history.md), and [selection](selection-decisions.md) contracts.
 TW-033 and TW-043 still own the complete, separate project and export schemas.
@@ -450,5 +450,59 @@ Actual results are recorded in [TW-031](../.wrk/wrk-dfb3bfaf.md). Navigation cur
 scans the annotation metadata and collision-checks accepted boxes synchronously;
 there is no spatial annotation index or native presentation/physical-memory claim.
 The measurements are Chromium CPU submission proxies. Refinement remains TW-049,
-with history/memory refinement in TW-050 under AGENTS.md. Browsing/focus is TW-032;
-project/export codecs remain their own tickets.
+with history/memory refinement in TW-050 under AGENTS.md. Browsing/focus is
+documented below; project/export codecs remain their own tickets.
+
+## Browsing and scale inspection (TW-032)
+
+The searchable Areas list includes all named areas, regardless of the current
+zoom, viewport, layer visibility or label collisions. Search is a case-insensitive
+name substring; it does not change selection or camera. Rows retain the authored
+name, tier and stable ID so duplicate names remain distinguishable. Selecting a
+row opens the existing explicit editor and highlights its purple outline/label;
+selecting an on-map label in Area mode opens the same record. Selection alone
+does not pan or zoom. A search can hide the selected row without hiding its editor.
+Renames, deletes and undo/redo refresh from document notifications; deleted IDs
+are deselected, and undo restores the row without automatically selecting it.
+
+**Focus area** centers the selected rectangle and fits it with the existing
+24 CSS pixel Fit padding (reduced on tiny hosts). Magnification caps at 100% so a
+small house remains at familiar tile scale. Large regions fit at overview scale;
+the selected-label exception continues to show their name even when their authored
+tier differs from the resulting zoom. The operation uses the live canvas size,
+works at negative coordinates and map edges, and never clamps the rectangle or
+moves its tiles. Repeating Focus yields the same view. Keyboard activation uses
+the ordinary panel button and keeps focus in the panel.
+
+While editing, Focus reveals the valid **draft** rectangle shown by the outline,
+retains all draft fields and does not Apply them. It cancels an armed bounds draw
+and its pointer preview before fitting the retained draft. Invalid geometry or
+an unavailable canvas disables Focus with an accessible reason. Deleted or disposed
+records cannot be focused. New, uncommitted areas keep the existing Draw/numeric
+workflow; Focus is for a selected area.
+
+Exact width × height in tiles is visible both in the editor and after Apply or
+Cancel. Inspection shows signed half-open X/Y bounds with exclusive maximums,
+the full name, authored tier and full multiline description (or “No description.”).
+These are world dimensions, independent of zoom and label visibility; no inferred
+hierarchy, automatic tier changes, tile selection, or occupied-cell counts are
+introduced. All focus/search/inspection state is transient: document version,
+content, history, explicit-save/recovery checkpoints and dirty state are unchanged.
+An idle cyan tile-selection rectangle remains independent of the purple area.
+The shared Undo/Redo route retains its existing policy of clearing tile selection;
+restoring an area never recreates a tile selection.
+
+Implementation locations: `src/AnnotationPanel.tsx` provides the focus control and
+persistent readouts; `src/editor/annotations.ts` validates selection/readiness and
+preserves drafts; `EditorSession.revealBounds` in `src/editor/session.ts` uses
+`focusOnBounds` in `src/editor/viewport.ts` through the existing camera update path.
+No renderer or document-storage change is required.
+
+Validation: `tests/domain/area-browsing.test.ts` covers signed/distant/edge bounds,
+both-axis fit and 100% cap, tiny hosts, clean checkpoints, tile-selection isolation,
+drafts, invalid/unready/stale/disposed actions. `tests/area-browsing.spec.ts` covers
+actual search/select/focus on both complete populated reference maps, exact readouts,
+hidden tiers, label-to-panel selection, rename/delete/undo and narrow-window layout.
+Actual command results and screenshot observations are recorded in
+[TW-032](../.wrk/wrk-efb169f5.md). Synchronous annotation filtering and rendering
+retain the documented baseline; performance refinement remains TW-049/TW-050.
