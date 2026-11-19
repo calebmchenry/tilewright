@@ -5,6 +5,10 @@ import {
 import { MapDocument, type MutationResult } from "../domain/document.ts";
 import { CommandHistory } from "../domain/history.ts";
 import {
+  captureAgentExportSnapshot,
+  type AgentExportCaptureOptions,
+} from "../domain/agent-export.ts";
+import {
   captureProjectSnapshot,
   type ProjectCaptureOptions,
 } from "../domain/project.ts";
@@ -254,6 +258,12 @@ export class EditorSession {
     this.drawing.dispose();
     this.#dispose();
   }
+  /** Captures complete committed map meaning independently of all viewing state. */
+  captureAgentExportSnapshot(options: AgentExportCaptureOptions = {}) {
+    if (this.#closed) throw new Error("Editor session is closed.");
+    return captureAgentExportSnapshot(this.history, options);
+  }
+
   /** Captures committed content and only the two persisted editor preferences. */
   captureProjectSnapshot(options: ProjectCaptureOptions = {}) {
     if (this.#closed) throw new Error("Editor session is closed.");

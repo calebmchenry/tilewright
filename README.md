@@ -108,8 +108,11 @@ recovery discard while preserving explicit project files.
 
 The [whole-map agent format](docs/agent-export-format.md) defines a separate public
 JSON schema with resolved color meanings, complete ordered layers, raw-color
-policy and independent named areas. It includes a readable example and measured
-fixture encoding sizes; the application exporter follows in TW-044.
+policy and independent named areas. The
+[agent snapshot and encoder](docs/agent-export-format.md#snapshot-and-encoder-implementation-tw-044)
+now capture every committed layer and area and emit deterministic UTF-8 bytes,
+independently of viewport, selection and visibility. Native export actions and
+reliable file writes follow in TW-045.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).

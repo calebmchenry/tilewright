@@ -1,5 +1,5 @@
 /** Public agent interchange contract; independent of the editable-project schema.
- * See docs/agent-export-format.md. Export generation belongs to TW-044.
+ * See docs/agent-export-format.md; agent-export.ts implements capture and encoding.
  */
 export interface AgentBounds {
   readonly minX: number;

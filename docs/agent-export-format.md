@@ -2,8 +2,9 @@
 
 Decision record for [TW-043](../.wrk/wrk-eeabc6ef.md), subordinate to
 [INTENT.md](../INTENT.md#project-files-and-agent-exports). These are implementation
-choices resolving the open export decisions. TW-044 implements capture, encoding
-and local export; this ticket supplies its public contract, example and size study.
+choices resolving the open export decisions. TW-044 implements capture and encoding;
+TW-045 adds the native export action and reliable local publication. TW-043 supplies
+the public contract, example and size study.
 
 ## Container and public contract
 
@@ -193,7 +194,8 @@ entries in the color total and hidden/covered tiles in the cell total. These are
 defensive implementation limits, independent of interpretation and not measured
 latency/memory guarantees. Exceeding a limit or invalid source content must fail
 before publishing a final file, without flattening, cropping or truncating data.
-Native publication and cancellation belong to TW-044.
+Native publication, action/progress UI and user-facing cancellation belong to TW-045;
+the TW-044 codec exposes an encoding cancellation signal for that coordinator.
 
 No editor caches, overview images, GPU resources, storage partitions/tokens,
 history/revisions, save/recovery metadata, paths, active tools, visibility flags,
@@ -259,3 +261,88 @@ by this size estimate. Performance-only issues remain nonblocking
 under the current delivery priority; rendering/presentation refinement belongs
 to TW-049, large edit/history/memory refinement to TW-050, and export profiling
 to TW-051.
+
+## Snapshot and encoder implementation (TW-044)
+
+[`agent-export.ts`](../src/domain/agent-export.ts) implements this public contract
+directly from the sparse domain model. It imports neither the project schema/codec
+nor editor/renderer modules. The only shared machinery is domain validation,
+committed-read guards, history checkpoints and the model's ordered run iterator.
+
+- `captureAgentExportSnapshot(history, { limits? }?)` synchronously captures one
+  committed revision as a deeply frozen `AgentExportSnapshot`. `snapshot.map`
+  contains only the public wire shape; `checkpoint` and `documentVersion` remain
+  outside it. All runs are detached before an asynchronous boundary, and registry
+  colors/names and area text/geometry are resolved at capture time. Reentrant
+  capture and edits bypassing history reject; capture verifies the version and
+  revision again before publishing the snapshot.
+- `encodeAgentExportSnapshot(snapshot, { signal?, yieldControl? }?)` accepts only
+  snapshots produced by capture and returns canonical UTF-8 `Uint8Array` bytes.
+  It reads no live document or editor state. It yields to timer tasks before
+  encoding, between approximately 32 KiB character batches and every sixteen
+  chunks during final assembly. Large strings use bounded escaping slices that
+  keep surrogate pairs intact. Null raw meanings, unpaired surrogates, negative
+  zero and safe-integer coordinates follow ECMAScript JSON spelling exactly.
+- `EditorSession.captureAgentExportSnapshot(options?)` is the session entry point.
+  It rejects closed sessions and delegates only the history, never active/hidden
+  layers, selection, viewport, filenames, overview data, pending gestures or drafts.
+  Neither API changes history, redo, dirty/save/recovery checkpoints or project paths.
+
+```ts
+const snapshot = session.captureAgentExportSnapshot(); // before the first await
+const bytes = await encodeAgentExportSnapshot(snapshot, { signal });
+// TW-045 publishes bytes atomically to the chosen export destination.
+// Export is not a project save: do not markSaved or markRecovery.
+```
+
+Capture traverses every layer's occupied runs without a window or visibility
+filter. Model iteration already sorts and coalesces across 32-tile storage and
+64-tile visual boundaries. Empty layers/margins remain, underlying tiles are never
+composited, and all registry entries (including unused ones) become resolved
+colors. Only used raw colors enter the table, separately from equal registered
+RGBA. A final color sort remaps indices without changing coverage. Area IDs are
+already ASCII-sorted by the model; only the validated center-placement field is
+intentionally omitted from the semantic wire shape.
+
+Feature validation rejects malformed/unknown registry and area properties,
+ambiguous registry ownership, invalid geometry/tiers and unresolved paint IDs.
+Domain primitives already enforce layer names/IDs, tile values, bounds arithmetic
+and ordered nonoverlapping runs. `AgentExportError` carries `category`
+(`invalid-data`, `capacity`, `canceled`) and `path`. Collection/run/cell limits
+apply during capture; byte limits apply incrementally to encoded UTF-8 including
+the trailing LF. Per-capture limits can only lower the independent
+`AGENT_EXPORT_LIMITS` ceilings. A failure returns no partial byte array.
+
+[`agent-export.test.ts`](../tests/domain/agent-export.test.ts) and
+[`agent-export-snapshot.test.ts`](../tests/domain/agent-export-snapshot.test.ts)
+verify the reviewed example's exact canonical SHA-256, raw/registered equality,
+recolor/undo/redo, all tiers, empty layers, sparse gaps, boundary coalescing,
+safe-integer extremes, Unicode, capacity boundaries, invalid source rejection,
+cancellation and edits during asynchronous encoding (including a real timer edit).
+They compare identical bytes across viewport/active/hidden-layer combinations,
+selection/move/transform/paste previews, area drafts, unsaved/saved paths and
+empty/pending/warm/stale/destroyed overview caches.
+
+Both complete 6,400 × 6,400 fixtures are loaded into real `MapDocument` storage,
+with all 1,089 house/village/region annotations. Parsed export bytes are translated
+independently into the fixture inspector's lattice; complete content hashes,
+occupancy, overlap counts, layer order/names, resolved meanings and every area field
+must match. The 17 focused tests passed with Node 24.22.3 on 2026-11-19:
+
+| Fixture      | Occupied layer cells | Canonical runs | UTF-8 bytes | Capture ms | Encode ms |
+| ------------ | -------------------: | -------------: | ----------: | ---------: | --------: |
+| frontier-v1  |            6,620,700 |        123,870 |   2,306,718 |     161.40 |    286.10 |
+| heartland-v1 |           24,025,200 |        470,490 |   8,080,454 |     364.19 |    927.30 |
+
+These are single Node samples under concurrent browser-test load, not native I/O
+or performance gate results. The files are larger than TW-043's estimate because
+they contain 1,089 areas instead of two. Golden content hashes remain frontier
+`de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617` and heartland
+`c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33`.
+
+Capture is synchronous and proportional to occupied storage/runs; its observed
+long tasks remain a limitation. Snapshot runs, encoded chunks and final bytes
+coexist transiently; peak memory and native responsiveness are not measured here.
+The current delivery policy defers performance-only refinement to TW-049/TW-050
+and export profiling to TW-051. TW-045 still owns native dialogs, progress,
+destination handling and atomic writes; this codec performs no file I/O.
