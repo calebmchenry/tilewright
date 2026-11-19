@@ -175,6 +175,12 @@ export class MapDocument {
     return this.#version;
   }
 
+  /** Snapshot readers must never observe an unpublished transaction or callback. */
+  assertCommittedRead(): void {
+    if (this.#busy || this.#journal)
+      throw new Error("Document is busy; capture a snapshot after the commit.");
+  }
+
   subscribe(listener: (change: DocumentChange) => void): () => void {
     this.#listeners.add(listener);
     return () => {

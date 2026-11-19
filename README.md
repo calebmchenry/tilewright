@@ -86,8 +86,11 @@ in [grids and scale](docs/grid-and-scale.md).
 
 The [versioned editable-project format](docs/project-format.md) specifies sparse
 ordered layers, stable paint identity, complete named areas, persisted preferences,
-validation and compatibility policy, with an annotated example. Encoding, file
-I/O and recovery implementation follow in the project tickets.
+validation and compatibility policy, with an annotated example. The
+[snapshot and encoder](docs/project-format.md#snapshot-and-encoder-implementation-tw-034)
+capture one committed revision and emit deterministic UTF-8 bytes, including
+hidden content and persisted layer preferences. Decoding, file I/O and recovery
+implementation follow in the project tickets.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).

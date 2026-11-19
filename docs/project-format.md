@@ -3,8 +3,9 @@
 Decision record for [TW-033](../.wrk/wrk-eef53dd9.md), subordinate to
 [INTENT.md](../INTENT.md#project-files-and-agent-exports). These are implementation
 choices, not additional product requirements. This specifies the contract for
-TW-034 encoding, TW-035 decoding and subsequent native save/open/recovery work;
-it does **not** claim those features exist yet.
+TW-034 encoding, TW-035 decoding and subsequent native save/open/recovery work.
+The [TW-034 snapshot and encoder](#snapshot-and-encoder-implementation-tw-034)
+now implement the writing side; decoding and native file workflows follow.
 
 ## Container and version
 
@@ -361,3 +362,77 @@ The existing populated golden fixtures have 138,222 and 500,802 recipe runs and
 run/cell ceilings; this is a count review, not an encoded-byte-size, codec memory,
 latency or native-I/O measurement. Actual checks and inspection evidence are in
 the TW-033 ticket.
+
+## Snapshot and encoder implementation (TW-034)
+
+[`project-format.ts`](../src/domain/project-format.ts) defines readonly v1 wire
+types, shared capacity constants and `ProjectEncodingError` with a `category`
+(`invalid-data`, `capacity`, or `canceled`) and field `path`.
+[`project.ts`](../src/domain/project.ts) provides two operations:
+
+- `captureProjectSnapshot(history, preferences, options?)` synchronously validates
+  and detaches one committed revision into a deeply frozen `ProjectSnapshot`.
+  `snapshot.project` holds only v1 data; `checkpoint` and `documentVersion` stay
+  outside the payload. No live iterator or controller is retained. Immutable
+  metadata/paint values can safely be shared; run arrays, indices and preferences
+  are detached. Capture validates feature records/references and rejects unknown
+  fields instead of dropping them. Model primitives already enforce identities,
+  safe run arithmetic and nonoverlap; their iterator coalesces ordered spans.
+- `encodeProjectSnapshot(snapshot, { signal?, yieldControl? }?)` returns canonical
+  UTF-8 `Uint8Array` bytes with one trailing LF. By default it yields to a timer
+  before encoding and between approximately 32 KiB character batches. Long strings
+  are escaped in slices preserving surrogate pairs and exact `JSON.stringify`
+  output. Final byte assembly yields after every sixteen chunks. It accepts only
+  snapshots captured by this module, not arbitrary or spread/copied objects.
+
+`EditorSession.captureProjectSnapshot(options?)` captures its history and just
+the active/hidden layer preferences in one synchronous call, including when
+content is clean or has redo available. It never reads or commits drawing queues,
+tile/area selection, clipboard, placements or drafts. Closed sessions reject it.
+The caller must capture before its first await and keep the matching token:
+
+```ts
+const snapshot = session.captureProjectSnapshot();
+const bytes = await encodeProjectSnapshot(snapshot);
+// Future save coordinator: write these bytes atomically to the chosen destination.
+// Only on that write's successful acknowledgement:
+// session.history.markSaved(snapshot.checkpoint);
+```
+
+`MapDocument.assertCommittedRead` rejects capture during transactions/mutation
+callbacks; history rejects edits outside its controller. Capture also verifies
+version/revision before publication. Later edits, undo/redo, layer removal,
+recolor or preference changes cannot affect the snapshot. An older acknowledged
+token leaves newer content dirty. Neither API acknowledges saved/recovery state.
+Ordering native writes and assigning file paths remain the save coordinator's job.
+
+Collection/run/cell ceilings apply during capture; the complete UTF-8 byte ceiling
+(including LF) applies incrementally during encoding. The closed wire shape has
+maximum container depth six, below the v1 ceiling of eight. Optional capture
+`limits` may lower capacities for constrained destinations/testing but cannot
+raise policy ceilings. Encoding cancellation or capacity failure returns no file.
+
+[`project-snapshot.test.ts`](../tests/domain/project-snapshot.test.ts) and
+[`project-encoding.test.ts`](../tests/domain/project-encoding.test.ts) cover all
+fields, immutable capture, equivalent storage/mutation histories, Unicode/integer
+extremes, capacity boundaries, invalid metadata/references, cancellation, preview
+exclusion, preference-only saves and edits during asynchronous encoding (including
+real timer tasks). The [canonical golden bytes](../tests/fixtures/project-v1.canonical.tilewright)
+are an independently sorted/minified copy of the reviewed example, intentionally
+compact. No decoder or native write is implied by these tests.
+
+Both complete populated fixtures encode all four layers, five registry records
+and 1,089 named areas. A test adapter reads **every run from emitted JSON bytes**
+into the existing independent golden occupancy/hash oracle. All metadata and
+preferences are compared separately. Frontier encodes to 123,870 canonical runs /
+2,340,632 bytes; heartland to 470,490 runs / 8,114,368 bytes. Occupied layer-cell
+counts remain 6,620,700 and 24,025,200, including hidden/covered content.
+
+Tests report extraction and encoding durations separately. Initial Node v24.22.3
+project-suite samples measured approximately 106/171 ms for frontier and 274/839 ms
+for heartland (capture/encoding, one sample each, with concurrent build activity).
+These are correctness-run timings, not native save or percentile benchmarks.
+Capture and palette construction remain synchronous; encoded chunks coexist
+temporarily with the final byte buffer. Native I/O, UI presentation and peak
+process memory are unmeasured. These performance limitations remain for TW-050
+(TW-049 for presentation), following AGENTS.md's delivery priority.

@@ -4,6 +4,10 @@ import {
 } from "../domain/selection.ts";
 import { MapDocument, type MutationResult } from "../domain/document.ts";
 import { CommandHistory } from "../domain/history.ts";
+import {
+  captureProjectSnapshot,
+  type ProjectCaptureOptions,
+} from "../domain/project.ts";
 import type { DocumentCommand } from "../domain/commands.ts";
 import {
   layerId,
@@ -245,7 +249,19 @@ export class EditorSession {
     this.drawing.dispose();
     this.#dispose();
   }
-  /** Visibility is a transient view preference until layer persistence is defined. */
+  /** Captures committed content and only the two persisted editor preferences. */
+  captureProjectSnapshot(options: ProjectCaptureOptions = {}) {
+    if (this.#closed) throw new Error("Editor session is closed.");
+    return captureProjectSnapshot(
+      this.history,
+      {
+        activeLayerId: this.activeLayer.getSnapshot(),
+        hiddenLayerIds: this.hiddenLayers.getSnapshot(),
+      },
+      options,
+    );
+  }
+  /** Visibility is a project preference, independent of content history/dirty state. */
   setLayerVisible(id: LayerId, visible: boolean): void {
     if (this.#closed) throw new Error("Editor session is closed.");
     if (!this.document.layers.some((layer) => layer.id === id))

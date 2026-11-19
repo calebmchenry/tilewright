@@ -20,8 +20,10 @@ readiness, rectangle measurement and feedback. React component drafts (layer nam
 search) stay local to their panel. None of these values are copied into document
 content, commands, saved revisions or recovery data in the current implementation.
 The [TW-033 project format](project-format.md#persisted-preferences-and-session-reset)
-chooses to snapshot active/hidden layers separately when persistence is implemented;
-other editor preferences remain session-local. `execute` and `perform` are the shared
+chooses to snapshot active/hidden layers separately. The
+[TW-034 snapshot API](project-format.md#snapshot-and-encoder-implementation-tw-034)
+implements that boundary; other editor preferences remain session-local.
+`execute` and `perform` are the shared
 command/action entry points; tools can build domain commands outside React.
 
 `Store` exposes cached `getSnapshot` and idempotent `subscribe` seams for

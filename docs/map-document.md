@@ -149,8 +149,10 @@ with the [tile renderer](tile-renderer.md).
 
 Iterators fail on any effective intervening mutation, including before the first
 `next()` or during expansion of a run. They are consistent synchronous read seams,
-not retained asynchronous save snapshots. Future codecs/history must capture their
-own revision/snapshot policy rather than holding a live iterator across edits.
+not retained asynchronous save snapshots. The
+[TW-034 project snapshot](project-format.md#snapshot-and-encoder-implementation-tw-034)
+detaches and validates all runs synchronously before encoding yields; it never
+holds a live iterator across edits.
 
 ## Validation and measurement
 
