@@ -105,8 +105,13 @@ export function bindNavigation(
     selecting = null;
     if (id === null) return;
     try {
-      if (point) session.selection.commit(id, local(point));
-      else session.selection.cancel(id);
+      if (point) {
+        // Pointer delivery can precede ResizeObserver after a window resize.
+        // Publish the actual host size first so a stale gesture cancels.
+        const { width, height } = host.getBoundingClientRect();
+        session.setCanvasSize(width, height);
+        session.selection.commit(id, local(point));
+      } else session.selection.cancel(id);
     } finally {
       if (host.hasPointerCapture(id)) host.releasePointerCapture(id);
     }
@@ -231,7 +236,12 @@ export function bindNavigation(
     }
     if (selecting === event.pointerId) {
       if (!(event.buttons & 1)) finishSelection();
-      else session.selection.sample(selecting, local(lastPointer));
+      else {
+        const id = selecting;
+        const { width, height } = host.getBoundingClientRect();
+        session.setCanvasSize(width, height);
+        session.selection.sample(id, local(lastPointer));
+      }
     }
     updatePointer();
   };
@@ -295,6 +305,20 @@ export function bindNavigation(
       finishSelection();
       cursor();
       updatePointer();
+    } else if (
+      (space || drag) &&
+      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
+    ) {
+      event.preventDefault();
+      const step = event.shiftKey ? 256 : 64;
+      session.pan(
+        event.key === "ArrowLeft"
+          ? step
+          : event.key === "ArrowRight"
+            ? -step
+            : 0,
+        event.key === "ArrowUp" ? step : event.key === "ArrowDown" ? -step : 0,
+      );
     } else if (event.key === "Escape") {
       event.preventDefault();
       session.fill.cancel();

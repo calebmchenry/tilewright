@@ -1,5 +1,5 @@
 import { BufferImageSource, Container, Sprite, Texture } from "pixi.js";
-import type { MapDocument } from "../domain/document";
+import type { MapDocument, TileWrite } from "../domain/document";
 import type { LayerId, RegistryId } from "../domain/values";
 import type { CanvasInvalidation } from "../editor/invalidation";
 import { CANVAS_INSET, TILE_PIXELS, type Viewport } from "../editor/viewport";
@@ -34,6 +34,7 @@ export class TileScene {
   #released = 0;
   #runs = 0;
   #destroyed = false;
+  #preview: readonly TileWrite[] | null = null;
   #overview: OverviewScene;
   #mode: "detail" | "overview" = "detail";
 
@@ -113,6 +114,35 @@ export class TileScene {
     }
   }
 
+  /** Rebuild only visible chunks touched by the old/new transient move. */
+  setPreview(writes: readonly TileWrite[] | null): void {
+    if (this.#destroyed || writes === this.#preview) return;
+    const affected = [...(this.#preview ?? []), ...(writes ?? [])];
+    this.#preview = writes;
+    const ids = new Set(this.#document.layers.map(({ id }) => id));
+    const bounds = this.#document.bounds;
+    for (const [id, layer] of this.#layers)
+      for (const chunk of layer.chunks.values())
+        if (
+          // Cancellation can run before the document bridge removes obsolete
+          // layer/bounds caches. Never query those stale chunk addresses.
+          ids.has(id) &&
+          chunk.region.bounds.minX >= bounds.minX &&
+          chunk.region.bounds.minY >= bounds.minY &&
+          chunk.region.bounds.maxX <= bounds.maxX &&
+          chunk.region.bounds.maxY <= bounds.maxY &&
+          affected.some(
+            (run) =>
+              run.layerId === id &&
+              run.y >= chunk.region.bounds.minY &&
+              run.y < chunk.region.bounds.maxY &&
+              run.x < chunk.region.bounds.maxX &&
+              run.x + run.length > chunk.region.bounds.minX,
+          )
+        )
+          this.#build(id, layer, chunk);
+  }
+
   invalidate(change: CanvasInvalidation): boolean {
     if (this.#destroyed) return false;
     const overviewChanged = this.#overview.invalidate(change);
@@ -143,7 +173,12 @@ export class TileScene {
   }
 
   #build(id: LayerId, layer: Layer, chunk: Chunk): void {
-    const data = rasterizeChunk(this.#document, id, chunk.region);
+    const data = rasterizeChunk(
+      this.#document,
+      id,
+      chunk.region,
+      this.#preview ?? [],
+    );
     this.#builds++;
     this.#runs += data.runs;
     chunk.registryIds = data.registryIds;

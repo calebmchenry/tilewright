@@ -125,6 +125,8 @@ export async function createRenderer(
           (bounds.maxY - bounds.minY) * scale,
         )
         .fill("#1d2732");
+      const selectionPreview = session?.selection.preview.getSnapshot();
+      tiles!.setPreview(selectionPreview?.move?.writes ?? null);
       tiles!.sync(
         view,
         width,
@@ -191,7 +193,7 @@ export async function createRenderer(
       }
       selection.clear();
       const selected =
-        session?.selection.preview.getSnapshot()?.bounds ??
+        selectionPreview?.bounds ??
         session?.selection.state.getSnapshot()?.bounds;
       if (selected) {
         selection
@@ -201,8 +203,11 @@ export async function createRenderer(
             (selected.maxX - selected.minX) * scale,
             (selected.maxY - selected.minY) * scale,
           )
-          .fill({ color: "#87dfff", alpha: 0.12 })
-          .stroke({ color: "#87dfff", width: 2 });
+          .fill({ color: "#87dfff", alpha: selectionPreview?.move ? 0 : 0.12 })
+          .stroke({
+            color: selectionPreview?.move?.reason ? "#ff8080" : "#87dfff",
+            width: 2,
+          });
       }
       renderer.render(stage);
       renders++;

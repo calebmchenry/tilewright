@@ -1,5 +1,5 @@
 import type { Bounds } from "../domain/coordinates.ts";
-import type { MapDocument } from "../domain/document.ts";
+import type { MapDocument, TileWrite } from "../domain/document.ts";
 import { cellKey, type LayerId, type RegistryId } from "../domain/values.ts";
 import {
   CANVAS_INSET,
@@ -82,31 +82,54 @@ export function rasterizeChunk(
   document: MapDocument,
   layer: LayerId,
   chunk: VisibleChunk,
+  preview: readonly TileWrite[] = [],
 ) {
   let pixels: Uint8Array | null = null;
   let cells = 0,
     runs = 0;
   const registryIds = new Set<RegistryId>();
   const colors = new Map<string, Rgba>();
-  for (const run of document.iterateRuns(layer, chunk.bounds)) {
+  const occupied = preview.length
+    ? new Uint8Array(RENDER_CHUNK_SIZE ** 2)
+    : null;
+  function* spans() {
+    yield* document.iterateRuns(layer, chunk.bounds);
+    for (const run of preview) {
+      if (
+        run.layerId !== layer ||
+        run.y < chunk.bounds.minY ||
+        run.y >= chunk.bounds.maxY
+      )
+        continue;
+      const x = Math.max(run.x, chunk.bounds.minX);
+      const end = Math.min(run.x + run.length, chunk.bounds.maxX);
+      if (x < end) yield { ...run, x, length: end - x };
+    }
+  }
+  for (const run of spans()) {
     pixels ??= new Uint8Array(CHUNK_BYTES);
     runs++;
-    cells += run.length;
-    if (run.value.kind === "registered") registryIds.add(run.value.registryId);
-    const key = cellKey(run.value);
+    if (!occupied) cells += run.length;
+    if (run.value?.kind === "registered") registryIds.add(run.value.registryId);
+    const key = run.value ? cellKey(run.value) : "empty";
     let rgba = colors.get(key);
     if (!rgba) {
-      rgba = resolveColor(document, run.value);
+      rgba = run.value ? resolveColor(document, run.value) : [0, 0, 0, 0];
       colors.set(key, rgba);
     }
     const [r, g, b, a] = rgba;
     for (let x = run.x; x < run.x + run.length; x++) {
-      const offset = ((run.y - chunk.y) * RENDER_CHUNK_SIZE + x - chunk.x) * 4;
+      const index = (run.y - chunk.y) * RENDER_CHUNK_SIZE + x - chunk.x;
+      if (occupied) {
+        cells += Number(run.value !== null) - occupied[index];
+        occupied[index] = Number(run.value !== null);
+      }
+      const offset = index * 4;
       pixels[offset] = Math.round((r * a) / 255);
       pixels[offset + 1] = Math.round((g * a) / 255);
       pixels[offset + 2] = Math.round((b * a) / 255);
       pixels[offset + 3] = a;
     }
   }
-  return { pixels, cells, runs, registryIds };
+  return { pixels: cells ? pixels : null, cells, runs, registryIds };
 }

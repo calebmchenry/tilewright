@@ -80,3 +80,25 @@ export function selectionDocument() {
   ]);
   return document;
 }
+
+/** The movement contract's house, with distinct C/D and 24 overwritten wall cells. */
+export function movementDocument() {
+  const document = selectionDocument();
+  document.writeBatch([
+    ...Array.from({ length: 8 }, (_, i) => ({
+      layerId: walls,
+      x: 68,
+      y: 60 + i,
+      length: 3,
+      value: rawColor("#556677ff"),
+    })),
+    {
+      layerId: furniture,
+      x: 61,
+      y: 61,
+      length: 1,
+      value: rawColor("#ddeeffff"),
+    },
+  ]);
+  return document;
+}

@@ -303,7 +303,7 @@ test("painting clears selection; gates/shortcuts and workspace disposal respect 
     s.canvasState.set("ready");
   }
   select(s);
-  assert.equal(s.selection.begin(1, point(62, 62)), false);
+  assert.equal(s.selection.begin(1, point(62, 62)), true);
   assert.deepEqual(s.selection.state.getSnapshot()!.bounds, house);
   const workspace = new EditorWorkspace(s);
   workspace.createMap(128, 128);

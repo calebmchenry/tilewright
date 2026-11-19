@@ -28,7 +28,12 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
             · end excluded
           </p>
           {preview ? (
-            <p className="hint">Release to capture tiles; Escape cancels.</p>
+            <p className="hint" role="status" aria-label="Selection preview">
+              {preview.move
+                ? (preview.move.reason ??
+                  `Move ${preview.move.dx}, ${preview.move.dy} tiles. Release to apply; Escape cancels.`)
+                : "Release to capture tiles; Escape cancels."}
+            </p>
           ) : (
             <>
               <fieldset className="selection-layers">
@@ -85,6 +90,11 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
               </button>
             </>
           )}
+          <p className="hint">
+            Drag inside to move, including from a hole. Arrows nudge one tile;
+            Shift+arrow nudges ten. Deselect to start a rectangle inside this
+            one.
+          </p>
           <p className="hint">
             Layer choices stay fixed when the active layer changes. Named areas
             and labels are excluded.

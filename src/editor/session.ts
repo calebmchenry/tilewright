@@ -349,7 +349,7 @@ export class EditorSession {
     if (id === "select") {
       this.activeTool.set(id);
       this.report(
-        "Select active. Drag a rectangle; choose its layers explicitly. Escape cancels a drag or deselects.",
+        "Select active. Drag a rectangle, then drag inside to move. Arrows nudge one tile; Shift nudges ten. Escape cancels or deselects.",
       );
       return true;
     }
@@ -753,6 +753,17 @@ export class EditorSession {
       else if (
         ["arrowleft", "arrowright", "arrowup", "arrowdown"].includes(key)
       ) {
+        if (
+          this.activeTool.getSnapshot() === "select" &&
+          this.selection.state.getSnapshot()
+        ) {
+          const step = input.shiftKey ? 10 : 1;
+          this.selection.nudge(
+            key === "arrowleft" ? -step : key === "arrowright" ? step : 0,
+            key === "arrowup" ? -step : key === "arrowdown" ? step : 0,
+          );
+          return true;
+        }
         const step = input.shiftKey ? 256 : 64;
         this.pan(
           key === "arrowleft" ? step : key === "arrowright" ? -step : 0,

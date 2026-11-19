@@ -2,17 +2,31 @@ import { containsTile, type Bounds } from "../domain/coordinates.ts";
 import {
   captureSelection,
   selectionFits,
+  planSelectionMove,
+  translatedSelection,
   type SelectionPayload,
 } from "../domain/selection.ts";
+import type { TileWrite } from "../domain/document.ts";
 import type { LayerId } from "../domain/values.ts";
 import { rectangleBetween } from "./measurement.ts";
 import type { EditorSession } from "./session.ts";
 import { Store } from "./store.ts";
-import { screenToTile, type Point } from "./viewport.ts";
+import {
+  canEditTiles,
+  OVERVIEW_MESSAGE,
+  screenToTile,
+  type Point,
+} from "./viewport.ts";
 
 export interface SelectionRectangle {
   readonly bounds: Bounds;
   readonly layerIds: readonly LayerId[];
+  readonly move?: {
+    readonly dx: number;
+    readonly dy: number;
+    readonly writes: readonly TileWrite[];
+    readonly reason: string | null;
+  };
 }
 
 /** Selection creation and membership are view state, never document commands. */
@@ -20,7 +34,12 @@ export class SelectionController {
   readonly state = new Store<SelectionPayload | null>(null);
   readonly preview = new Store<SelectionRectangle | null>(null);
   #session: EditorSession;
-  #current: { id: number; start: Point; layerId: LayerId } | null = null;
+  #current: {
+    id: number;
+    start: Point;
+    layerIds: readonly LayerId[];
+    source: SelectionPayload | null;
+  } | null = null;
   #stops: (() => void)[];
   #closed = false;
 
@@ -90,22 +109,39 @@ export class SelectionController {
       session.activeTool.getSnapshot() !== "select"
     )
       return false;
-    const reason = session.action("select").reason;
+    const start = session.editableTileAt(point);
+    const selected = this.state.getSnapshot();
+    const moving = !!(
+      start &&
+      selected &&
+      containsTile(selected.bounds, start.x, start.y)
+    );
+    const reason = moving
+      ? this.#moveReason()
+      : session.action("select").reason;
     if (reason) {
       session.report(reason);
       return false;
     }
-    const start = session.editableTileAt(point);
     if (!start) return false;
-    const current = this.state.getSnapshot();
-    if (current && containsTile(current.bounds, start.x, start.y)) {
-      session.report(
-        "Deselect to start a new rectangle here. Selection movement is not available yet.",
+    try {
+      const layerIds = Object.freeze(
+        moving
+          ? selected!.layers.map((layer) => layer.layerId)
+          : [session.activeLayer.getSnapshot()],
       );
-      return false;
+      this.#current = {
+        id,
+        start,
+        layerIds,
+        source: moving
+          ? captureSelection(session.document, selected!.bounds, layerIds)
+          : null,
+      };
+      return this.sample(id, point);
+    } catch (error) {
+      return this.#fail(error);
     }
-    this.#current = { id, start, layerId: session.activeLayer.getSnapshot() };
-    return this.sample(id, point);
   }
   sample(id: number, point: Point): boolean {
     const current = this.#current;
@@ -119,14 +155,34 @@ export class SelectionController {
       if (![end.x, end.y].every(Number.isSafeInteger))
         throw new RangeError("Invalid selection coordinate.");
       const map = this.#session.document.bounds;
+      if (current.source) {
+        const dx = end.x - current.start.x,
+          dy = end.y - current.start.y;
+        const previous = this.preview.getSnapshot()?.move;
+        if (previous?.dx === dx && previous.dy === dy) return true;
+        const bounds = translatedSelection(current.source, dx, dy);
+        const reason = selectionFits(map, bounds)
+          ? null
+          : "The entire selection must fit inside the map. Cancel and Grow Canvas to make more room.";
+        const writes = reason
+          ? Object.freeze([])
+          : planSelectionMove(this.#session.document, current.source, dx, dy)
+              .writes;
+        this.preview.set(
+          Object.freeze({
+            bounds,
+            layerIds: current.layerIds,
+            move: Object.freeze({ dx, dy, writes, reason }),
+          }),
+        );
+        return this.#current === current;
+      }
       // Clamp only an already-started creation endpoint, before adding one.
       const bounds = rectangleBetween(current.start, {
         x: Math.max(map.minX, Math.min(map.maxX - 1, end.x)),
         y: Math.max(map.minY, Math.min(map.maxY - 1, end.y)),
       });
-      this.preview.set(
-        Object.freeze({ bounds, layerIds: Object.freeze([current.layerId]) }),
-      );
+      this.preview.set(Object.freeze({ bounds, layerIds: current.layerIds }));
       return this.#current === current;
     } catch (error) {
       return this.#fail(error);
@@ -136,6 +192,15 @@ export class SelectionController {
     if (!this.sample(id, point)) return false;
     try {
       const preview = this.preview.getSnapshot()!;
+      if (preview.move) {
+        const source = this.#current!.source!;
+        return this.#apply(
+          source,
+          preview.move.dx,
+          preview.move.dy,
+          "Move selection",
+        );
+      }
       const payload = captureSelection(
         this.#session.document,
         preview.bounds,
@@ -148,6 +213,85 @@ export class SelectionController {
     } catch (error) {
       return this.#fail(error);
     }
+  }
+  #moveReason(): string | null {
+    if (this.#closed || this.#session.canvasState.getSnapshot() !== "ready")
+      return "Wait for the map canvas to be ready.";
+    if (!canEditTiles(this.#session.viewport.getSnapshot()))
+      return OVERVIEW_MESSAGE;
+    const selected = this.state.getSnapshot();
+    if (
+      !selected ||
+      !this.#visible(selected.layers.map((layer) => layer.layerId))
+    )
+      return "Select at least one visible layer to move tiles.";
+    return null;
+  }
+  nudge(dx: number, dy: number): boolean {
+    if (this.#current || this.#session.activeTool.getSnapshot() !== "select")
+      return false;
+    const reason = this.#moveReason();
+    if (reason) {
+      this.#session.report(reason);
+      return false;
+    }
+    const selected = this.state.getSnapshot()!;
+    try {
+      return this.#apply(
+        captureSelection(
+          this.#session.document,
+          selected.bounds,
+          selected.layers.map((layer) => layer.layerId),
+        ),
+        dx,
+        dy,
+        "Nudge selection",
+      );
+    } catch (error) {
+      return this.#fail(error);
+    }
+  }
+  #apply(
+    source: SelectionPayload,
+    dx: number,
+    dy: number,
+    label: string,
+  ): boolean {
+    let result;
+    let bounds: Bounds;
+    try {
+      const reason = this.#moveReason();
+      if (reason) throw new Error(reason);
+      const plan = planSelectionMove(this.#session.document, source, dx, dy);
+      bounds = plan.bounds;
+      // Detach before capture release and synchronous document notifications.
+      this.cancel();
+      result = this.#session.history.execute(label, [
+        { kind: "tiles", writes: plan.writes },
+      ]);
+    } catch (error) {
+      return this.#fail(error);
+    }
+    // Publication has succeeded. View failures must never report a retryable edit.
+    try {
+      this.state.set(
+        captureSelection(
+          this.#session.document,
+          bounds,
+          source.layers.map((layer) => layer.layerId),
+        ),
+      );
+      if (result.observerErrors.length) throw result.observerErrors[0];
+      this.#session.report(
+        result.change ? label : "Selection positioned; no tile changes.",
+      );
+    } catch (error) {
+      this.#session.reportError(
+        error,
+        `${label} committed, but a view could not update`,
+      );
+    }
+    return true;
   }
   setIncluded(id: LayerId, included: boolean): boolean {
     if (this.#closed) return false;

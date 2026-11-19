@@ -59,12 +59,13 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         their shared size. D selects Eyedropper. G selects Fill. L selects Line;
         R selects Rectangle. V selects tiles. Shapes include both endpoints;
         lines and outlines are one tile thick. H selects Pan; I selects Inspect.
-        F fits the map; 0 resets to 100%; plus/minus zoom; arrows pan. Drag with
-        Inspect to measure a rectangle; Escape clears it.{" "}
+        F fits the map; 0 resets to 100%; plus/minus zoom; arrows pan or nudge a
+        Select selection. Drag with Inspect to measure a rectangle; Escape
+        clears it.{" "}
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
           : tool === "select"
-            ? "Drag a rectangle, then choose included layers. Escape cancels creation or deselects."
+            ? "Drag a rectangle and choose layers; drag inside to move. Arrows nudge one tile, Shift ten. Escape cancels a drag or deselects."
             : tool === "fill"
               ? "Click to fill a connected region on the active layer. Escape cancels a running fill. Pan and zoom remain available."
               : tool === "eyedropper"
