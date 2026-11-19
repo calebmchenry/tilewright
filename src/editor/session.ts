@@ -33,6 +33,7 @@ import {
 } from "../domain/registry.ts";
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
+import { toolShortcuts } from "./shortcuts.ts";
 import { FillController } from "./fill.ts";
 import { AnnotationController } from "./annotations.ts";
 import { SelectionController } from "./selection.ts";
@@ -63,6 +64,7 @@ import {
 export type FocusOwner = "canvas" | "panel" | "text" | "outside";
 export type ActionId =
   | SelectionTransform
+  | "cancel"
   | "undo"
   | "redo"
   | "save"
@@ -299,6 +301,7 @@ export class EditorSession {
     );
   }
   action(id: ActionId): ActionState {
+    if (id === "cancel") return { label: "Cancel", reason: null };
     if (Object.hasOwn(selectionTransforms, id))
       return {
         label: selectionTransforms[id as SelectionTransform],
@@ -393,6 +396,8 @@ export class EditorSession {
   }
   perform(id: ActionId): boolean {
     if (id === "undo" || id === "redo") {
+      this.drawing.cancel();
+      this.fill.cancel();
       this.selection.deselect();
       this.areas.cancelDraft();
     }
@@ -400,6 +405,19 @@ export class EditorSession {
     if (state.reason) {
       this.report(state.reason);
       return false;
+    }
+    if (id === "cancel") {
+      // Cancel the pending operation before clearing an already committed selection.
+      if (this.fill.progress.getSnapshot()) this.fill.cancel();
+      else if (this.drawing.preview.getSnapshot()) this.drawing.cancel();
+      else if (this.areas.draft.getSnapshot()) this.areas.cancelDraft();
+      else if (
+        this.selection.preview.getSnapshot() ||
+        this.selection.state.getSnapshot()
+      )
+        this.selection.escape();
+      else this.setRectangle(null);
+      return true;
     }
     if (Object.hasOwn(selectionTransforms, id))
       return this.selection.transform(id as SelectionTransform);
@@ -784,10 +802,8 @@ export class EditorSession {
     )
       return false;
     const key = input.key.toLowerCase();
-    if (key === "escape" && this.areas.draft.getSnapshot()) {
-      this.areas.cancelDraft();
-      return true;
-    }
+    if (key === "escape" && !input.metaKey && !input.ctrlKey)
+      return this.perform("cancel");
     if (
       owner === "canvas" &&
       (input.metaKey || input.ctrlKey) &&
@@ -802,28 +818,23 @@ export class EditorSession {
       return true;
     }
     if (
-      owner === "canvas" &&
       !input.metaKey &&
       !input.ctrlKey &&
       this.canvasState.getSnapshot() === "ready"
     ) {
+      const tool = toolShortcuts[key as keyof typeof toolShortcuts];
+      if (tool) {
+        this.perform(tool);
+        return true;
+      }
+      // Arrows, Enter, brush sizing and zoom belong to the canvas. Buttons,
+      // checkboxes and other panel controls retain their native navigation.
+      if (owner !== "canvas") return false;
       if (this.selection.placing && key === "enter") {
         this.selection.commitPlacement();
         return true;
       }
-      const toolKeys: Readonly<Record<string, ActionId>> = {
-        i: "inspect",
-        h: "pan",
-        b: "pencil",
-        e: "eraser",
-        d: "eyedropper",
-        l: "line",
-        r: "rectangle",
-        g: "fill",
-        v: "select",
-      };
-      if (toolKeys[key]) this.perform(toolKeys[key]);
-      else if (
+      if (
         (key === "[" || key === "]") &&
         ["pencil", "eraser"].includes(this.activeTool.getSnapshot())
       )
@@ -836,7 +847,6 @@ export class EditorSession {
             ),
           ),
         );
-      else if (key === "f") this.perform("fit-map");
       else if (key === "0") this.setZoom(1);
       else if (["+", "=", "-", "_"].includes(key))
         this.setZoom(

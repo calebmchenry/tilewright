@@ -158,6 +158,20 @@ export class ApplicationActions {
   }
   routeKey(input: KeyInput): boolean {
     if (
+      !input.defaultPrevented &&
+      !input.isComposing &&
+      !input.altKey &&
+      !input.metaKey &&
+      !input.ctrlKey &&
+      input.key === "Escape" &&
+      !this.#modal() &&
+      this.#context.owner !== "text" &&
+      this.lifecycle.agentExport?.state.getSnapshot().cancelable
+    ) {
+      this.lifecycle.agentExport.cancel();
+      return true;
+    }
+    if (
       input.defaultPrevented ||
       input.isComposing ||
       input.altKey ||

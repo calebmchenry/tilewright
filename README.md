@@ -38,6 +38,8 @@ documented in [command history](docs/command-history.md).
 
 The editor session, targeted subscriptions, keyboard routing, and workspace controls
 are documented in [the editor shell](docs/editor-shell.md).
+[Complete session integration](docs/editor-shell.md#complete-editing-session-integration-tw-047)
+covers shared shortcuts, focus restoration, cancellation and compact-window controls.
 
 Visible sparse WebGL tiles, color lookup, composition, and cache lifetime are
 documented in [the tile renderer](docs/tile-renderer.md).

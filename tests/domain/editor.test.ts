@@ -294,3 +294,96 @@ test("layer visibility stays transient, rejects unknown IDs and drops removed id
   session.dispose();
   assert.throws(() => session.setLayerVisible(layerId("base"), false));
 });
+
+test("tool shortcuts work from non-text panels while typing, IME and panel arrows stay local", () => {
+  const editor = session();
+  editor.canvasState.set("ready");
+  editor.setCanvasSize(640, 480);
+  for (const [key, tool] of Object.entries({
+    b: "pencil",
+    e: "eraser",
+    d: "eyedropper",
+    g: "fill",
+    l: "line",
+    r: "rectangle",
+    v: "select",
+    a: "area",
+    h: "pan",
+    i: "inspect",
+  })) {
+    assert.equal(editor.routeKey({ key }, "panel"), true);
+    assert.equal(editor.activeTool.getSnapshot(), tool);
+    for (const owner of ["text", "outside"] as const)
+      assert.equal(editor.routeKey({ key: "b" }, owner), false);
+    assert.equal(
+      editor.routeKey({ key: "b", isComposing: true }, "panel"),
+      false,
+    );
+    assert.equal(editor.activeTool.getSnapshot(), tool);
+  }
+  const viewport = editor.viewport.getSnapshot();
+  for (const key of [
+    "ArrowRight",
+    "ArrowDown",
+    " ",
+    "Enter",
+    "Delete",
+    "Backspace",
+  ])
+    assert.equal(editor.routeKey({ key }, "panel"), false);
+  assert.equal(editor.viewport.getSnapshot(), viewport);
+  assert.equal(editor.history.state.undoSteps, 0);
+  editor.dispose();
+});
+
+test("Escape from panel focus cancels previews before deselecting and never mutates history", () => {
+  const editor = session();
+  editor.canvasState.set("ready");
+  editor.setCanvasSize(640, 480);
+  editor.perform("pencil");
+  editor.drawing.begin(1, { x: 36, y: 36 });
+  assert.ok(editor.drawing.preview.getSnapshot());
+  editor.routeKey({ key: "Escape" }, "panel");
+  assert.equal(editor.drawing.pointerId, null);
+  editor.perform("select");
+  editor.selection.begin(2, { x: 36, y: 36 });
+  editor.selection.commit(2, { x: 60, y: 60 });
+  const selection = editor.selection.state.getSnapshot();
+  assert.ok(selection);
+  editor.selection.begin(3, { x: 36, y: 36 });
+  editor.selection.sample(3, { x: 84, y: 36 });
+  assert.ok(editor.selection.preview.getSnapshot());
+  editor.routeKey({ key: "Escape" }, "panel");
+  assert.equal(editor.selection.preview.getSnapshot(), null);
+  assert.equal(editor.selection.state.getSnapshot(), selection);
+  editor.routeKey({ key: "Escape" }, "panel");
+  assert.equal(editor.selection.state.getSnapshot(), null);
+  editor.areas.newArea();
+  editor.routeKey({ key: "Escape" }, "text");
+  assert.ok(editor.areas.draft.getSnapshot());
+  editor.routeKey({ key: "Escape" }, "panel");
+  assert.equal(editor.areas.draft.getSnapshot(), null);
+  assert.equal(editor.history.state.undoSteps, 0);
+  editor.dispose();
+});
+
+test("undo and redo cancel pending drawing and fill before changing committed map history", async () => {
+  const editor = session();
+  editor.canvasState.set("ready");
+  editor.setCanvasSize(640, 480);
+  editor.renameLayer(base, "Land");
+  editor.perform("pencil");
+  editor.drawing.begin(1, { x: 36, y: 36 });
+  assert.equal(editor.perform("undo"), true);
+  assert.equal(editor.drawing.pointerId, null);
+  assert.equal(editor.document.getCell(base, 0, 0), null);
+  editor.perform("fill");
+  const fill = editor.fill.start({ x: 36, y: 36 });
+  assert.ok(editor.fill.progress.getSnapshot());
+  assert.equal(editor.perform("redo"), true);
+  assert.equal(await fill, false);
+  assert.equal(editor.fill.progress.getSnapshot(), null);
+  assert.equal(editor.document.layers[0].name, "Land");
+  assert.equal(editor.document.getCell(base, 0, 0), null);
+  editor.dispose();
+});

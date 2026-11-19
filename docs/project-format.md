@@ -713,8 +713,9 @@ same selection/visibility/preview gates as the panel buttons. Menu and keyboard
 editing call `EditorSession.perform`, exactly as those buttons do. Cmd+Z,
 Cmd+Shift+Z and Cmd+X/C/V operate on the map from canvas or non-text panel focus;
 clipboard contents remain document-local tile data, separate from system text.
-The browser development fallback also accepts Ctrl. Tool and arrow shortcuts
-remain canvas-only and are ignored during text entry, IME composition and modals.
+The browser development fallback also accepts Ctrl. Tool shortcuts now also work from non-text panels (TW-047); arrow shortcuts
+remain canvas-only. Both are ignored during text entry, IME composition and modals.
+See [complete session integration](editor-shell.md#complete-editing-session-integration-tw-047).
 
 `src-tauri/src/application_menu.rs` owns conventional File/Edit menus and
 accelerators, retaining the guarded Quit/Close and standard View/Window menus.

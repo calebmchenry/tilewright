@@ -5,7 +5,8 @@ import type {
 } from "./editor/recovery-discovery";
 import { useEffect, useId, useState } from "react";
 import { MapCanvas } from "./MapCanvas";
-import { focusOwner } from "./editor/focus";
+import { ShortcutHint } from "./ShortcutHint";
+import { focusOwner, restoreFocus } from "./editor/focus";
 import { type ActionId, type EditorSession } from "./editor/session";
 import { canEditTiles } from "./editor/viewport";
 import { useStore, useStoreField } from "./editor/useStore";
@@ -82,6 +83,7 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
           action === "eyedropper" ||
           action === "fill" ||
           action === "select" ||
+          action === "area" ||
           session.drawing.tool(action)
             ? action === activeTool
             : undefined
@@ -89,6 +91,7 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
         onClick={() => session.perform(action)}
       >
         {state.label}
+        <ShortcutHint action={action} />
       </button>
       {state.reason && (
         <span className="sr-only" id={id}>
@@ -129,6 +132,7 @@ export function ToolPanel({ session }: Props) {
             "line",
             "rectangle",
             "select",
+            "area",
           ] as const
         ).map((action) => (
           <ActionButton key={action} session={session} action={action} />
@@ -178,8 +182,8 @@ export function ToolPanel({ session }: Props) {
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
         B: Pencil · E: Eraser · D: Eyedropper · G: Fill · L: Line · R: Rectangle
-        · V: Select · [ / ]: Brush size · H: Pan · I: Inspect · F: Fit map. Drag
-        with Inspect to measure a rectangle; Escape clears it.{" "}
+        · V: Select · A: Areas · [ / ]: Brush size · H: Pan · I: Inspect · F:
+        Fit map. Drag with Inspect to measure a rectangle; Escape clears it.{" "}
         {session.drawing.tool(tool)
           ? "Drag to preview; release to apply; Escape cancels drawing."
           : tool === "area"
@@ -368,6 +372,8 @@ export function ViewControls({ session }: Props) {
 }
 
 function Readout({ session }: Props) {
+  const tool = useStore(session.activeTool);
+  const color = useStore(session.color);
   const focus = useStore(session.focus),
     pointer = useStore(session.pointer);
   const layer = useStore(session.activeLayer),
@@ -400,8 +406,11 @@ function Readout({ session }: Props) {
           ? `Rectangle ${rectangle.maxX - rectangle.minX} × ${rectangle.maxY - rectangle.minY} tiles`
           : "Rectangle —"}
       </span>
-      <span>
+      <span title={layers.find((item) => item.id === layer)?.name}>
         Layer: {layers.find((item) => item.id === layer)?.name ?? "—"}
+      </span>
+      <span data-testid="tool-color-readout">
+        {session.action(tool).label} · {color.slice(0, 7).toUpperCase()}
       </span>
       <span data-testid="focus-readout">
         {focus === "text"
@@ -498,20 +507,53 @@ export function App({
 }) {
   useEffect(() => {
     const blur = () => session.focus.set("outside");
+    const focus = () => {
+      session.focus.set(focusOwner(document.activeElement));
+      restoreFocus();
+    };
     window.addEventListener("blur", blur);
-    return () => window.removeEventListener("blur", blur);
+    window.addEventListener("focus", focus);
+    return () => {
+      window.removeEventListener("blur", blur);
+      window.removeEventListener("focus", focus);
+    };
   }, [session]);
   return (
     <main
       className="editor"
       data-editor-root
+      onPointerDownCapture={(event) => {
+        // WKWebView does not focus buttons on mouse clicks by default. Give
+        // deliberate panel clicks ownership so subsequent keys cannot keep
+        // editing the previous text field or disappear at the webview root.
+        const button = (event.target as Element).closest("button");
+        if (event.button === 0 && button && !button.disabled)
+          button.focus({ preventScroll: true });
+      }}
+      onClickCapture={(event) => {
+        // Accessibility activation can emit a click without pointer events.
+        // Explicit buttons own focus; implicit form submission from a text
+        // field keeps the field's caret and native undo stack.
+        const button = (event.target as Element).closest("button");
+        if (
+          button &&
+          !button.disabled &&
+          (button.type === "button" ||
+            event.detail > 0 ||
+            focusOwner(document.activeElement) !== "text")
+        )
+          button.focus({ preventScroll: true });
+      }}
       onFocusCapture={(event) => session.focus.set(focusOwner(event.target))}
       onBlurCapture={(event) =>
         session.focus.set(focusOwner(event.relatedTarget))
       }
       onKeyDown={(event) => {
-        if (session.routeKey(event.nativeEvent, focusOwner(event.target)))
+        if ((event.target as Element).closest("dialog[open]")) return;
+        if (session.routeKey(event.nativeEvent, focusOwner(event.target))) {
           event.preventDefault();
+          restoreFocus();
+        }
       }}
     >
       <header className="app-header">
@@ -546,6 +588,7 @@ export function App({
               onClick={() => actions.perform("new")}
             >
               New map
+              <ShortcutHint action="new" />
             </button>
           ) : (
             onCreateMap && (

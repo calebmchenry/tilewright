@@ -163,3 +163,67 @@ retain AppKit editing. See [File/Edit menus](project-format.md#fileedit-menus-an
 header derives the path from workspace state and dirty status from the current
 history checkpoint. See [the lifecycle contract](project-format.md#document-lifecycle-tw-037)
 for asynchronous saves, failure preservation, session reset and validation.
+
+## Complete editing-session integration (TW-047)
+
+The shipping shell now exposes every implemented tool: Inspect **I**, Pan **H**,
+Pencil **B**, Eraser **E**, Eyedropper **D**, Fill **G**, Line **L**, Rectangle **R**,
+Select **V**, and Areas **A**. **F** fits the map. These letters work from the
+canvas and non-text panel controls. Inputs, textareas, selects, contenteditable,
+IME composition, Cmd/Ctrl/Alt-modified letters and modal dialogs retain their own keys.
+`src/editor/shortcuts.ts` supplies the shared dispatch vocabulary and visible
+button hints; `EditorSession.perform` supplies action gates and feedback.
+Native File/Edit actions continue through `ApplicationActions` and the same
+session/lifecycle methods as buttons. Disabled actions consume their reserved
+command shortcuts without invoking browser actions or background map edits.
+
+Arrows belong to the focused canvas: one-tile selection nudges, Shift for ten,
+or camera pan without a selection. Enter applies a canvas placement; Enter/Space
+on panel buttons activates that button. Brush brackets, zoom keys and temporary
+Space-pan also remain canvas-only. There is no tile Delete/Backspace shortcut;
+text editing always keeps its own deletion, clipboard and undo/redo.
+
+Escape uses the shared Cancel action from canvas or non-text panels, including
+after focus moves away from a placement control. It cancels a running fill,
+drawing preview, area draft or selection preview before deselecting an existing
+selection or clearing Inspect measurement. An area form also handles Escape
+locally from its text fields, discarding only that draft. Modal Escape closes
+only that dialog. Native file-panel Escape belongs to AppKit. Outside text/modal
+contexts, Escape cancels a cancelable agent export before other editor previews;
+once atomic publication begins, cancellation is unavailable and finishing
+feedback remains visible. Save and recovery publication retain their existing
+atomic, non-cancelable write boundaries. Undo/redo cancel unfinished gestures,
+fill and drafts before changing committed map history; save/export/recovery
+acknowledgements never add undo steps or silently acknowledge later edits.
+
+`src/editor/focus.ts` restores abandoned focus when a temporary control or dialog
+is removed, with a canvas fallback if the opener no longer exists. Recovery
+retains its explicit Review opener across asynchronous scanning. A newer dialog
+or a field the user moved to keeps focus. Native mouse clicks explicitly focus
+buttons at pointer-down and accessibility activation because WKWebView otherwise
+can leave the previous text field or webview root as keyboard owner. Returning from a native dialog/window
+blur refreshes the focus readout. A replacement canvas takes abandoned focus
+when it becomes ready; an already focused field or modal keeps ownership.
+Keyboard focus has a visible outline; pressed tool, layer and named-color states
+remain accessible.
+
+`src/styles.css` constrains the editor's grid and flexible header so long layer
+names and history labels cannot widen the window. The header wraps controls;
+sidebars, toolbar, dialogs and the bounded feedback footer scroll independently.
+Long paths, names and errors wrap or expose their full value through a field or
+tooltip. At the 640 × 480 native minimum (640 × 452 content), all actions remain
+reachable without horizontal page overflow. The footer cannot consume the entire
+canvas when file/export/recovery messages stack. Tool/color and active-layer
+readouts remain available alongside map/selection dimensions, dirty state and
+operation feedback. The focus readout reserves its width so changing focus
+during mouse-down cannot reflow the footer and move the clicked control.
+These are usability constraints, not performance budgets.
+
+`tests/usability.spec.ts` walks all tools with keyboard/mouse input, text/clipboard/
+IME isolation, cancellation, modal focus, long populated panels and sizes from
+1200 × 800 to 640 × 452. `tests/project-files.spec.ts` covers the shipping native
+adapter with substituted IPC, menu state, export Escape and recovery/New focus.
+`tests/domain/editor.test.ts` checks action routing and exact history/content
+preservation. The native WKWebView, AppKit file-panel, resizing and error/cancel
+walkthrough and actual regression results are recorded in TW-047. Browser tests
+and simulated focus events do not replace that native evidence.

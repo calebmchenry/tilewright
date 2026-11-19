@@ -1,4 +1,5 @@
-import { useId, useState } from "react";
+import { restoreFocus } from "./editor/focus";
+import { useId, useRef, useState } from "react";
 import { areaTiers } from "./domain/annotations";
 import type { Bounds } from "./domain/coordinates";
 import { useStore, useStoreField } from "./editor/useStore";
@@ -17,6 +18,11 @@ export function AnnotationPanel({ session }: { session: EditorSession }) {
   useStore(session.canvasState);
   const [query, setQuery] = useState("");
   const formId = useId();
+  const newButton = useRef<HTMLButtonElement>(null);
+  const cancel = () => {
+    areas.cancelDraft();
+    restoreFocus(newButton.current);
+  };
   const entries = annotations.filter(([id, record]) =>
     String(record.name ?? id)
       .toLowerCase()
@@ -71,7 +77,11 @@ export function AnnotationPanel({ session }: { session: EditorSession }) {
           {query ? "No matching areas." : "No named areas yet."}
         </p>
       )}
-      <button type="button" onClick={() => areas.newArea()}>
+      <button
+        ref={newButton}
+        type="button"
+        onClick={() => session.perform("add-annotation")}
+      >
         New area
       </button>
       {selected && (
@@ -97,9 +107,22 @@ export function AnnotationPanel({ session }: { session: EditorSession }) {
       {draft ? (
         <form
           className="area-form"
+          onKeyDown={(event) => {
+            if (
+              event.key === "Escape" &&
+              !event.nativeEvent.isComposing &&
+              !event.altKey &&
+              !event.metaKey &&
+              !event.ctrlKey
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              cancel();
+            }
+          }}
           onSubmit={(event) => {
             event.preventDefault();
-            areas.apply();
+            if (areas.apply()) restoreFocus(newButton.current);
           }}
         >
           <h3>{draft.id ? "Edit area" : "New area"}</h3>
@@ -211,7 +234,7 @@ export function AnnotationPanel({ session }: { session: EditorSession }) {
           {feedback("form")}
           <div className="selection-actions">
             <button type="submit">Apply area</button>
-            <button type="button" onClick={() => areas.cancelDraft()}>
+            <button type="button" onClick={cancel}>
               Cancel area edit
             </button>
           </div>

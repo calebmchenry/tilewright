@@ -1,3 +1,4 @@
+import { restoreFocus } from "./editor/focus";
 import { useEffect, useRef, useState } from "react";
 import {
   recoveryAge,
@@ -11,6 +12,7 @@ const time = (value: number) => {
   return Number.isNaN(date.getTime()) ? "Unknown time" : date.toLocaleString();
 };
 export function RecoveryPanel({ browser }: { browser: RecoveryBrowser }) {
+  const reviewButton = useRef<HTMLButtonElement>(null);
   const state = useStore(browser.state);
   const lifecycle = useStore(browser.lifecycle.state);
   if (!browser.bridge.available) return null;
@@ -18,6 +20,7 @@ export function RecoveryPanel({ browser }: { browser: RecoveryBrowser }) {
     <>
       <div className="recovery-entrypoint">
         <button
+          ref={reviewButton}
           type="button"
           disabled={lifecycle.busy || state.busy}
           onClick={() => void browser.review()}
@@ -39,18 +42,29 @@ export function RecoveryPanel({ browser }: { browser: RecoveryBrowser }) {
             <span key={index}>{warning}</span>
           ))}
       </div>
-      {state.open && <RecoveryDialog browser={browser} />}
+      {state.open && (
+        <RecoveryDialog browser={browser} opener={reviewButton.current} />
+      )}
     </>
   );
 }
-function RecoveryDialog({ browser }: { browser: RecoveryBrowser }) {
+function RecoveryDialog({
+  browser,
+  opener,
+}: {
+  browser: RecoveryBrowser;
+  opener: HTMLElement | null;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const state = useStore(browser.state);
   useStore(browser.lifecycle.files.workspace.state);
   useEffect(() => {
     const element = dialog.current!;
     element.showModal();
-    return () => element.close();
+    return () => {
+      element.close();
+      restoreFocus(opener, true);
+    };
   }, []);
   const groups = new Map<string, ReviewedEntry[]>();
   for (const entry of state.entries) {

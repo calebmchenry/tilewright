@@ -513,6 +513,7 @@ test("native adapter controls, text-focused Cmd+S, Save As cancellation/failure 
     page.getByRole("checkbox", { name: "Show active layer" }),
   ).not.toBeChecked();
   await expect(page.locator("canvas")).toHaveCount(1);
+  await expect(page.locator(".canvas-host")).toBeFocused();
 });
 
 test("Open cancellation/read errors preserve map; dirty Open can be declined; controls fit narrow windows", async ({
@@ -1151,4 +1152,81 @@ test("agent export shortcut, canceled picker, failed write and retry give distin
   ).toContainText("Exported the whole map");
   expect(await page.evaluate(() => window.fileProbe.exports.length)).toBe(1);
   await expect(page.locator(".document-title")).toContainText("Unsaved");
+});
+
+test("Escape cancels export from panel focus while text and modal Escape remain local", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.fileProbe.holdExport = true;
+    window.fileProbe.requestAction("export-agent");
+  });
+  const feedback = page.getByRole("status", { name: "Agent export feedback" });
+  await expect(feedback).toContainText("temporary file");
+  const name = page.getByLabel("Layer name", { exact: true });
+  await name.press("Escape");
+  await expect(feedback).toContainText("temporary file");
+  await page.getByRole("button", { name: "Grow canvas", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Grow canvas", exact: true });
+  await dialog.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(feedback).toContainText("temporary file");
+  await page.setViewportSize({ width: 640, height: 452 });
+  const cancel = page.getByRole("button", {
+    name: "Cancel export",
+    exact: true,
+  });
+  await cancel.scrollIntoViewIfNeeded();
+  await expect(cancel).toBeInViewport();
+  await cancel.press("Escape");
+  await expect(feedback).toContainText("Canceling");
+  await page.evaluate(() => window.fileProbe.releaseExport!());
+  await expect(feedback).toContainText("Export canceled");
+  await expect(page.locator(".canvas-host")).toBeFocused();
+  expect(await page.evaluate(() => window.fileProbe.exports)).toEqual([]);
+  expect(await page.evaluate(() => window.fileProbe.writes)).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    640,
+  );
+});
+
+test("New and recovery dismissal restore their opener without background map edits", async ({
+  page,
+}) => {
+  const name = page.getByLabel("Layer name", { exact: true });
+  await name.fill("Long layer name ".repeat(20));
+  await name.press("Enter");
+  await page.setViewportSize({ width: 640, height: 452 });
+  await name.press("Meta+n");
+  const dialog = page.getByRole("dialog", { name: "New map", exact: true });
+  await dialog.getByLabel("Width (tiles)").press("Escape");
+  await expect(name).toBeFocused();
+  const review = page.getByRole("button", { name: "Review recovery…" });
+  await review.click();
+  const recovery = page.getByRole("dialog", { name: "Recover unsaved work" });
+  await recovery.press("Escape");
+  await expect(review).toBeFocused();
+  for (const action of ["new", "open", "save", "save-as", "export-agent"]) {
+    await expect
+      .poll(() => menuState(page, action))
+      .toMatchObject({ enabled: true });
+  }
+  for (const title of [
+    "New map",
+    "Open…",
+    "Save",
+    "Save As…",
+    "Export for Agent…",
+  ]) {
+    await expect(
+      page.getByRole("button", { name: title, exact: true }),
+    ).toBeInViewport();
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    640,
+  );
+  expect(
+    (await page.locator(".canvas-host").boundingBox())!.height,
+  ).toBeGreaterThan(75);
+  expect(await page.evaluate(() => window.fileProbe.writes)).toEqual([]);
 });

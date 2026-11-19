@@ -1,3 +1,4 @@
+import { restoreFocus } from "./editor/focus";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   canvasInteger,
@@ -63,8 +64,12 @@ export function CanvasDialog({
   const [failure, setFailure] = useState("");
   useEffect(() => {
     const element = dialog.current!;
+    const opener = document.activeElement;
     element.showModal();
-    return () => element.close();
+    return () => {
+      element.close();
+      restoreFocus(opener);
+    };
   }, []);
 
   let preview: Bounds | undefined;

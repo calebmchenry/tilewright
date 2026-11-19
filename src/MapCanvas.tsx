@@ -1,3 +1,4 @@
+import { restoreFocus } from "./editor/focus";
 import { useEffect, useRef, useState } from "react";
 import { mountRenderer } from "./renderer/mountRenderer";
 import type { CanvasRenderer } from "./renderer/createRenderer";
@@ -41,6 +42,7 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         session.report(
           "Canvas ready. Scroll to pan; pinch or Cmd-scroll to zoom. F fits the map.",
         );
+        restoreFocus();
       },
       (error) => {
         renderer.current = null;
@@ -75,9 +77,10 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         their shared size. D selects Eyedropper. G selects Fill. L selects Line;
         R selects Rectangle. V selects tiles. Shapes include both endpoints;
         lines and outlines are one tile thick. H selects Pan; I selects Inspect.
-        Area bounds are drawn explicitly from the Named areas panel. F fits the
-        map; 0 resets to 100%; plus/minus zoom; arrows pan or nudge a Select
-        selection. Drag with Inspect to measure a rectangle; Escape clears it.{" "}
+        A selects Areas. Area bounds are drawn explicitly from the Named areas
+        panel. F fits the map; 0 resets to 100%; plus/minus zoom; arrows pan or
+        nudge a Select selection. Drag with Inspect to measure a rectangle;
+        Escape clears it.{" "}
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
           : tool === "area"
@@ -96,12 +99,9 @@ export function MapCanvas({ session }: { session: EditorSession }) {
           <span>Filling… {fill.cells.toLocaleString()} tiles</span>
           <button
             type="button"
-            onClick={() => session.fill.cancel()}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                session.fill.cancel();
-              }
+            onClick={() => {
+              session.perform("cancel");
+              restoreFocus();
             }}
           >
             Cancel fill

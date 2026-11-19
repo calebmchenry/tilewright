@@ -361,7 +361,7 @@ test("shipping shape selection/style are transient, cancel previews, respect gat
     assert.equal(s.drawing.pointerId, null);
     assert.deepEqual(s.history.state, history);
     assert.deepEqual([...s.document.iterateRuns()], before);
-    for (const owner of ["text", "panel", "outside"] as const)
+    for (const owner of ["text", "outside"] as const)
       assert.equal(s.routeKey({ key: key === "r" ? "l" : "r" }, owner), false);
     for (const input of [
       { key, isComposing: true },

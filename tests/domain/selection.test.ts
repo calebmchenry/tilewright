@@ -283,7 +283,7 @@ test("painting clears selection; gates/shortcuts and workspace disposal respect 
     s.dispose();
   }
   const s = setup();
-  for (const owner of ["text", "panel", "outside"] as const)
+  for (const owner of ["text", "outside"] as const)
     assert.equal(s.routeKey({ key: "v" }, owner), false);
   for (const input of [
     { key: "v", isComposing: true },

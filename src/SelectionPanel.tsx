@@ -1,9 +1,11 @@
+import { restoreFocus } from "./editor/focus";
 import {
   selectionTransforms,
   type SelectionTransform,
 } from "./domain/selection";
 import type { EditorSession } from "./editor/session";
 import { useStore } from "./editor/useStore";
+import { ShortcutHint } from "./ShortcutHint";
 
 export function SelectionPanel({ session }: { session: EditorSession }) {
   const selection = useStore(session.selection.state);
@@ -39,6 +41,7 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
               onClick={() => session.perform(id)}
             >
               {action.label}
+              <ShortcutHint action={id} />
             </button>
           );
         })}
@@ -168,7 +171,8 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
                   return;
                 if (event.key === "Escape") {
                   event.preventDefault();
-                  session.selection.cancel();
+                  session.perform("cancel");
+                  restoreFocus();
                 }
               }}
             >
@@ -176,19 +180,28 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
                 type="button"
                 disabled={!!placement.reason}
                 title={placement.reason ?? undefined}
-                onClick={() => session.selection.commitPlacement()}
+                onClick={() => {
+                  session.selection.commitPlacement();
+                  restoreFocus();
+                }}
               >
                 Apply {placementName}
               </button>
-              <button type="button" onClick={() => session.selection.cancel()}>
+              <button
+                type="button"
+                onClick={() => {
+                  session.perform("cancel");
+                  restoreFocus();
+                }}
+              >
                 Cancel {placementName}
               </button>
             </div>
           )}
           <p className="hint">
-            Drag inside to move, including from a hole. Arrows nudge one tile;
-            Shift+arrow nudges ten. Deselect to start a rectangle inside this
-            one.
+            Drag inside to move, including from a hole. Focus the canvas for
+            arrows to nudge one tile; Shift+arrow nudges ten. Deselect to start
+            a rectangle inside this one.
           </p>
           <p className="hint">
             Layer choices stay fixed when the active layer changes. Named areas

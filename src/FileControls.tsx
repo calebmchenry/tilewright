@@ -1,4 +1,6 @@
+import { restoreFocus } from "./editor/focus";
 import { useEffect, useRef } from "react";
+import { ShortcutHint } from "./ShortcutHint";
 import type {
   DocumentAction,
   DocumentLifecycle,
@@ -28,8 +30,12 @@ function UnsavedDialog({
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current!;
+    const opener = document.activeElement;
     element.showModal();
-    return () => element.close();
+    return () => {
+      element.close();
+      restoreFocus(opener);
+    };
   }, []);
   const title =
     action === "new"
@@ -95,6 +101,7 @@ export function FileControls({ actions }: { actions: ApplicationActions }) {
         onClick={() => actions.perform("open")}
       >
         Open…
+        <ShortcutHint action="open" />
       </button>
       <button
         type="button"
@@ -102,6 +109,7 @@ export function FileControls({ actions }: { actions: ApplicationActions }) {
         onClick={() => actions.perform("save")}
       >
         Save
+        <ShortcutHint action="save" />
       </button>
       <button
         type="button"
@@ -109,6 +117,7 @@ export function FileControls({ actions }: { actions: ApplicationActions }) {
         onClick={() => actions.perform("save-as")}
       >
         Save As…
+        <ShortcutHint action="save-as" />
       </button>
       <button
         type="button"
@@ -116,6 +125,7 @@ export function FileControls({ actions }: { actions: ApplicationActions }) {
         onClick={() => actions.perform("export-agent")}
       >
         Export for Agent…
+        <ShortcutHint action="export-agent" />
       </button>
     </span>
   );
@@ -201,6 +211,19 @@ export function AgentExportFeedback({
   exports: import("./editor/agent-export").AgentExports;
 }) {
   const { message, busy, cancelable, error } = useStore(exports.state);
+  const cancelButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const button = cancelButton.current;
+    return () => {
+      if (
+        button &&
+        (!document.activeElement ||
+          document.activeElement === button ||
+          document.activeElement === document.body)
+      )
+        restoreFocus();
+    };
+  }, [busy]);
   if (!message) return null;
   return (
     <div
@@ -212,10 +235,15 @@ export function AgentExportFeedback({
       {busy && (
         <button
           type="button"
+          ref={cancelButton}
           disabled={!cancelable}
-          onClick={() => exports.cancel()}
+          onClick={() => {
+            exports.cancel();
+            restoreFocus();
+          }}
         >
           Cancel export
+          <ShortcutHint action="cancel" />
         </button>
       )}
     </div>

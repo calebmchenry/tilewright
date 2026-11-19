@@ -425,9 +425,7 @@ export function bindNavigation(
       );
     } else if (event.key === "Escape") {
       event.preventDefault();
-      session.fill.cancel();
-      session.selection.escape();
-      session.areas.cancelDraft();
+      session.perform("cancel");
       reset();
       session.setRectangle(null);
     }

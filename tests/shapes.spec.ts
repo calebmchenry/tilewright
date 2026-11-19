@@ -58,6 +58,9 @@ for (const dpr of [1, 2])
     await action(page, "Paint with Grass").click();
     await action(page, "Rectangle").click();
     await expect(style(page)).toHaveValue("filled");
+    // Compare persisted pixels with the same keyboard focus outline; explicit
+    // panel activation now moves focus away from the canvas.
+    await host.press("Shift");
     const before = await state(page),
       originalPixels = await canvas.screenshot();
     await move(page, 60, 60);
@@ -87,6 +90,7 @@ for (const dpr of [1, 2])
     ).not.toEqual(originalPixels);
     await page.mouse.up();
     await page.mouse.move(10, 10);
+    await host.press("Shift");
     const terrain = await state(page),
       terrainPixels = await canvas.screenshot();
     expect(terrain.history.undoSteps).toBe(1);
@@ -136,6 +140,7 @@ for (const dpr of [1, 2])
     });
     await page.mouse.up();
     await page.mouse.move(10, 10);
+    await host.press("Shift");
     const house = await state(page),
       housePixels = await canvas.screenshot({
         path: info.outputPath(`terrain-house-dpr${dpr}.png`),

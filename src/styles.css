@@ -93,10 +93,12 @@ h3 {
   min-width: 640px;
   min-height: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 .app-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 24px;
   padding: 12px 18px;
@@ -116,7 +118,7 @@ h3 {
   display: flex;
   min-width: 0;
   align-items: center;
-  flex: 1;
+  flex: 1 1 140px;
   color: #c4cfdd;
   font-size: 13px;
 }
@@ -130,9 +132,32 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.history-controls > .action {
+  min-width: 0;
+}
+.history-controls > .action button {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .action {
   position: relative;
+}
+.shortcut-hint {
+  margin-left: 6px;
+  font: inherit;
+  font-size: 10px;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+.tool-grid button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .editor-body {
   display: grid;
@@ -141,6 +166,7 @@ h3 {
 }
 .left-sidebar,
 .right-sidebar {
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   background: #202a36;
@@ -220,6 +246,7 @@ form > button {
   padding: 7px 5px;
 }
 .color-association {
+  overflow-wrap: anywhere;
   margin: 12px 0 0;
   font-size: 12px;
   line-height: 1.5;
@@ -283,6 +310,10 @@ input[aria-invalid="true"] {
   border-bottom: 1px solid #34404f;
   background: #1c2632;
   font-size: 12px;
+  flex-wrap: wrap;
+  min-height: 0;
+  max-height: 38dvh;
+  overflow: auto;
 }
 .workspace-toolbar label {
   display: flex;
@@ -353,6 +384,9 @@ input[aria-invalid="true"] {
   margin-top: 14px;
 }
 footer {
+  min-width: 0;
+  max-height: 30dvh;
+  overflow: auto;
   background: #1c2632;
   border-top: 1px solid #34404f;
   font-size: 11px;
@@ -377,6 +411,8 @@ footer {
 }
 .readout > [data-testid="focus-readout"] {
   margin-left: auto;
+  /* Changing focus during pointer-down must not move the button under it. */
+  flex: 0 0 120px;
 }
 .readout > .grid-scale {
   flex-basis: 100%;
@@ -407,7 +443,8 @@ footer {
   .tool-grid button {
     font-size: 11px;
     padding: 8px 4px;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    flex-wrap: wrap;
   }
   .editor-body {
     grid-template-columns: 168px minmax(140px, 1fr) 204px;
@@ -547,6 +584,7 @@ footer {
 }
 .dialog-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 20px;
@@ -683,6 +721,8 @@ footer {
   gap: 10px;
   width: fit-content;
   max-width: calc(100% - 24px);
+  max-height: calc(100% - 24px);
+  overflow: auto;
   padding: 10px;
   background: #171f2a;
   border: 1px solid #95a4b3;
@@ -693,7 +733,8 @@ footer {
   width: 64px;
 }
 .fill-progress span {
-  min-width: 150px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
 }
 
