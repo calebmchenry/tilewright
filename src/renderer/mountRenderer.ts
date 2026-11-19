@@ -20,6 +20,7 @@ export function mountRenderer(
   let stopFootprint: (() => void) | undefined;
   let stopSelection: (() => void) | undefined;
   let stopSelectionPreview: (() => void) | undefined;
+  let stopAreas: (() => void)[] = [];
   let density: MediaQueryList | undefined;
   const measure = () => {
     const { width, height } = host.getBoundingClientRect();
@@ -60,6 +61,7 @@ export function mountRenderer(
     stopFootprint?.();
     stopSelection?.();
     stopSelectionPreview?.();
+    for (const stop of stopAreas) stop();
     renderer?.destroy();
     renderer = undefined;
   };
@@ -95,6 +97,11 @@ export function mountRenderer(
         stopFootprint = session.drawing.footprint.subscribe(resize);
         stopSelection = session.selection.state.subscribe(resize);
         stopSelectionPreview = session.selection.preview.subscribe(resize);
+        stopAreas = [
+          session.areas.selected,
+          session.areas.draft,
+          session.areas.preview,
+        ].map((store) => store.subscribe(resize));
       }
       onReady();
     })

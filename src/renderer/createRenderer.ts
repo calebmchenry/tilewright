@@ -8,6 +8,7 @@ import { TileScene } from "./tileScene";
 import { MapDocument } from "../domain/document";
 import { CANVAS_INSET, TILE_PIXELS } from "../editor/viewport";
 import { gridLayout, type GridBand } from "./grid";
+import { areaOutline } from "./areaOutline";
 import { resolveColor } from "./colors";
 
 export interface CanvasRenderer {
@@ -96,6 +97,8 @@ export async function createRenderer(
     stage.addChild(drawing);
     const selection = new Graphics();
     stage.addChild(selection);
+    const area = new Graphics();
+    stage.addChild(area);
     const resize = () => {
       if (destroyed || !renderer) return;
       const { width, height } = host.getBoundingClientRect();
@@ -213,6 +216,15 @@ export async function createRenderer(
             width: 2,
           });
       }
+      area.clear();
+      const areaBounds = session?.areas.overlayBounds();
+      if (areaBounds) {
+        for (const line of areaOutline(areaBounds, view, { width, height }))
+          area
+            .moveTo(line.x1, line.y1)
+            .lineTo(line.x2, line.y2)
+            .stroke({ color: "#dda6ff", width: line.corner ? 4 : 2 });
+      }
       renderer.render(stage);
       renders++;
     };
@@ -225,7 +237,8 @@ export async function createRenderer(
         resize();
       },
       invalidate(change) {
-        if (tiles?.invalidate(change)) resize();
+        const tileChange = tiles?.invalidate(change);
+        if (tileChange || change.annotationIds.length) resize();
       },
       snapshot: () => ({ ...tiles!.snapshot(), renders }),
       destroy,

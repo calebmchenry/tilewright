@@ -59,18 +59,20 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         their shared size. D selects Eyedropper. G selects Fill. L selects Line;
         R selects Rectangle. V selects tiles. Shapes include both endpoints;
         lines and outlines are one tile thick. H selects Pan; I selects Inspect.
-        F fits the map; 0 resets to 100%; plus/minus zoom; arrows pan or nudge a
-        Select selection. Drag with Inspect to measure a rectangle; Escape
-        clears it.{" "}
+        Area bounds are drawn explicitly from the Named areas panel. F fits the
+        map; 0 resets to 100%; plus/minus zoom; arrows pan or nudge a Select
+        selection. Drag with Inspect to measure a rectangle; Escape clears it.{" "}
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : tool === "select"
-            ? "Drag a rectangle and choose layers; drag inside to move. Arrows nudge one tile, Shift ten. Cmd/Ctrl+C copies, X cuts, V previews paste. For paste, move the pointer or use arrows; click or Enter applies. Rotate and flip in Tile selection; arrows reposition the transform, Enter applies. Escape cancels a preview or deselects."
-            : tool === "fill"
-              ? "Click to fill a connected region on the active layer. Escape cancels a running fill. Pan and zoom remain available."
-              : tool === "eyedropper"
-                ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
-                : "Choose Pencil to paint the active layer."}
+          : tool === "area"
+            ? "Edit named areas in the Areas panel. Draw bounds explicitly, then Apply. Escape cancels the draft."
+            : tool === "select"
+              ? "Drag a rectangle and choose layers; drag inside to move. Arrows nudge one tile, Shift ten. Cmd/Ctrl+C copies, X cuts, V previews paste. For paste, move the pointer or use arrows; click or Enter applies. Rotate and flip in Tile selection; arrows reposition the transform, Enter applies. Escape cancels a preview or deselects."
+              : tool === "fill"
+                ? "Click to fill a connected region on the active layer. Escape cancels a running fill. Pan and zoom remain available."
+                : tool === "eyedropper"
+                  ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
+                  : "Choose Pencil to paint the active layer."}
       </p>
       {fill && (
         <div className="fill-progress" aria-label="Fill progress" role="status">

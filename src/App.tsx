@@ -10,6 +10,8 @@ import { CanvasControls } from "./CanvasControls";
 import type { EditorWorkspace } from "./editor/workspace";
 import { LayerPanel } from "./LayerPanel";
 import { RegistryControls } from "./RegistryControls";
+import { AnnotationPanel } from "./AnnotationPanel";
+export { AnnotationPanel } from "./AnnotationPanel";
 import { SelectionPanel } from "./SelectionPanel";
 import {
   parseRgbFields,
@@ -165,13 +167,15 @@ export function ToolPanel({ session }: Props) {
         with Inspect to measure a rectangle; Escape clears it.{" "}
         {session.drawing.tool(tool)
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : tool === "select"
-            ? "Drag to select tiles, then choose included layers. Escape cancels a drag or deselects."
-            : tool === "fill"
-              ? "Click to fill connected tiles on the active layer. Matching uses exact color or named identity; corners do not connect. Escape cancels a running fill."
-              : tool === "eyedropper"
-                ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
-                : "Choose Pencil to paint the active layer."}
+          : tool === "area"
+            ? "Edit named areas in the Areas panel. Draw bounds explicitly, then Apply. Escape cancels the draft."
+            : tool === "select"
+              ? "Drag to select tiles, then choose included layers. Escape cancels a drag or deselects."
+              : tool === "fill"
+                ? "Click to fill connected tiles on the active layer. Matching uses exact color or named identity; corners do not connect. Escape cancels a running fill."
+                : tool === "eyedropper"
+                  ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
+                  : "Choose Pencil to paint the active layer."}
       </p>
     </section>
   );
@@ -309,51 +313,6 @@ export function ColorPanel({ session }: Props) {
           : "Unregistered color · No named match."}
       </p>
       <RegistryControls session={session} />
-    </section>
-  );
-}
-
-export function AnnotationPanel({ session }: Props) {
-  const annotations = useStore(session.annotations);
-  const [query, setQuery] = useState("");
-  const entries = annotations.filter(([id, record]) =>
-    String(record.name ?? id)
-      .toLowerCase()
-      .includes(query.toLowerCase()),
-  );
-  return (
-    <section className="panel" aria-label="Annotations">
-      <h2>
-        Named areas <span className="panel-value">{annotations.length}</span>
-      </h2>
-      <label>
-        Find an area
-        <input
-          type="search"
-          value={query}
-          placeholder="Search named areas"
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </label>
-      {entries.length ? (
-        <ul className="record-list">
-          {entries.map(([id, record]) => (
-            <li key={id}>
-              {typeof record.name === "string" ? record.name : id}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="empty-state">
-          {query ? "No matching areas." : "No named areas yet."}
-        </p>
-      )}
-      <ActionButton session={session} action="add-annotation" />
-      <p className="hint">
-        Detail · Locality · Region
-        <br />
-        Named area editing is not available yet.
-      </p>
     </section>
   );
 }

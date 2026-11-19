@@ -2,8 +2,9 @@
 
 Decision record for [TW-029](../.wrk/wrk-353fa9ca.md), subordinate to
 [INTENT.md](../INTENT.md#named-areas-and-labels). These are implementation choices
-for TW-030–TW-032, not additional confirmed product requirements or a claim that
-annotation authoring/rendering already ships. They extend the
+for TW-030–TW-032, not additional confirmed product requirements.
+TW-030 authoring and bounds overlays now ship as documented below; zoom-dependent
+labels and browsing/focus remain TW-031/TW-032. They extend the
 [coordinate](foundation-decisions.md), [camera](navigation.md),
 [history](command-history.md), and [selection](selection-decisions.md) contracts.
 TW-033 and TW-043 still own the complete, separate project and export schemas.
@@ -312,3 +313,74 @@ overlap, long-name and edge cases. TW-032 implements area browsing/focus without
 document edits. Performance observations remain subject to the working-baseline
 priority in AGENTS.md; rendering refinement belongs to TW-049, history/memory to
 TW-050. These thresholds are chosen defaults, not measured performance guarantees.
+
+## Authoring implementation (TW-030)
+
+The **Named areas** panel now provides New area, a searchable list with stable IDs,
+name, multiline description, Detail/Locality/Region, exclusive numeric bounds,
+Apply area, Cancel area edit, Delete area and Deselect area. Selecting a list item
+opens a transient editor; after Apply or Cancel, Edit area reopens it. Duplicate
+names and overlapping/nested rectangles are allowed, with no hierarchy or cascade.
+An empty description remains exactly `""`. Plain text is never interpreted as HTML.
+
+New area starts at the map's top-left cell with 1 × 1 bounds and Detail tier;
+it requires a name before Apply. All numeric fields work at every zoom and with
+hidden tile layers. Empty, fractional, unsafe, inverted, zero-size and out-of-map
+bounds reject atomically. Invalid fields retain the draft, show inline feedback
+and produce no document version, history or dirty-state change. Numeric bounds
+never clip or grow the map. Names trim outer whitespace and reject line breaks;
+description whitespace, Unicode and newlines remain exact.
+
+Draw bounds / Redraw bounds explicitly arms area input. The ordinary tile Select
+tool never edits an area. At >= 8 CSS px/tile, primary drag captures both endpoint
+cells, normalizes reverse drags and clips an outside endpoint to the fixed map.
+An outside start does nothing; a click proposes one tile. Release changes only the
+draft, and Apply performs the single document edit. Purple outlines and thicker
+corner marks distinguish selected/draft areas from cyan tile selection and gold
+Inspect measurement. Draft geometry substitutes for the selected outline; invalid
+numeric geometry draws no outline. Outlines have no fill, remain visible at all
+zooms and clip actual edges to the viewport without inventing boundary edges.
+There are no normal-tier labels or collision handling yet; those remain TW-031.
+
+Tool/area switches, Undo/Redo, document mutations and session replacement discard
+unapplied drafts. Camera/size/readiness changes, pointer cancellation, capture loss,
+missing pointer buttons, window/host blur, Space navigation or pinch cancel an
+active bounds gesture and retain the preceding draft. Escape from canvas/panel
+controls discards the draft; text fields and IME keep native key behavior. Enter
+in the form uses ordinary form submission. Starting area authoring cancels pending
+tile previews while retaining an idle tile-selection rectangle. Selection changes,
+drafts, previews and camera actions do not dirty the map. Undoing a deleted area
+restores its exact ID/data without reselecting it.
+
+Implementation locations:
+
+- `src/domain/annotations.ts`: complete record validation, field errors, stable
+  `area-<UUID>` creation and explicit annotation-only lifecycle commands through
+  `CommandHistory`. The generic JSON metadata seam remains unchanged for existing
+  fixtures and future codecs; feature entry points reject malformed targets.
+- `src/editor/annotations.ts`: immutable draft/selection stores, field parsing,
+  Apply/Cancel/Delete, context cancellation and bounds gesture state. The session
+  and single navigation router integrate it without including areas in tile payloads.
+- `src/AnnotationPanel.tsx`: accessible controls, field feedback and inspection.
+  `src/renderer/areaOutline.ts`, `createRenderer.ts` and `mountRenderer.ts` provide
+  clipped Pixi outlines, redraw subscriptions and teardown. Annotation IDs trigger
+  overlay refresh without dirtying detail textures or overview images.
+
+Validation is reproducible in `tests/domain/annotations.test.ts`,
+`annotation-controller.test.ts`, `annotation-independence.test.ts` and
+`tests/annotations.spec.ts`. Lifecycle/validation tests include missing fields,
+all tiers, descriptions, stable identities, capacity failure, no-op Apply, dirty
+checkpoints, cancellation, overview editing and session replacement. The selection
+matrix uses asymmetric populated walls plus furniture with fully enclosed,
+partially overlapping and surrounding named areas created through the feature
+commands. Every move, nudge, copy, cut, repeated paste, rotation and flip (including
+transformed paste) preserves byte-identical records through commit/undo/redo in
+both layer scopes. Paint, erase, fill, layer changes and growth are also isolated.
+Browser checks cover controls, native text undo, canceled captured gestures,
+minimum-window layout, exact DPR 1/2 outline pixels and GPU cleanup.
+
+Actual command/native results are recorded in [TW-030](../.wrk/wrk-0d9194dc.md).
+No project/agent codec or performance guarantee is introduced. Draft updates and
+annotation-list filtering are synchronous; no large-annotation benchmark is claimed.
+Rendering/presentation refinement remains TW-049 and edit/history/memory work
+remains TW-050 under AGENTS.md.

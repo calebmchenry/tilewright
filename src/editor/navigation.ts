@@ -22,6 +22,7 @@ export function bindNavigation(
   let drag: { id: number; x: number; y: number } | null = null;
   let drawing: number | null = null;
   let selecting: number | null = null;
+  let areaDrawing: number | null = null;
   let measure: { id: number; start: Point; previous: Bounds | null } | null =
     null;
   let gesture: { view: Viewport; anchor: Point } | null = null;
@@ -116,6 +117,20 @@ export function bindNavigation(
       if (host.hasPointerCapture(id)) host.releasePointerCapture(id);
     }
   };
+  const finishArea = (point?: Point) => {
+    const id = areaDrawing;
+    areaDrawing = null;
+    if (id === null) return;
+    try {
+      if (point) {
+        const { width, height } = host.getBoundingClientRect();
+        session.setCanvasSize(width, height);
+        session.areas.commit(id, local(point));
+      } else session.areas.cancelGesture(id);
+    } finally {
+      if (host.hasPointerCapture(id)) host.releasePointerCapture(id);
+    }
+  };
   const reset = () => {
     space = false;
     gesture = null;
@@ -124,6 +139,7 @@ export function bindNavigation(
     finishMeasure(true);
     finishDrawing();
     finishSelection();
+    finishArea();
     updatePointer();
   };
   const windowReset = () => {
@@ -137,6 +153,7 @@ export function bindNavigation(
       measure ||
       drawing !== null ||
       selecting !== null ||
+      areaDrawing !== null ||
       gesture ||
       !event.isPrimary ||
       !canvasTarget(event.target)
@@ -165,7 +182,21 @@ export function bindNavigation(
       !event.metaKey &&
       !event.ctrlKey
     ) {
-      if (session.selection.pasting) {
+      if (session.activeTool.getSnapshot() === "area") {
+        event.preventDefault();
+        if (session.areas.begin(event.pointerId, local(lastPointer))) {
+          areaDrawing = event.pointerId;
+          try {
+            host.setPointerCapture(event.pointerId);
+          } catch (error) {
+            finishArea();
+            session.reportError(
+              error,
+              "Area bounds canceled: pointer capture failed",
+            );
+          }
+        }
+      } else if (session.selection.pasting) {
         event.preventDefault();
         const { width, height } = host.getBoundingClientRect();
         session.setCanvasSize(width, height);
@@ -262,6 +293,15 @@ export function bindNavigation(
         session.selection.sample(id, local(lastPointer));
       }
     }
+    if (areaDrawing === event.pointerId) {
+      if (!(event.buttons & 1)) finishArea();
+      else {
+        const id = areaDrawing;
+        const { width, height } = host.getBoundingClientRect();
+        session.setCanvasSize(width, height);
+        session.areas.sample(id, local(lastPointer));
+      }
+    }
     if (session.selection.pasting && !drag && !space && !gesture) {
       const { width, height } = host.getBoundingClientRect();
       session.setCanvasSize(width, height);
@@ -277,12 +317,20 @@ export function bindNavigation(
       finishDrawing({ x: event.clientX, y: event.clientY });
     if (selecting === event.pointerId && event.button === 0)
       finishSelection({ x: event.clientX, y: event.clientY });
+    if (areaDrawing === event.pointerId && event.button === 0)
+      finishArea({ x: event.clientX, y: event.clientY });
     if (drag?.id === event.pointerId) finishDrag();
     if (measure?.id === event.pointerId) finishMeasure(false);
     updatePointer();
   };
   const leave = () => {
-    if (!drag && !measure && drawing === null && selecting === null) {
+    if (
+      !drag &&
+      !measure &&
+      drawing === null &&
+      selecting === null &&
+      areaDrawing === null
+    ) {
       lastPointer = null;
       updatePointer();
     }
@@ -290,7 +338,14 @@ export function bindNavigation(
   const wheel = (event: WheelEvent) => {
     if (!ready() || !canvasTarget(event.target)) return;
     event.preventDefault();
-    if (gesture || drag || measure || drawing !== null || selecting !== null)
+    if (
+      gesture ||
+      drag ||
+      measure ||
+      drawing !== null ||
+      selecting !== null ||
+      areaDrawing !== null
+    )
       return;
     lastPointer = { x: event.clientX, y: event.clientY };
     const units =
@@ -334,6 +389,7 @@ export function bindNavigation(
       space = true;
       finishDrawing();
       finishSelection();
+      finishArea();
       session.selection.cancel();
       cursor();
       updatePointer();
@@ -355,6 +411,7 @@ export function bindNavigation(
       event.preventDefault();
       session.fill.cancel();
       session.selection.escape();
+      session.areas.cancelDraft();
       reset();
       session.setRectangle(null);
     }
@@ -374,6 +431,7 @@ export function bindNavigation(
     finishMeasure(true);
     finishDrawing();
     finishSelection();
+    finishArea();
     session.selection.cancel();
     const input = event as GestureInput;
     const point = { x: input.clientX, y: input.clientY };
@@ -398,6 +456,7 @@ export function bindNavigation(
     finishMeasure(true);
     finishDrawing();
     finishSelection();
+    finishArea();
     session.selection.cancel();
     lastPointer = null;
     updatePointer();
@@ -414,7 +473,8 @@ export function bindNavigation(
         const id = (event as PointerEvent).pointerId;
         if (
           (drawing === null || id === drawing) &&
-          (selecting === null || id === selecting)
+          (selecting === null || id === selecting) &&
+          (areaDrawing === null || id === areaDrawing)
         )
           cancel();
       },
@@ -428,6 +488,7 @@ export function bindNavigation(
           measure ||
           drawing === (event as PointerEvent).pointerId ||
           selecting === (event as PointerEvent).pointerId ||
+          areaDrawing === (event as PointerEvent).pointerId ||
           session.selection.placing
         )
           cancel();
@@ -453,6 +514,10 @@ export function bindNavigation(
   window.addEventListener("keyup", keyUp);
   window.addEventListener("blur", windowReset);
   const stops = [
+    session.areas.preview.subscribe(() => {
+      if (areaDrawing !== null && session.areas.pointerId === null)
+        finishArea();
+    }),
     session.selection.preview.subscribe(() => {
       if (selecting !== null && session.selection.pointerId === null)
         finishSelection();

@@ -14,6 +14,7 @@ body {
 }
 button,
 input,
+textarea,
 select {
   font: inherit;
 }
@@ -41,7 +42,8 @@ button[aria-pressed="true"] {
   background: #304c43;
   border-color: #7eac93;
 }
-input {
+input,
+textarea {
   min-width: 0;
   width: 100%;
   border: 1px solid #3d4b5b;
@@ -723,4 +725,57 @@ footer {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.area-list {
+  list-style: none;
+  padding: 0;
+  max-height: 180px;
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+}
+.area-list button {
+  width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.area-list small {
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.area-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.area-form h3,
+.area-form p {
+  margin: 0;
+}
+.area-form textarea {
+  resize: vertical;
+  max-width: 100%;
+}
+.area-bounds {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #3d4b5b;
+}
+.area-bounds legend {
+  font-size: 12px;
+}
+.area-panel p,
+.area-details h3 {
+  overflow-wrap: anywhere;
+}
+.area-description {
+  white-space: pre-wrap;
+}
+.area-actions {
+  margin-top: 12px;
 }

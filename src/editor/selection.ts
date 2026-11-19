@@ -83,7 +83,7 @@ export class SelectionController {
       session.activeTool.subscribe(() => {
         this.cancel();
         if (
-          !["select", "pan", "inspect", "eyedropper"].includes(
+          !["select", "pan", "inspect", "eyedropper", "area"].includes(
             session.activeTool.getSnapshot(),
           )
         )

@@ -26,6 +26,7 @@ import {
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import { FillController } from "./fill.ts";
+import { AnnotationController } from "./annotations.ts";
 import { SelectionController } from "./selection.ts";
 import { DrawingController, type DrawingToolId } from "./drawing.ts";
 import { assertPencilSize, eraserTool, pencilTool } from "./pencil.ts";
@@ -70,7 +71,8 @@ export type ActionId =
   | "fit-map"
   | "eyedropper"
   | "add-layer"
-  | "add-annotation";
+  | "add-annotation"
+  | "area";
 export interface ActionState {
   readonly label: string;
   readonly reason: string | null;
@@ -103,10 +105,6 @@ const unavailable: Partial<Record<ActionId, ActionState>> = {
     label: "Eyedropper",
     reason: "Color sampling is not available yet.",
   },
-  "add-annotation": {
-    label: "Add area",
-    reason: "Named area editing is not available yet.",
-  },
 };
 
 /** One session owns the model/controller; React sees small, stable snapshots only. */
@@ -117,6 +115,7 @@ export class EditorSession {
   readonly drawing: DrawingController;
   readonly fill: FillController;
   readonly selection: SelectionController;
+  readonly areas: AnnotationController;
   readonly layers;
   readonly bounds;
   readonly registry;
@@ -125,7 +124,7 @@ export class EditorSession {
   readonly activeLayer;
   readonly hiddenLayers = new Store<readonly LayerId[]>(Object.freeze([]));
   readonly activeTool = new Store<
-    "inspect" | "pan" | "eyedropper" | "select" | DrawingToolId
+    "inspect" | "pan" | "eyedropper" | "select" | "area" | DrawingToolId
   >("inspect");
   readonly canvasSize = new Store<ViewSize>(
     Object.freeze({ width: 1, height: 1 }),
@@ -222,6 +221,7 @@ export class EditorSession {
     this.fill = new FillController(this);
     this.selection = new SelectionController(this);
     this.drawing = new DrawingController(this);
+    this.areas = new AnnotationController(this);
     this.drawing.register(
       "pencil",
       pencilTool(() => this.pencilSize.getSnapshot()),
@@ -238,6 +238,7 @@ export class EditorSession {
   }
   dispose(): void {
     this.#closed = true;
+    this.areas.dispose();
     this.fill.dispose();
     this.selection.dispose();
     this.drawing.dispose();
@@ -276,6 +277,8 @@ export class EditorSession {
         label: id === "copy" ? "Copy" : id === "cut" ? "Cut" : "Paste",
         reason: this.selection.clipboardReason(id),
       };
+    if (id === "add-annotation") return { label: "New area", reason: null };
+    if (id === "area") return { label: "Areas", reason: null };
     if (id === "add-layer") return { label: "Add layer", reason: null };
     if (
       [
@@ -357,7 +360,10 @@ export class EditorSession {
         };
   }
   perform(id: ActionId): boolean {
-    if (id === "undo" || id === "redo") this.selection.deselect();
+    if (id === "undo" || id === "redo") {
+      this.selection.deselect();
+      this.areas.cancelDraft();
+    }
     const state = this.action(id);
     if (state.reason) {
       this.report(state.reason);
@@ -365,6 +371,11 @@ export class EditorSession {
     }
     if (Object.hasOwn(selectionTransforms, id))
       return this.selection.transform(id as SelectionTransform);
+    if (id === "add-annotation") return this.areas.newArea();
+    if (id === "area") {
+      this.activeTool.set("area");
+      return true;
+    }
     if (id === "add-layer") return this.addLayer();
     if (id === "copy" || id === "cut") return this.selection.copy(id === "cut");
     if (id === "paste") return this.selection.startPaste();
@@ -730,6 +741,10 @@ export class EditorSession {
     )
       return false;
     const key = input.key.toLowerCase();
+    if (key === "escape" && this.areas.draft.getSnapshot()) {
+      this.areas.cancelDraft();
+      return true;
+    }
     if (
       owner === "canvas" &&
       (input.metaKey || input.ctrlKey) &&
