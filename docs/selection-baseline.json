@@ -1,0 +1,2503 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-19T03:25:57.978Z",
+  "scope": "Node domain and CPU raster baseline; no UI/controller, WebGL upload, presented-frame or native physical-memory budget claim.",
+  "method": "Two fresh processes per complete golden-verified background and size. Two extra overlapping striped layers with 25% holes, registered stone, identical raw stone, and alpha-zero paint; source 512x384 or 1024x768 crosses 32/64 boundaries. CW+horizontal transpose then offset (3,5), one atomic commit. CPU preview raster covers all six layers in a 1024x640 CSS detail viewport. Timings exclude GC and correctness checks. Retained snapshots and plans remain alive through history eviction, isolating released history approximately. heapUsed+arrayBuffers is a V8 estimate, external already includes buffers; snapshots are not a transient heap peak and maxRSS is whole-process high-water including load/verification. Two samples are not percentiles. House samples are 20 resets per scope with full document hash checks, separate CPU timing only. Performance gate deferred to TW-049/TW-050.",
+  "inputsSha256": {
+    "scripts/selection-baseline.ts": "f7708ddf3ad05cd24be379540171a5d47e5c62d151e9ea4dd78ffb6ee011260c",
+    "src/domain/selection.ts": "a97cb1d63c1e8b5164a10314dbbb82eb73be334a5509a85d7464b0e352113c1c",
+    "src/domain/clipboard.ts": "f7948131f89baa772d165644e0e9e68c94cdc415179068dd3826d3c566e6e04a",
+    "src/domain/document.ts": "a97fc8fa3f20d2cb8740c2ba7e33e61217b80eb6f5ce674a5e5ef5c579c01a35",
+    "src/domain/storage.ts": "44abcdf018792d092ed52a297b31d50f7d704523f780b1334a371aea758463d0",
+    "src/domain/commands.ts": "1811ec5d77866137497366d89659fa5d484a0eb4925db0c319b124adc4594352",
+    "src/domain/history.ts": "7bddba3a3f0978248bcc1f66eed63d1131bff5742b6360d654eafcbe70a099b2",
+    "src/renderer/chunks.ts": "0bba092d72aae40dac487212c75d1f0c2af3709377c409eb3fdc87678ec54dba",
+    "src/renderer/colors.ts": "addce4eab946e2daaa5f4afb25540f172de38dce019a8aa7ed9473af308d7426",
+    "tests/fixtures/selection.ts": "de52dcf9bb69546c45c26da5ad6bc0a1f46a2c7d6f79646bbffaeed5bd318027",
+    "tests/fixtures/document.ts": "2d97cb9e1f02390709d3defbfdf9bd90cb8d5716f5deaef3dd46b30f85a4a70a",
+    "tests/fixtures/maps.ts": "fc4a5576552bce3491d0b09fe2e13848af9aa314fa441fdf5ad35f8e15b0ca5a",
+    "tests/fixtures/inspect.ts": "60577c000437fca722183f52ff1e5aeb82835437e7121b8e776b42195bddc856",
+    "tests/fixtures/expected.json": "264bef125e7a84d86d3a538f91f4b04f8643bd510a681706fa62eaf926f8abe8",
+    "package-lock.json": "c8f9aaaf0121ad82a34d6ecd95c216e48c05044a8c17d2fd726608eba7b01853",
+    ".nvmrc": "584f19ccde29925286e32f566a2aa06c89efb4e2eb2bb2fc9ea5d56e2d190ac4"
+  },
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v24.22.3",
+    "cpu": "Apple M1 Pro",
+    "totalMemoryBytes": 17179869184,
+    "macOS": "15.8.1",
+    "macOSBuild": "24H32",
+    "model": "MacBookPro18,3"
+  },
+  "house": [
+    {
+      "scope": [
+        "walls"
+      ],
+      "repetitions": 20,
+      "exactUndoRedo": true,
+      "samples": [
+        {
+          "snapshotAndPlanMs": 0.28608300000000497,
+          "commitMs": 0.42345799999999656,
+          "undoMs": 0.3322920000000096,
+          "redoMs": 0.11520899999999301
+        },
+        {
+          "snapshotAndPlanMs": 0.05116599999999494,
+          "commitMs": 0.0882090000000062,
+          "undoMs": 0.10987500000000239,
+          "redoMs": 0.07762499999999761
+        },
+        {
+          "snapshotAndPlanMs": 0.041208999999994944,
+          "commitMs": 0.0761669999999981,
+          "undoMs": 0.0749579999999952,
+          "redoMs": 0.07399999999999807
+        },
+        {
+          "snapshotAndPlanMs": 0.03520800000001145,
+          "commitMs": 0.09704099999999016,
+          "undoMs": 0.07266599999999812,
+          "redoMs": 0.05804200000000037
+        },
+        {
+          "snapshotAndPlanMs": 0.026459000000002675,
+          "commitMs": 0.06850000000000023,
+          "undoMs": 0.07012500000000443,
+          "redoMs": 0.06516600000000494
+        },
+        {
+          "snapshotAndPlanMs": 0.024124999999997954,
+          "commitMs": 0.054500000000004434,
+          "undoMs": 0.053374999999988404,
+          "redoMs": 0.03716700000001083
+        },
+        {
+          "snapshotAndPlanMs": 0.01808299999999008,
+          "commitMs": 0.04779200000000117,
+          "undoMs": 0.035542000000006624,
+          "redoMs": 0.09379099999999596
+        },
+        {
+          "snapshotAndPlanMs": 0.016125000000002387,
+          "commitMs": 0.03875000000000739,
+          "undoMs": 0.035459000000003016,
+          "redoMs": 0.03499999999999659
+        },
+        {
+          "snapshotAndPlanMs": 0.019874999999998977,
+          "commitMs": 0.04608299999999588,
+          "undoMs": 0.031959000000000515,
+          "redoMs": 0.031374999999997044
+        },
+        {
+          "snapshotAndPlanMs": 0.023041000000006306,
+          "commitMs": 0.045708000000004745,
+          "undoMs": 0.029959000000005176,
+          "redoMs": 0.042208000000002244
+        },
+        {
+          "snapshotAndPlanMs": 0.015416999999999348,
+          "commitMs": 0.03999999999999204,
+          "undoMs": 0.03558400000000006,
+          "redoMs": 0.027040999999996984
+        },
+        {
+          "snapshotAndPlanMs": 0.011334000000005062,
+          "commitMs": 0.0379999999999967,
+          "undoMs": 0.02841599999999289,
+          "redoMs": 0.025500000000008072
+        },
+        {
+          "snapshotAndPlanMs": 0.008833999999993125,
+          "commitMs": 0.031165999999998917,
+          "undoMs": 0.03566600000000619,
+          "redoMs": 0.028874999999999318
+        },
+        {
+          "snapshotAndPlanMs": 0.009040999999996302,
+          "commitMs": 0.030750000000011823,
+          "undoMs": 0.035459000000003016,
+          "redoMs": 0.02358300000000213
+        },
+        {
+          "snapshotAndPlanMs": 0.011541999999991504,
+          "commitMs": 0.029666000000005965,
+          "undoMs": 0.02750000000000341,
+          "redoMs": 0.02400000000000091
+        },
+        {
+          "snapshotAndPlanMs": 0.00841599999999687,
+          "commitMs": 0.028333000000003494,
+          "undoMs": 0.025625000000005116,
+          "redoMs": 0.024583000000006905
+        },
+        {
+          "snapshotAndPlanMs": 0.00837500000000091,
+          "commitMs": 0.028916999999992754,
+          "undoMs": 0.026291999999997984,
+          "redoMs": 0.022582999999997355
+        },
+        {
+          "snapshotAndPlanMs": 0.008749999999992042,
+          "commitMs": 0.02845800000000054,
+          "undoMs": 0.028083000000009406,
+          "redoMs": 0.02345899999998835
+        },
+        {
+          "snapshotAndPlanMs": 0.008125000000006821,
+          "commitMs": 0.027167000000005714,
+          "undoMs": 0.02516599999999869,
+          "redoMs": 0.023665999999991527
+        },
+        {
+          "snapshotAndPlanMs": 0.008209000000007904,
+          "commitMs": 0.027708000000004063,
+          "undoMs": 0.0262079999999969,
+          "redoMs": 0.02283400000000313
+        }
+      ],
+      "memoryBytes": {
+        "before": {
+          "rss": 112541696,
+          "heapTotal": 15417344,
+          "heapUsed": 9796128,
+          "external": 9882594,
+          "arrayBuffers": 315667
+        },
+        "after": {
+          "rss": 117161984,
+          "heapTotal": 15679488,
+          "heapUsed": 10213880,
+          "external": 9880077,
+          "arrayBuffers": 315667
+        }
+      },
+      "retainedHistory": {
+        "revision": 0,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": false,
+        "undoSteps": 0,
+        "redoSteps": 1,
+        "retainedBytes": 6362,
+        "undoLabel": null,
+        "redoLabel": "House move"
+      }
+    },
+    {
+      "scope": [
+        "walls",
+        "furniture"
+      ],
+      "repetitions": 20,
+      "exactUndoRedo": true,
+      "samples": [
+        {
+          "snapshotAndPlanMs": 0.038000000000010914,
+          "commitMs": 0.1316669999999931,
+          "undoMs": 0.07733300000001009,
+          "redoMs": 0.05987500000000523
+        },
+        {
+          "snapshotAndPlanMs": 0.01650000000000773,
+          "commitMs": 0.06704099999998903,
+          "undoMs": 0.05937499999998863,
+          "redoMs": 0.0609579999999994
+        },
+        {
+          "snapshotAndPlanMs": 0.013583999999980279,
+          "commitMs": 0.06191599999999653,
+          "undoMs": 0.060083999999989146,
+          "redoMs": 0.05437499999999318
+        },
+        {
+          "snapshotAndPlanMs": 0.013165999999984024,
+          "commitMs": 0.08620899999999665,
+          "undoMs": 0.05850000000000932,
+          "redoMs": 0.05479199999999196
+        },
+        {
+          "snapshotAndPlanMs": 0.011957999999992808,
+          "commitMs": 0.06512500000002319,
+          "undoMs": 0.0816250000000025,
+          "redoMs": 0.0801659999999913
+        },
+        {
+          "snapshotAndPlanMs": 0.016375000000010687,
+          "commitMs": 0.17425000000000068,
+          "undoMs": 0.0589999999999975,
+          "redoMs": 0.053541999999993095
+        },
+        {
+          "snapshotAndPlanMs": 0.015625,
+          "commitMs": 0.05679200000000151,
+          "undoMs": 0.04829199999997513,
+          "redoMs": 0.05254199999998832
+        },
+        {
+          "snapshotAndPlanMs": 0.012833000000000538,
+          "commitMs": 0.06954199999998423,
+          "undoMs": 0.051333999999997104,
+          "redoMs": 0.04820799999998826
+        },
+        {
+          "snapshotAndPlanMs": 0.015666999999979225,
+          "commitMs": 0.044959000000005744,
+          "undoMs": 0.04354200000000219,
+          "redoMs": 0.036791999999991276
+        },
+        {
+          "snapshotAndPlanMs": 0.024625000000014552,
+          "commitMs": 0.044999999999987494,
+          "undoMs": 0.03741700000000492,
+          "redoMs": 0.03716599999998493
+        },
+        {
+          "snapshotAndPlanMs": 0.012499999999988631,
+          "commitMs": 0.04520899999999983,
+          "undoMs": 0.03870900000001143,
+          "redoMs": 0.036417000000000144
+        },
+        {
+          "snapshotAndPlanMs": 0.011791999999985592,
+          "commitMs": 0.05012499999997999,
+          "undoMs": 0.038000000000010914,
+          "redoMs": 0.03762499999999136
+        },
+        {
+          "snapshotAndPlanMs": 0.011541999999991504,
+          "commitMs": 0.042791999999991504,
+          "undoMs": 0.037458999999984144,
+          "redoMs": 0.036417000000000144
+        },
+        {
+          "snapshotAndPlanMs": 0.012334000000009837,
+          "commitMs": 0.042833000000001675,
+          "undoMs": 0.03712499999997476,
+          "redoMs": 0.03633400000001075
+        },
+        {
+          "snapshotAndPlanMs": 0.011791999999985592,
+          "commitMs": 0.040625000000005684,
+          "undoMs": 0.0363749999999925,
+          "redoMs": 0.037208999999990056
+        },
+        {
+          "snapshotAndPlanMs": 0.012790999999992891,
+          "commitMs": 0.0473750000000166,
+          "undoMs": 0.04045800000000099,
+          "redoMs": 0.03758299999998371
+        },
+        {
+          "snapshotAndPlanMs": 0.012750000000011141,
+          "commitMs": 0.045250000000010004,
+          "undoMs": 0.03850000000002751,
+          "redoMs": 0.06283400000000938
+        },
+        {
+          "snapshotAndPlanMs": 0.01620900000000347,
+          "commitMs": 0.048292000000003554,
+          "undoMs": 0.03987500000002342,
+          "redoMs": 0.05099999999998772
+        },
+        {
+          "snapshotAndPlanMs": 0.014833999999979142,
+          "commitMs": 0.05016699999998764,
+          "undoMs": 0.04112500000002228,
+          "redoMs": 0.037333000000018046
+        },
+        {
+          "snapshotAndPlanMs": 0.012208000000015318,
+          "commitMs": 0.04408300000000054,
+          "undoMs": 0.04162500000001046,
+          "redoMs": 0.03941600000001699
+        }
+      ],
+      "memoryBytes": {
+        "before": {
+          "rss": 117227520,
+          "heapTotal": 15679488,
+          "heapUsed": 10194392,
+          "external": 10052109,
+          "arrayBuffers": 315667
+        },
+        "after": {
+          "rss": 117522432,
+          "heapTotal": 15679488,
+          "heapUsed": 10216544,
+          "external": 9880077,
+          "arrayBuffers": 315667
+        }
+      },
+      "retainedHistory": {
+        "revision": 0,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": false,
+        "undoSteps": 0,
+        "redoSteps": 1,
+        "retainedBytes": 8110,
+        "undoLabel": null,
+        "redoLabel": "House move"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "pass": 1,
+      "fixture": "frontier-v1",
+      "seed": 439041101,
+      "size": 512,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 764,
+        "maxY": 636
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 639,
+        "maxY": 769
+      },
+      "occupiedSelectedCells": 294912,
+      "sourceRuns": 9792,
+      "transformedRuns": 19200,
+      "planWrites": 22740,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 73728,
+      "overwrites": 147456,
+      "golden": {
+        "version": 1,
+        "id": "frontier-v1",
+        "seed": 439041101,
+        "terrainPercent": 18,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 138222,
+        "occupiedByLayer": [
+          6545856,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 6620700,
+        "uniqueOccupiedPositions": 6545856,
+        "emptyPositions": 34414144,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          34414144,
+          6480912,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+      },
+      "originalHash": "4bf3e1fd427b8265b8004ed35b8019e785e33ca2dede27fb7923e57ba09b024e",
+      "changedHash": "f4d2c4407c352e7c14773668aaeeecb31bba319c7b7f983d919d39bcb1e18cc9",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 4.122082999999975,
+          "afterOperation": {
+            "rss": 191234048,
+            "heapTotal": 53379072,
+            "heapUsed": 23322944,
+            "external": 44649725,
+            "arrayBuffers": 35053843
+          }
+        },
+        "transform": {
+          "ms": 46.45229199999994,
+          "afterOperation": {
+            "rss": 225673216,
+            "heapTotal": 103776256,
+            "heapUsed": 40399176,
+            "external": 44649725,
+            "arrayBuffers": 35053843
+          }
+        },
+        "plan": {
+          "ms": 3.5314580000000433,
+          "afterOperation": {
+            "rss": 225001472,
+            "heapTotal": 88129536,
+            "heapUsed": 23771744,
+            "external": 44649725,
+            "arrayBuffers": 35053843
+          }
+        },
+        "previewRaster": {
+          "ms": 11.904667000000018,
+          "afterOperation": {
+            "rss": 241254400,
+            "heapTotal": 88965120,
+            "heapUsed": 54140208,
+            "external": 44752125,
+            "arrayBuffers": 35156243
+          }
+        },
+        "commit": {
+          "ms": 59.52141699999993,
+          "afterOperation": {
+            "rss": 246841344,
+            "heapTotal": 94650368,
+            "heapUsed": 35480688,
+            "external": 44715261,
+            "arrayBuffers": 35119379
+          }
+        },
+        "undo": {
+          "ms": 43.33504200000016,
+          "afterOperation": {
+            "rss": 246677504,
+            "heapTotal": 99762176,
+            "heapUsed": 39307672,
+            "external": 44780797,
+            "arrayBuffers": 35184915
+          }
+        },
+        "redo": {
+          "ms": 36.79079200000001,
+          "afterOperation": {
+            "rss": 254017536,
+            "heapTotal": 165330944,
+            "heapUsed": 69344712,
+            "external": 44780797,
+            "arrayBuffers": 35184915
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 9690028,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 190857216,
+          "heapTotal": 53379072,
+          "heapUsed": 17016696,
+          "external": 44593070,
+          "arrayBuffers": 35053843
+        },
+        "captured": {
+          "rss": 191430656,
+          "heapTotal": 52068352,
+          "heapUsed": 17756824,
+          "external": 44649725,
+          "arrayBuffers": 35053843
+        },
+        "transformed": {
+          "rss": 224329728,
+          "heapTotal": 87457792,
+          "heapUsed": 18944400,
+          "external": 44649725,
+          "arrayBuffers": 35053843
+        },
+        "planned": {
+          "rss": 224755712,
+          "heapTotal": 88702976,
+          "heapUsed": 20593560,
+          "external": 44649725,
+          "arrayBuffers": 35053843
+        },
+        "previewed": {
+          "rss": 241336320,
+          "heapTotal": 89227264,
+          "heapUsed": 20698672,
+          "external": 44752125,
+          "arrayBuffers": 35119379
+        },
+        "committed": {
+          "rss": 242483200,
+          "heapTotal": 91275264,
+          "heapUsed": 22756832,
+          "external": 44715261,
+          "arrayBuffers": 34795795
+        },
+        "undone": {
+          "rss": 245760000,
+          "heapTotal": 93372416,
+          "heapUsed": 22818488,
+          "external": 44780797,
+          "arrayBuffers": 35184915
+        },
+        "redone": {
+          "rss": 251084800,
+          "heapTotal": 160481280,
+          "heapUsed": 22856136,
+          "external": 44780797,
+          "arrayBuffers": 34861331
+        },
+        "evicted": {
+          "rss": 304431104,
+          "heapTotal": 156860416,
+          "heapUsed": 20870856,
+          "external": 44457213,
+          "arrayBuffers": 34861331
+        },
+        "snapshotDelta": 740128,
+        "transformDelta": 1187576,
+        "planDelta": 1649160,
+        "commitDelta": 1734576,
+        "releasedByHistoryEviction": 1985280
+      },
+      "processMaxRssBytes": 304709632
+    },
+    {
+      "pass": 2,
+      "fixture": "frontier-v1",
+      "seed": 439041101,
+      "size": 512,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 764,
+        "maxY": 636
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 639,
+        "maxY": 769
+      },
+      "occupiedSelectedCells": 294912,
+      "sourceRuns": 9792,
+      "transformedRuns": 19200,
+      "planWrites": 22740,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 73728,
+      "overwrites": 147456,
+      "golden": {
+        "version": 1,
+        "id": "frontier-v1",
+        "seed": 439041101,
+        "terrainPercent": 18,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 138222,
+        "occupiedByLayer": [
+          6545856,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 6620700,
+        "uniqueOccupiedPositions": 6545856,
+        "emptyPositions": 34414144,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          34414144,
+          6480912,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+      },
+      "originalHash": "4bf3e1fd427b8265b8004ed35b8019e785e33ca2dede27fb7923e57ba09b024e",
+      "changedHash": "f4d2c4407c352e7c14773668aaeeecb31bba319c7b7f983d919d39bcb1e18cc9",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 4.033709000000044,
+          "afterOperation": {
+            "rss": 187301888,
+            "heapTotal": 54427648,
+            "heapUsed": 23321424,
+            "external": 44649725,
+            "arrayBuffers": 35053843
+          }
+        },
+        "transform": {
+          "ms": 44.753124999999955,
+          "afterOperation": {
+            "rss": 219234304,
+            "heapTotal": 103776256,
+            "heapUsed": 40398792,
+            "external": 44649725,
+            "arrayBuffers": 35053843
+          }
+        },
+        "plan": {
+          "ms": 3.610916999999972,
+          "afterOperation": {
+            "rss": 218644480,
+            "heapTotal": 88391680,
+            "heapUsed": 23753328,
+            "external": 44649725,
+            "arrayBuffers": 35053843
+          }
+        },
+        "previewRaster": {
+          "ms": 11.834332999999901,
+          "afterOperation": {
+            "rss": 235356160,
+            "heapTotal": 89227264,
+            "heapUsed": 54138640,
+            "external": 44752125,
+            "arrayBuffers": 35156243
+          }
+        },
+        "commit": {
+          "ms": 55.28187500000013,
+          "afterOperation": {
+            "rss": 246038528,
+            "heapTotal": 94650368,
+            "heapUsed": 35247184,
+            "external": 44715261,
+            "arrayBuffers": 35119379
+          }
+        },
+        "undo": {
+          "ms": 41.96995800000013,
+          "afterOperation": {
+            "rss": 245710848,
+            "heapTotal": 99762176,
+            "heapUsed": 38699776,
+            "external": 44780797,
+            "arrayBuffers": 35184915
+          }
+        },
+        "redo": {
+          "ms": 38.746875000000045,
+          "afterOperation": {
+            "rss": 252592128,
+            "heapTotal": 165068800,
+            "heapUsed": 69644288,
+            "external": 44780797,
+            "arrayBuffers": 35184915
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 9690028,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 187023360,
+          "heapTotal": 54427648,
+          "heapUsed": 17015048,
+          "external": 44593070,
+          "arrayBuffers": 35053843
+        },
+        "captured": {
+          "rss": 187154432,
+          "heapTotal": 52592640,
+          "heapUsed": 17755512,
+          "external": 44649725,
+          "arrayBuffers": 35053843
+        },
+        "transformed": {
+          "rss": 217972736,
+          "heapTotal": 87719936,
+          "heapUsed": 18943352,
+          "external": 44649725,
+          "arrayBuffers": 35053843
+        },
+        "planned": {
+          "rss": 218480640,
+          "heapTotal": 88965120,
+          "heapUsed": 20592512,
+          "external": 44649725,
+          "arrayBuffers": 35053843
+        },
+        "previewed": {
+          "rss": 235372544,
+          "heapTotal": 89489408,
+          "heapUsed": 20697552,
+          "external": 44752125,
+          "arrayBuffers": 35119379
+        },
+        "committed": {
+          "rss": 241926144,
+          "heapTotal": 91537408,
+          "heapUsed": 22754952,
+          "external": 44715261,
+          "arrayBuffers": 34795795
+        },
+        "undone": {
+          "rss": 244678656,
+          "heapTotal": 93634560,
+          "heapUsed": 22817712,
+          "external": 44780797,
+          "arrayBuffers": 35184915
+        },
+        "redone": {
+          "rss": 249643008,
+          "heapTotal": 161005568,
+          "heapUsed": 22850648,
+          "external": 44780797,
+          "arrayBuffers": 34861331
+        },
+        "evicted": {
+          "rss": 303628288,
+          "heapTotal": 157122560,
+          "heapUsed": 20869624,
+          "external": 44457213,
+          "arrayBuffers": 34861331
+        },
+        "snapshotDelta": 740464,
+        "transformDelta": 1187840,
+        "planDelta": 1649160,
+        "commitDelta": 1733816,
+        "releasedByHistoryEviction": 1981024
+      },
+      "processMaxRssBytes": 304070656
+    },
+    {
+      "pass": 1,
+      "fixture": "frontier-v1",
+      "seed": 439041101,
+      "size": 1024,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 1276,
+        "maxY": 1020
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 1023,
+        "maxY": 1281
+      },
+      "occupiedSelectedCells": 1179648,
+      "sourceRuns": 38016,
+      "transformedRuns": 75264,
+      "planWrites": 86958,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 294912,
+      "overwrites": 589824,
+      "golden": {
+        "version": 1,
+        "id": "frontier-v1",
+        "seed": 439041101,
+        "terrainPercent": 18,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 138222,
+        "occupiedByLayer": [
+          6545856,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 6620700,
+        "uniqueOccupiedPositions": 6545856,
+        "emptyPositions": 34414144,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          34414144,
+          6480912,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+      },
+      "originalHash": "cac00ba0487c8681a465aada5f84c6b43abc5136099851bc8763d3dc870e23c3",
+      "changedHash": "0ea9508282818fdb1e306ade6f0a2de05b9f95bbfdfc1a51dcab86f98958495b",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 12.788209000000052,
+          "afterOperation": {
+            "rss": 237830144,
+            "heapTotal": 91619328,
+            "heapUsed": 40906704,
+            "external": 51432701,
+            "arrayBuffers": 41836819
+          }
+        },
+        "transform": {
+          "ms": 178.04208300000005,
+          "afterOperation": {
+            "rss": 352452608,
+            "heapTotal": 234029056,
+            "heapUsed": 109432384,
+            "external": 51432701,
+            "arrayBuffers": 41836819
+          }
+        },
+        "plan": {
+          "ms": 8.16012499999988,
+          "afterOperation": {
+            "rss": 345653248,
+            "heapTotal": 164413440,
+            "heapUsed": 42553288,
+            "external": 51432701,
+            "arrayBuffers": 41836819
+          }
+        },
+        "previewRaster": {
+          "ms": 35.454291999999896,
+          "afterOperation": {
+            "rss": 376602624,
+            "heapTotal": 167231488,
+            "heapUsed": 89986048,
+            "external": 51515645,
+            "arrayBuffers": 41919763
+          }
+        },
+        "commit": {
+          "ms": 177.63266699999986,
+          "afterOperation": {
+            "rss": 417415168,
+            "heapTotal": 203440128,
+            "heapUsed": 87317160,
+            "external": 51498237,
+            "arrayBuffers": 41902355
+          }
+        },
+        "undo": {
+          "ms": 131.94650000000001,
+          "afterOperation": {
+            "rss": 409141248,
+            "heapTotal": 214777856,
+            "heapUsed": 137199984,
+            "external": 51563773,
+            "arrayBuffers": 41967891
+          }
+        },
+        "redo": {
+          "ms": 137.09858300000042,
+          "afterOperation": {
+            "rss": 411402240,
+            "heapTotal": 224067584,
+            "heapUsed": 120268736,
+            "external": 51563773,
+            "arrayBuffers": 41967891
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 37505222,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 236535808,
+          "heapTotal": 90603520,
+          "heapUsed": 17573096,
+          "external": 51376046,
+          "arrayBuffers": 41836819
+        },
+        "captured": {
+          "rss": 237240320,
+          "heapTotal": 88571904,
+          "heapUsed": 20120616,
+          "external": 51432701,
+          "arrayBuffers": 41836819
+        },
+        "transformed": {
+          "rss": 342376448,
+          "heapTotal": 161284096,
+          "heapUsed": 24898216,
+          "external": 51432701,
+          "arrayBuffers": 41836819
+        },
+        "planned": {
+          "rss": 343588864,
+          "heapTotal": 167231488,
+          "heapUsed": 31181928,
+          "external": 51432701,
+          "arrayBuffers": 41836819
+        },
+        "previewed": {
+          "rss": 376602624,
+          "heapTotal": 167231488,
+          "heapUsed": 31220960,
+          "external": 51515645,
+          "arrayBuffers": 41902355
+        },
+        "committed": {
+          "rss": 400867328,
+          "heapTotal": 175865856,
+          "heapUsed": 38902032,
+          "external": 51498237,
+          "arrayBuffers": 40472851
+        },
+        "undone": {
+          "rss": 401702912,
+          "heapTotal": 177963008,
+          "heapUsed": 39071656,
+          "external": 51563773,
+          "arrayBuffers": 41967891
+        },
+        "redone": {
+          "rss": 403570688,
+          "heapTotal": 180060160,
+          "heapUsed": 39013640,
+          "external": 51563773,
+          "arrayBuffers": 40538387
+        },
+        "evicted": {
+          "rss": 402800640,
+          "heapTotal": 167755776,
+          "heapUsed": 31357376,
+          "external": 50134269,
+          "arrayBuffers": 40538387
+        },
+        "snapshotDelta": 2547520,
+        "transformDelta": 4777600,
+        "planDelta": 6283712,
+        "commitDelta": 6251568,
+        "releasedByHistoryEviction": 7656264
+      },
+      "processMaxRssBytes": 417611776
+    },
+    {
+      "pass": 2,
+      "fixture": "frontier-v1",
+      "seed": 439041101,
+      "size": 1024,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 1276,
+        "maxY": 1020
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 1023,
+        "maxY": 1281
+      },
+      "occupiedSelectedCells": 1179648,
+      "sourceRuns": 38016,
+      "transformedRuns": 75264,
+      "planWrites": 86958,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 294912,
+      "overwrites": 589824,
+      "golden": {
+        "version": 1,
+        "id": "frontier-v1",
+        "seed": 439041101,
+        "terrainPercent": 18,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 138222,
+        "occupiedByLayer": [
+          6545856,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 6620700,
+        "uniqueOccupiedPositions": 6545856,
+        "emptyPositions": 34414144,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          34414144,
+          6480912,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "de4ed786f9a80c42b6ab3939c08990b40484975b2dc77eeea147591bab552617"
+      },
+      "originalHash": "cac00ba0487c8681a465aada5f84c6b43abc5136099851bc8763d3dc870e23c3",
+      "changedHash": "0ea9508282818fdb1e306ade6f0a2de05b9f95bbfdfc1a51dcab86f98958495b",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 12.750541999999996,
+          "afterOperation": {
+            "rss": 243548160,
+            "heapTotal": 91881472,
+            "heapUsed": 40894160,
+            "external": 51432701,
+            "arrayBuffers": 41836819
+          }
+        },
+        "transform": {
+          "ms": 177.93179099999998,
+          "afterOperation": {
+            "rss": 353140736,
+            "heapTotal": 234291200,
+            "heapUsed": 109340480,
+            "external": 51432701,
+            "arrayBuffers": 41836819
+          }
+        },
+        "plan": {
+          "ms": 8.553750000000036,
+          "afterOperation": {
+            "rss": 346079232,
+            "heapTotal": 163889152,
+            "heapUsed": 42586776,
+            "external": 51432701,
+            "arrayBuffers": 41836819
+          }
+        },
+        "previewRaster": {
+          "ms": 34.618375000000015,
+          "afterOperation": {
+            "rss": 376979456,
+            "heapTotal": 166707200,
+            "heapUsed": 90006528,
+            "external": 51515645,
+            "arrayBuffers": 41919763
+          }
+        },
+        "commit": {
+          "ms": 180.19833300000005,
+          "afterOperation": {
+            "rss": 422297600,
+            "heapTotal": 203440128,
+            "heapUsed": 87414432,
+            "external": 51498237,
+            "arrayBuffers": 41902355
+          }
+        },
+        "undo": {
+          "ms": 135.15379200000007,
+          "afterOperation": {
+            "rss": 413499392,
+            "heapTotal": 215040000,
+            "heapUsed": 136841032,
+            "external": 51563773,
+            "arrayBuffers": 41967891
+          }
+        },
+        "redo": {
+          "ms": 142.79595800000016,
+          "afterOperation": {
+            "rss": 414810112,
+            "heapTotal": 223805440,
+            "heapUsed": 120393672,
+            "external": 51563773,
+            "arrayBuffers": 41967891
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 37505222,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 242253824,
+          "heapTotal": 90865664,
+          "heapUsed": 17573096,
+          "external": 51376046,
+          "arrayBuffers": 41836819
+        },
+        "captured": {
+          "rss": 243154944,
+          "heapTotal": 88571904,
+          "heapUsed": 20120616,
+          "external": 51432701,
+          "arrayBuffers": 41836819
+        },
+        "transformed": {
+          "rss": 342949888,
+          "heapTotal": 160759808,
+          "heapUsed": 24898216,
+          "external": 51432701,
+          "arrayBuffers": 41836819
+        },
+        "planned": {
+          "rss": 343965696,
+          "heapTotal": 166707200,
+          "heapUsed": 31181928,
+          "external": 51432701,
+          "arrayBuffers": 41836819
+        },
+        "previewed": {
+          "rss": 377028608,
+          "heapTotal": 166707200,
+          "heapUsed": 31220960,
+          "external": 51515645,
+          "arrayBuffers": 41902355
+        },
+        "committed": {
+          "rss": 405733376,
+          "heapTotal": 177700864,
+          "heapUsed": 38902048,
+          "external": 51498237,
+          "arrayBuffers": 40472851
+        },
+        "undone": {
+          "rss": 406241280,
+          "heapTotal": 179273728,
+          "heapUsed": 39071744,
+          "external": 51563773,
+          "arrayBuffers": 41967891
+        },
+        "redone": {
+          "rss": 407273472,
+          "heapTotal": 182419456,
+          "heapUsed": 39050376,
+          "external": 51563773,
+          "arrayBuffers": 40538387
+        },
+        "evicted": {
+          "rss": 406503424,
+          "heapTotal": 167493632,
+          "heapUsed": 31357496,
+          "external": 50134269,
+          "arrayBuffers": 40538387
+        },
+        "snapshotDelta": 2547520,
+        "transformDelta": 4777600,
+        "planDelta": 6283712,
+        "commitDelta": 6251584,
+        "releasedByHistoryEviction": 7692880
+      },
+      "processMaxRssBytes": 422297600
+    },
+    {
+      "pass": 1,
+      "fixture": "heartland-v1",
+      "seed": 1584361601,
+      "size": 512,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 764,
+        "maxY": 636
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 639,
+        "maxY": 769
+      },
+      "occupiedSelectedCells": 294912,
+      "sourceRuns": 9792,
+      "transformedRuns": 19200,
+      "planWrites": 22740,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 73728,
+      "overwrites": 147456,
+      "golden": {
+        "version": 1,
+        "id": "heartland-v1",
+        "seed": 1584361601,
+        "terrainPercent": 82,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 500802,
+        "occupiedByLayer": [
+          23950356,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 24025200,
+        "uniqueOccupiedPositions": 23950356,
+        "emptyPositions": 17009644,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          17009644,
+          23885412,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+      },
+      "originalHash": "41573186593cf7f38d97a7c3a9f3d2143d47c802171a1c2a972eb87f8c5e4f99",
+      "changedHash": "43993c4c50f6c484096ddc25eea1aefcb95606681dbdd4887de42a3fbe468e76",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 4.08266599999979,
+          "afterOperation": {
+            "rss": 327319552,
+            "heapTotal": 97353728,
+            "heapUsed": 33961400,
+            "external": 136342781,
+            "arrayBuffers": 126746899
+          }
+        },
+        "transform": {
+          "ms": 41.06366600000001,
+          "afterOperation": {
+            "rss": 333987840,
+            "heapTotal": 165314560,
+            "heapUsed": 58017104,
+            "external": 136342781,
+            "arrayBuffers": 126746899
+          }
+        },
+        "plan": {
+          "ms": 3.5957499999999527,
+          "afterOperation": {
+            "rss": 334708736,
+            "heapTotal": 165658624,
+            "heapUsed": 34392840,
+            "external": 136342781,
+            "arrayBuffers": 126746899
+          }
+        },
+        "previewRaster": {
+          "ms": 10.977791999999681,
+          "afterOperation": {
+            "rss": 335757312,
+            "heapTotal": 166756352,
+            "heapUsed": 64830896,
+            "external": 136457469,
+            "arrayBuffers": 126861587
+          }
+        },
+        "commit": {
+          "ms": 55.01983300000029,
+          "afterOperation": {
+            "rss": 353107968,
+            "heapTotal": 173064192,
+            "heapUsed": 75418048,
+            "external": 136457469,
+            "arrayBuffers": 126824723
+          }
+        },
+        "undo": {
+          "ms": 45.390499999999975,
+          "afterOperation": {
+            "rss": 413777920,
+            "heapTotal": 174473216,
+            "heapUsed": 80764568,
+            "external": 136498429,
+            "arrayBuffers": 126902547
+          }
+        },
+        "redo": {
+          "ms": 34.88208399999985,
+          "afterOperation": {
+            "rss": 413876224,
+            "heapTotal": 174194688,
+            "heapUsed": 81510504,
+            "external": 136498429,
+            "arrayBuffers": 126902547
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 9690028,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 327024640,
+          "heapTotal": 97091584,
+          "heapUsed": 27660384,
+          "external": 136286126,
+          "arrayBuffers": 126746899
+        },
+        "captured": {
+          "rss": 327352320,
+          "heapTotal": 96829440,
+          "heapUsed": 28400440,
+          "external": 136342781,
+          "arrayBuffers": 126746899
+        },
+        "transformed": {
+          "rss": 334020608,
+          "heapTotal": 164986880,
+          "heapUsed": 29588272,
+          "external": 136342781,
+          "arrayBuffers": 126746899
+        },
+        "planned": {
+          "rss": 335020032,
+          "heapTotal": 166232064,
+          "heapUsed": 31237432,
+          "external": 136342781,
+          "arrayBuffers": 126746899
+        },
+        "previewed": {
+          "rss": 336052224,
+          "heapTotal": 167018496,
+          "heapUsed": 31363568,
+          "external": 136457469,
+          "arrayBuffers": 126824723
+        },
+        "committed": {
+          "rss": 349569024,
+          "heapTotal": 169066496,
+          "heapUsed": 33400408,
+          "external": 136420605,
+          "arrayBuffers": 126824723
+        },
+        "undone": {
+          "rss": 410468352,
+          "heapTotal": 170377216,
+          "heapUsed": 33462568,
+          "external": 136498429,
+          "arrayBuffers": 126902547
+        },
+        "redone": {
+          "rss": 410681344,
+          "heapTotal": 171163648,
+          "heapUsed": 33496520,
+          "external": 136498429,
+          "arrayBuffers": 126578963
+        },
+        "evicted": {
+          "rss": 410566656,
+          "heapTotal": 168329216,
+          "heapUsed": 31511256,
+          "external": 136174845,
+          "arrayBuffers": 126578963
+        },
+        "snapshotDelta": 740056,
+        "transformDelta": 1187832,
+        "planDelta": 1649160,
+        "commitDelta": 2036840,
+        "releasedByHistoryEviction": 1985264
+      },
+      "processMaxRssBytes": 414040064
+    },
+    {
+      "pass": 2,
+      "fixture": "heartland-v1",
+      "seed": 1584361601,
+      "size": 512,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 764,
+        "maxY": 636
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 639,
+        "maxY": 769
+      },
+      "occupiedSelectedCells": 294912,
+      "sourceRuns": 9792,
+      "transformedRuns": 19200,
+      "planWrites": 22740,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 73728,
+      "overwrites": 147456,
+      "golden": {
+        "version": 1,
+        "id": "heartland-v1",
+        "seed": 1584361601,
+        "terrainPercent": 82,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 500802,
+        "occupiedByLayer": [
+          23950356,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 24025200,
+        "uniqueOccupiedPositions": 23950356,
+        "emptyPositions": 17009644,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          17009644,
+          23885412,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+      },
+      "originalHash": "41573186593cf7f38d97a7c3a9f3d2143d47c802171a1c2a972eb87f8c5e4f99",
+      "changedHash": "43993c4c50f6c484096ddc25eea1aefcb95606681dbdd4887de42a3fbe468e76",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 4.0873750000000655,
+          "afterOperation": {
+            "rss": 330530816,
+            "heapTotal": 96043008,
+            "heapUsed": 33973808,
+            "external": 136342781,
+            "arrayBuffers": 126746899
+          }
+        },
+        "transform": {
+          "ms": 39.24191599999995,
+          "afterOperation": {
+            "rss": 332283904,
+            "heapTotal": 98205696,
+            "heapUsed": 58019152,
+            "external": 136342781,
+            "arrayBuffers": 126746899
+          }
+        },
+        "plan": {
+          "ms": 3.447834000000057,
+          "afterOperation": {
+            "rss": 332627968,
+            "heapTotal": 99074048,
+            "heapUsed": 34388960,
+            "external": 136342781,
+            "arrayBuffers": 126746899
+          }
+        },
+        "previewRaster": {
+          "ms": 10.876291999999921,
+          "afterOperation": {
+            "rss": 335183872,
+            "heapTotal": 99909632,
+            "heapUsed": 64830552,
+            "external": 136457469,
+            "arrayBuffers": 126861587
+          }
+        },
+        "commit": {
+          "ms": 60.29558300000008,
+          "afterOperation": {
+            "rss": 351567872,
+            "heapTotal": 171917312,
+            "heapUsed": 46545944,
+            "external": 136420605,
+            "arrayBuffers": 126824723
+          }
+        },
+        "undo": {
+          "ms": 45.3015419999997,
+          "afterOperation": {
+            "rss": 420823040,
+            "heapTotal": 174997504,
+            "heapUsed": 80585832,
+            "external": 136498429,
+            "arrayBuffers": 126902547
+          }
+        },
+        "redo": {
+          "ms": 34.221665999999914,
+          "afterOperation": {
+            "rss": 420839424,
+            "heapTotal": 174718976,
+            "heapUsed": 81425776,
+            "external": 136498429,
+            "arrayBuffers": 126902547
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 9690028,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 330252288,
+          "heapTotal": 96043008,
+          "heapUsed": 27659216,
+          "external": 136286126,
+          "arrayBuffers": 126746899
+        },
+        "captured": {
+          "rss": 330842112,
+          "heapTotal": 96567296,
+          "heapUsed": 28399728,
+          "external": 136342781,
+          "arrayBuffers": 126746899
+        },
+        "transformed": {
+          "rss": 331956224,
+          "heapTotal": 98402304,
+          "heapUsed": 29587096,
+          "external": 136342781,
+          "arrayBuffers": 126746899
+        },
+        "planned": {
+          "rss": 334184448,
+          "heapTotal": 99385344,
+          "heapUsed": 31236288,
+          "external": 136342781,
+          "arrayBuffers": 126746899
+        },
+        "previewed": {
+          "rss": 335151104,
+          "heapTotal": 99647488,
+          "heapUsed": 31362864,
+          "external": 136457469,
+          "arrayBuffers": 126824723
+        },
+        "committed": {
+          "rss": 347734016,
+          "heapTotal": 168804352,
+          "heapUsed": 33399264,
+          "external": 136420605,
+          "arrayBuffers": 126824723
+        },
+        "undone": {
+          "rss": 417480704,
+          "heapTotal": 169852928,
+          "heapUsed": 33461648,
+          "external": 136498429,
+          "arrayBuffers": 126902547
+        },
+        "redone": {
+          "rss": 417529856,
+          "heapTotal": 170377216,
+          "heapUsed": 33500872,
+          "external": 136498429,
+          "arrayBuffers": 126578963
+        },
+        "evicted": {
+          "rss": 417316864,
+          "heapTotal": 167542784,
+          "heapUsed": 31515664,
+          "external": 136174845,
+          "arrayBuffers": 126578963
+        },
+        "snapshotDelta": 740512,
+        "transformDelta": 1187368,
+        "planDelta": 1649192,
+        "commitDelta": 2036400,
+        "releasedByHistoryEviction": 1985208
+      },
+      "processMaxRssBytes": 421052416
+    },
+    {
+      "pass": 1,
+      "fixture": "heartland-v1",
+      "seed": 1584361601,
+      "size": 1024,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 1276,
+        "maxY": 1020
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 1023,
+        "maxY": 1281
+      },
+      "occupiedSelectedCells": 1179648,
+      "sourceRuns": 38016,
+      "transformedRuns": 75264,
+      "planWrites": 86958,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 294912,
+      "overwrites": 589824,
+      "golden": {
+        "version": 1,
+        "id": "heartland-v1",
+        "seed": 1584361601,
+        "terrainPercent": 82,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 500802,
+        "occupiedByLayer": [
+          23950356,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 24025200,
+        "uniqueOccupiedPositions": 23950356,
+        "emptyPositions": 17009644,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          17009644,
+          23885412,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+      },
+      "originalHash": "07950409c0abe36a48a6b0ea71b81e457dd3aaf03681d695a6757022bff0fc1e",
+      "changedHash": "fcf11dfbf77f33877725af5f263da68ae6791c4a1154a2f5d9788c50d2d60700",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 12.747834000000239,
+          "afterOperation": {
+            "rss": 410615808,
+            "heapTotal": 167313408,
+            "heapUsed": 51538104,
+            "external": 143125757,
+            "arrayBuffers": 133529875
+          }
+        },
+        "transform": {
+          "ms": 182.316417,
+          "afterOperation": {
+            "rss": 487964672,
+            "heapTotal": 212795392,
+            "heapUsed": 117451824,
+            "external": 143125757,
+            "arrayBuffers": 133529875
+          }
+        },
+        "plan": {
+          "ms": 9.047625000000153,
+          "afterOperation": {
+            "rss": 478412800,
+            "heapTotal": 170000384,
+            "heapUsed": 48465856,
+            "external": 143124467,
+            "arrayBuffers": 133529875
+          }
+        },
+        "previewRaster": {
+          "ms": 32.3901249999999,
+          "afterOperation": {
+            "rss": 477364224,
+            "heapTotal": 173080576,
+            "heapUsed": 95885408,
+            "external": 143219699,
+            "arrayBuffers": 133625107
+          }
+        },
+        "commit": {
+          "ms": 178.26791600000024,
+          "afterOperation": {
+            "rss": 524779520,
+            "heapTotal": 210075648,
+            "heapUsed": 93139128,
+            "external": 143202291,
+            "arrayBuffers": 133607699
+          }
+        },
+        "undo": {
+          "ms": 137.15224999999964,
+          "afterOperation": {
+            "rss": 519241728,
+            "heapTotal": 225148928,
+            "heapUsed": 139503456,
+            "external": 143280115,
+            "arrayBuffers": 133685523
+          }
+        },
+        "redo": {
+          "ms": 139.3719999999994,
+          "afterOperation": {
+            "rss": 519651328,
+            "heapTotal": 216875008,
+            "heapUsed": 141193784,
+            "external": 143280115,
+            "arrayBuffers": 133685523
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 37505222,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 409305088,
+          "heapTotal": 166297600,
+          "heapUsed": 28209896,
+          "external": 143069102,
+          "arrayBuffers": 133529875
+        },
+        "captured": {
+          "rss": 410517504,
+          "heapTotal": 165838848,
+          "heapUsed": 30756496,
+          "external": 143125757,
+          "arrayBuffers": 133529875
+        },
+        "transformed": {
+          "rss": 475234304,
+          "heapTotal": 166871040,
+          "heapUsed": 30727296,
+          "external": 143124467,
+          "arrayBuffers": 133529875
+        },
+        "planned": {
+          "rss": 476479488,
+          "heapTotal": 173080576,
+          "heapUsed": 37010576,
+          "external": 143124467,
+          "arrayBuffers": 133529875
+        },
+        "previewed": {
+          "rss": 477626368,
+          "heapTotal": 173604864,
+          "heapUsed": 37050544,
+          "external": 143219699,
+          "arrayBuffers": 133607699
+        },
+        "committed": {
+          "rss": 508755968,
+          "heapTotal": 182763520,
+          "heapUsed": 44731360,
+          "external": 143202291,
+          "arrayBuffers": 132800787
+        },
+        "undone": {
+          "rss": 511885312,
+          "heapTotal": 185122816,
+          "heapUsed": 44901456,
+          "external": 143280115,
+          "arrayBuffers": 133685523
+        },
+        "redone": {
+          "rss": 512819200,
+          "heapTotal": 186695680,
+          "heapUsed": 44878488,
+          "external": 143280115,
+          "arrayBuffers": 132464915
+        },
+        "evicted": {
+          "rss": 512065536,
+          "heapTotal": 174129152,
+          "heapUsed": 37187256,
+          "external": 141850611,
+          "arrayBuffers": 132256019
+        },
+        "snapshotDelta": 2546600,
+        "transformDelta": -29200,
+        "planDelta": 6283280,
+        "commitDelta": 6873904,
+        "releasedByHistoryEviction": 7900128
+      },
+      "processMaxRssBytes": 525320192
+    },
+    {
+      "pass": 2,
+      "fixture": "heartland-v1",
+      "seed": 1584361601,
+      "size": 1024,
+      "source": {
+        "minX": 252,
+        "minY": 252,
+        "maxX": 1276,
+        "maxY": 1020
+      },
+      "destination": {
+        "minX": 255,
+        "minY": 257,
+        "maxX": 1023,
+        "maxY": 1281
+      },
+      "occupiedSelectedCells": 1179648,
+      "sourceRuns": 38016,
+      "transformedRuns": 75264,
+      "planWrites": 86958,
+      "previewChunks": 6,
+      "layers": 6,
+      "holesPreserved": 294912,
+      "overwrites": 589824,
+      "golden": {
+        "version": 1,
+        "id": "heartland-v1",
+        "seed": 1584361601,
+        "terrainPercent": 82,
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 6400,
+          "maxY": 6400
+        },
+        "layers": [
+          "terrain",
+          "buildings",
+          "furniture",
+          "canopy"
+        ],
+        "palette": [
+          {
+            "key": "grass",
+            "rgba": "#629653ff",
+            "meaning": "Grass"
+          },
+          {
+            "key": "water",
+            "rgba": "#417aabff",
+            "meaning": "Water"
+          },
+          {
+            "key": "stone",
+            "rgba": "#8d939cff",
+            "meaning": "Stone building"
+          },
+          {
+            "key": "wood",
+            "rgba": "#a7754cff",
+            "meaning": "Wood building"
+          },
+          {
+            "key": "ink",
+            "rgba": "#000000ff",
+            "meaning": null
+          },
+          {
+            "key": "leaves",
+            "rgba": "#285c39ff",
+            "meaning": "Tree canopy"
+          }
+        ],
+        "runCount": 500802,
+        "occupiedByLayer": [
+          23950356,
+          57024,
+          3564,
+          14256
+        ],
+        "occupiedLayerCells": 24025200,
+        "uniqueOccupiedPositions": 23950356,
+        "emptyPositions": 17009644,
+        "overlappingPositions": 64944,
+        "positionsByDepth": [
+          17009644,
+          23885412,
+          55440,
+          9108,
+          396
+        ],
+        "contentSha256": "c1e4443944ee8d9576529a88029c3aad854fa33c251e1d91c70adad8f8361d33"
+      },
+      "originalHash": "07950409c0abe36a48a6b0ea71b81e457dd3aaf03681d695a6757022bff0fc1e",
+      "changedHash": "fcf11dfbf77f33877725af5f263da68ae6791c4a1154a2f5d9788c50d2d60700",
+      "checks": {
+        "goldenBackground": true,
+        "everyEditedCell": true,
+        "backgroundUnchanged": true,
+        "previewMatchesCommit": true,
+        "exactUndoRedo": true
+      },
+      "timing": {
+        "snapshot": {
+          "ms": 12.966792000000169,
+          "afterOperation": {
+            "rss": 418086912,
+            "heapTotal": 167837696,
+            "heapUsed": 51540320,
+            "external": 143125757,
+            "arrayBuffers": 133529875
+          }
+        },
+        "transform": {
+          "ms": 200.97404200000028,
+          "afterOperation": {
+            "rss": 495681536,
+            "heapTotal": 216055808,
+            "heapUsed": 122439056,
+            "external": 143125757,
+            "arrayBuffers": 133529875
+          }
+        },
+        "plan": {
+          "ms": 8.59512500000028,
+          "afterOperation": {
+            "rss": 486178816,
+            "heapTotal": 174571520,
+            "heapUsed": 53137120,
+            "external": 143125757,
+            "arrayBuffers": 133529875
+          }
+        },
+        "previewRaster": {
+          "ms": 34.719708999999966,
+          "afterOperation": {
+            "rss": 483885056,
+            "heapTotal": 177651712,
+            "heapUsed": 100706576,
+            "external": 143220989,
+            "arrayBuffers": 133625107
+          }
+        },
+        "commit": {
+          "ms": 179.70829099999992,
+          "afterOperation": {
+            "rss": 530350080,
+            "heapTotal": 214122496,
+            "heapUsed": 97996696,
+            "external": 143203581,
+            "arrayBuffers": 133607699
+          }
+        },
+        "undo": {
+          "ms": 137.6890830000002,
+          "afterOperation": {
+            "rss": 524140544,
+            "heapTotal": 229457920,
+            "heapUsed": 144716400,
+            "external": 143281405,
+            "arrayBuffers": 133685523
+          }
+        },
+        "redo": {
+          "ms": 143.63425000000007,
+          "afterOperation": {
+            "rss": 523567104,
+            "heapTotal": 221446144,
+            "heapUsed": 146136064,
+            "external": 143281405,
+            "arrayBuffers": 133685523
+          }
+        }
+      },
+      "retainedHistory": {
+        "revision": 1,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 37505222,
+        "undoLabel": "Large composed transform",
+        "redoLabel": null
+      },
+      "evictedHistory": {
+        "revision": 2,
+        "savedRevision": 0,
+        "recoveryRevision": null,
+        "dirty": true,
+        "undoSteps": 1,
+        "redoSteps": 0,
+        "retainedBytes": 682,
+        "undoLabel": "Evict large entry",
+        "redoLabel": null
+      },
+      "memoryBytes": {
+        "before": {
+          "rss": 416759808,
+          "heapTotal": 166821888,
+          "heapUsed": 28209672,
+          "external": 143062702,
+          "arrayBuffers": 133529875
+        },
+        "captured": {
+          "rss": 417873920,
+          "heapTotal": 165838848,
+          "heapUsed": 30756616,
+          "external": 143125757,
+          "arrayBuffers": 133529875
+        },
+        "transformed": {
+          "rss": 483049472,
+          "heapTotal": 171442176,
+          "heapUsed": 35533488,
+          "external": 143125757,
+          "arrayBuffers": 133529875
+        },
+        "planned": {
+          "rss": 483803136,
+          "heapTotal": 177651712,
+          "heapUsed": 41816144,
+          "external": 143125757,
+          "arrayBuffers": 133529875
+        },
+        "previewed": {
+          "rss": 483885056,
+          "heapTotal": 177651712,
+          "heapUsed": 41856488,
+          "external": 143220989,
+          "arrayBuffers": 133607699
+        },
+        "committed": {
+          "rss": 513785856,
+          "heapTotal": 187334656,
+          "heapUsed": 49536712,
+          "external": 143203581,
+          "arrayBuffers": 132653331
+        },
+        "undone": {
+          "rss": 516423680,
+          "heapTotal": 190742528,
+          "heapUsed": 49706032,
+          "external": 143281405,
+          "arrayBuffers": 133685523
+        },
+        "redone": {
+          "rss": 517128192,
+          "heapTotal": 191528960,
+          "heapUsed": 49683064,
+          "external": 143281405,
+          "arrayBuffers": 132387091
+        },
+        "evicted": {
+          "rss": 516276224,
+          "heapTotal": 178176000,
+          "heapUsed": 41993096,
+          "external": 141851901,
+          "arrayBuffers": 132256019
+        },
+        "snapshotDelta": 2546944,
+        "transformDelta": 4776872,
+        "planDelta": 6282656,
+        "commitDelta": 6725856,
+        "releasedByHistoryEviction": 7821040
+      },
+      "processMaxRssBytes": 530350080
+    }
+  ]
+}

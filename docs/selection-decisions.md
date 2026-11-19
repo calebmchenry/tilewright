@@ -240,7 +240,85 @@ Transform computation, planning, preview rasterization and history remain
 synchronous. Quarter-turns temporarily expand horizontal runs to occupied cells
 before merging; very large dense or varied selections can consume substantial
 memory and pause. No latency or memory budget is claimed. Refinement remains
-TW-049/TW-050 under AGENTS.md; general selection stress scenarios remain TW-028.
+TW-049/TW-050 under AGENTS.md. TW-028 records composed workflow and large-selection
+evidence below.
+
+## Composed workflow verification (TW-028)
+
+`tests/domain/selection-workflow.test.ts` runs 36 generated operations for each of
+six fixed seeds at both positive and negative chunk boundaries (12 workflows).
+An independent dense matrix model uses transpose/reverse transforms, clears only
+source cells outside the destination, and overlays only occupied cells. It never
+uses the production payload, writes, or change records as expected content. Every
+cell on four layers and all bounds/layer/registry/annotation metadata are compared
+after commits, interleaved undo/redo, and every step of full history reversal/replay.
+The sequences change layer scope, move, compose both rotations and both flips,
+copy/cut, transform paste and reuse the unmodified clipboard. They include holes,
+transparent occupied paint and raw paint matching a registered color. Stale
+captures reject; identity previews preserve redo and saved/recovery checkpoints.
+A separate 512 × 384 two-layer transform with a real 4 KiB history cap verifies
+complete rollback, no event, unchanged checkpoints and a usable prior redo branch.
+
+`tests/selection-workflow.spec.ts` exercises the shipping controls at DPR 1 and 2
+for both active-Walls and explicitly chosen Walls/Furniture variants. Reverse-select
+the 8 × 8 house crossing (64,64), drag three tiles, compare every map cell with
+the independent move rule, change scope, cut, rotate/flip/paste, copy/repeat paste,
+then transform and nudge. All five committed states are checked on undo and redo.
+Terrain, layer order, registry identities and named-area records remain unchanged.
+Preview and fully undone screenshots make both variants repeatable and inspectable.
+Native release WKWebView also has a one-cell Cut → transformed Paste → Nudge →
+full Undo/Redo smoke record in TW-028; native automated drag did not establish
+a larger rectangle, so it is not evidence for native large-gesture performance.
+
+Run the reproducible profiling harness with:
+
+```sh
+npm run perf:selection -- --output artifacts/performance/selection-baseline.json
+```
+
+The checked-in [selection baseline](selection-baseline.json) records two fresh
+Node processes per size on each complete golden-verified frontier/heartland map.
+Two added overlapping layers contain 25% holes, registered stone, equal-looking
+raw stone and alpha-zero paint. The 512 × 384 / 1024 × 768 rectangles capture
+294,912 / 1,179,648 occupied layer cells and cross 32/64-tile boundaries. A composed
+clockwise/horizontal transform with offset (3,5) exercises overwritten cells and
+destination holes. Independent formula-based checks cover every edited cell, and
+global counts exclude stray writes outside the checked region. Complete background
+hashes and before/undo/redo document hashes retain all six layers and metadata.
+Preview pixels and occupancy match committed CPU rasters on every visible chunk.
+Repeated passes must agree on document hashes, counts and history accounting.
+
+Capture, transform, plan, CPU preview raster, commit, undo and redo have separate
+timings and memory samples. GC runs outside timers. The report retains per-stage
+post-GC heap/buffer snapshots, accounted history and release after eviction, plus
+whole-process high-water RSS and input source hashes. A separate 20-reset house
+measurement covers both scopes. These are CPU baselines; they exclude controller
+refresh, React, GPU upload, presentation, and attributed native physical memory.
+Two large trials do not establish percentiles or transient heap peaks; the house's
+20 cycles do not stand in for large-edit memory-growth measurement.
+
+Recorded on TW-M1Pro-16, macOS 15.8.1, Node 24.22.3 (four trials per size across
+both backgrounds). All timing ranges are milliseconds; history is deterministic
+accounting, not measured heap:
+
+| Selection             | Capture     | Transform     | CPU preview | Commit        | Undo          | Redo          | Accounted history |
+| --------------------- | ----------- | ------------- | ----------- | ------------- | ------------- | ------------- | ----------------- |
+| 512 × 384 × 2 layers  | 4.03–4.12   | 39.24–46.45   | 10.88–11.90 | 55.02–60.30   | 41.97–45.39   | 34.22–38.75   | 9.24 MiB          |
+| 1024 × 768 × 2 layers | 12.75–12.97 | 177.93–200.97 | 32.39–35.45 | 177.63–180.20 | 131.95–137.69 | 137.10–143.63 | 35.77 MiB         |
+
+The larger selection retained about 2.43 MiB more heap/buffers after capture
+and 5.99 MiB after planning; history eviction released 7.30–7.53 MiB. GC/JIT and
+other collectable allocations affect these deltas. Whole Node process high-water
+RSS was 290–506 MiB across all trials, including fixture loading and validation.
+The 20-reset house samples' commit/undo/redo p95 values were 0.097/0.110/0.094 ms
+for Walls and 0.132/0.077/0.063 ms for Walls/Furniture. These exclude every UI and
+presentation cost; they do not pass the native 50 ms small-edit budget.
+
+Large transforms and commits still run synchronously and exceed the 50 ms
+main-thread-task target. No new progress/cancellation mechanism or performance
+pass is claimed. Per the current delivery priority in AGENTS.md and INTENT.md,
+these limits are recorded for TW-049/TW-050 and do not block this verification
+ticket. No functional defect was found in the composed workflow checks.
 
 ## Rectangle and layer membership
 

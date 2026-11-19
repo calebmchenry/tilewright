@@ -81,6 +81,15 @@ These domain timings/memory samples do not establish the editor budgets below.
 Earlier baseline files are historical TW-003/TW-004 evidence, not source hashes of
 the current command implementation.
 
+`npm run perf:selection` records snapshot, composed transform, planning, CPU preview
+raster, commit/undo/redo and retained-history memory for 512 × 384 and 1024 × 768
+selections across two overlapping layers on both complete target-scale fixtures.
+It also records 20 three-tile house moves per single/chosen-layer scope. See
+[composed selection verification](selection-decisions.md#composed-workflow-verification-tw-028)
+and [selection-baseline.json](selection-baseline.json) for the actual measurements,
+independent correctness checks and evidence limits. Synchronous task overruns and
+unmeasured native presentation/physical memory remain deferred to TW-049/TW-050.
+
 ## Deterministic populated fixtures
 
 Source: [maps.ts](../tests/fixtures/maps.ts). Both fixtures have bounds

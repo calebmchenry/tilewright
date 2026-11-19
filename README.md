@@ -68,6 +68,8 @@ adds snapped composite drag previews and whole-tile arrow nudges with atomic und
 adds session-local cut/copy/paste, composited previews and repeated placement.
 [Quarter-turns and flips](docs/selection-decisions.md#transform-implementation-tw-027)
 add composable live/paste previews with arrow positioning and Apply/Cancel.
+[Composed workflow verification](docs/selection-decisions.md#composed-workflow-verification-tw-028)
+covers fixed-seed full undo/redo, both house-move scopes and large-selection profiling.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).
