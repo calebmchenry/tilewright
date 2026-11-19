@@ -100,7 +100,9 @@ during saves and fresh session/cache installation. [File/Edit menus](docs/projec
 share those actions, with focus-aware native text editing and Cmd+N/O/S/Z/X/C/V.
 The [recovery policy](docs/recovery-policy.md) defines separate local snapshots,
 cadence, identity, bounded retention, save/discard ordering and restoration as an
-unsaved copy. Recovery writing and restore controls follow in TW-040/TW-041.
+unsaved copy. [Recovery writing](docs/recovery-policy.md#writer-implementation-tw-040) now preserves
+committed revisions with atomic local generations, bounded retention and separate
+feedback. Startup discovery and restore controls follow in TW-041.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).

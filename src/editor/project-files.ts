@@ -1,5 +1,6 @@
 import { encodeProjectSnapshot } from "../domain/project.ts";
 import type { EditorSession } from "./session.ts";
+import type { RecoveryCoordinator } from "./recovery.ts";
 import { Store } from "./store.ts";
 import type { EditorWorkspace } from "./workspace.ts";
 
@@ -28,14 +29,20 @@ export class ProjectFiles {
   });
   readonly workspace: EditorWorkspace;
   readonly bridge: ProjectFileBridge;
+  readonly recovery?: RecoveryCoordinator;
   #closed = false;
   #busy = false;
   #unsubscribe: () => void;
   #association: { session: EditorSession; file: ProjectFileHandle } | null =
     null;
 
-  constructor(workspace: EditorWorkspace, bridge: ProjectFileBridge) {
+  constructor(
+    workspace: EditorWorkspace,
+    bridge: ProjectFileBridge,
+    recovery?: RecoveryCoordinator,
+  ) {
     this.workspace = workspace;
+    this.recovery = recovery;
     this.bridge = bridge;
     this.#unsubscribe = workspace.state.subscribe(() => {
       if (this.#association?.session !== workspace.state.getSnapshot().session)
@@ -69,6 +76,7 @@ export class ProjectFiles {
       });
       return false;
     }
+    const resume = this.recovery?.pause();
     const before = this.state.getSnapshot();
     this.#busy = true;
     this.#publish({
@@ -93,10 +101,11 @@ export class ProjectFiles {
       return false;
     } finally {
       this.#busy = false;
+      resume?.();
     }
   }
   /** Caller confirms discarding unsaved work before invoking Open. */
-  open(): Promise<boolean> {
+  open(checkTransition: () => void = () => {}): Promise<boolean> {
     return this.#run(async () => {
       const before = this.workspace.state.getSnapshot();
       const session = before.session;
@@ -126,6 +135,19 @@ export class ProjectFiles {
       const owner = this;
       const result = await this.workspace.openProject(bytes, {
         savedPath: file.path,
+        beforeInstall: this.recovery
+          ? async () => {
+              checkTransition();
+              const release = session.document.holdEdits();
+              try {
+                await this.recovery!.resolve(session.history.state.dirty);
+                return release;
+              } catch (error) {
+                release();
+                throw error;
+              }
+            }
+          : undefined,
         signal: {
           get aborted() {
             return owner.#closed;
@@ -133,6 +155,14 @@ export class ProjectFiles {
         },
       });
       this.#association = { session: result.session, file };
+      if (this.recovery)
+        await this.recovery.saved(
+          result.session,
+          file.path,
+          bytes,
+          result.session.captureProjectSnapshot(),
+          true,
+        );
       return `Opened ${file.path}.${result.observerErrors.length ? " Some interface observers failed; reopen the app if the view is stale." : ""}`;
     });
   }
@@ -177,6 +207,7 @@ export class ProjectFiles {
         snapshot.checkpoint,
       );
       this.#association = { session, file };
+      await this.recovery?.saved(session, file.path, bytes, snapshot);
       return `Saved ${file.path}.${warning ? ` ${warning}` : ""}${errors.length ? " Some interface observers failed; the file was saved." : ""}`;
     });
   }

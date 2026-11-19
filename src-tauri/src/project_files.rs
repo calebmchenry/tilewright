@@ -1,8 +1,9 @@
+use crate::atomic_io::{write_synced, Stage};
 use serde::Serialize;
 use std::{
     collections::HashMap,
     fs::{self, File, OpenOptions},
-    io::{self, Read, Write},
+    io::{self, Read},
     os::unix::fs::OpenOptionsExt,
     path::{Path, PathBuf},
     sync::Mutex,
@@ -191,13 +192,6 @@ pub async fn read_project(app: tauri::AppHandle, token: String) -> Result<Respon
     .map_err(|e| format!("Project read failed: {e}. Try again."))?
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Stage {
-    PartialWrite,
-    Sync,
-    Rename,
-}
-
 // All fallible pre-commit work targets a private sibling. Persist is one atomic
 // rename on the same filesystem; drop removes the temp file after any failure.
 fn atomic_write(
@@ -230,16 +224,10 @@ fn atomic_write(
         .prefix(".tilewright-")
         .suffix(".tmp")
         .tempfile_in(parent)?;
-    // This seam exercises a real partially written temporary file in fault tests.
-    let middle = bytes.len() / 2;
-    temp.write_all(&bytes[..middle])?;
-    check(Stage::PartialWrite)?;
-    temp.write_all(&bytes[middle..])?;
     if let Some(permissions) = permissions {
         temp.as_file().set_permissions(permissions)?;
     }
-    check(Stage::Sync)?;
-    temp.as_file().sync_all()?;
+    write_synced(temp.as_file_mut(), bytes, &mut check)?;
     check(Stage::Rename)?;
     temp.persist(path).map_err(|e| e.error)?;
     // Commit already happened. A directory flush failure is a durability warning,

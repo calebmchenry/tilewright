@@ -54,6 +54,7 @@ export class DocumentLifecycle {
     if (this.#closed || this.#busy || this.files.state.getSnapshot().busy)
       return false;
     this.#busy = true;
+    const resume = this.files.recovery?.pause();
     this.#publish({ busy: true, action, prompt: null, error: "" });
     let error = "";
     try {
@@ -64,6 +65,7 @@ export class DocumentLifecycle {
     } finally {
       this.#busy = false;
       this.#publish({ busy: false, action: null, prompt: null, error });
+      resume?.();
     }
   }
 
@@ -117,8 +119,17 @@ export class DocumentLifecycle {
       const proceed = await this.#protect("new");
       if (!proceed) return false;
       proceed();
-      this.files.workspace.createMap(width, height);
-      return true;
+      const prepared = this.files.workspace.prepareMap(width, height);
+      const session = this.files.workspace.state.getSnapshot().session;
+      const release = session.document.holdEdits();
+      try {
+        await this.files.recovery?.resolve(session.history.state.dirty);
+        prepared.install();
+        return true;
+      } finally {
+        release();
+        prepared.dispose();
+      }
     });
   }
 
@@ -128,7 +139,7 @@ export class DocumentLifecycle {
       const proceed = await this.#protect("open");
       if (!proceed) return false;
       proceed();
-      return this.files.open();
+      return this.files.open(proceed);
     });
   }
 
@@ -137,9 +148,16 @@ export class DocumentLifecycle {
       const proceed = await this.#protect("close");
       if (!proceed) return false;
       proceed();
-      await finish();
-      this.#closed = true;
-      return true;
+      const session = this.files.workspace.state.getSnapshot().session;
+      const release = session.document.holdEdits();
+      try {
+        await this.files.recovery?.resolve(session.history.state.dirty);
+        await finish();
+        this.#closed = true;
+        return true;
+      } finally {
+        release();
+      }
     });
   }
 }

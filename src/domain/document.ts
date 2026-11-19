@@ -126,6 +126,7 @@ export class MapDocument {
   #palette = new TilePalette();
   #version = 0;
   #busy = false;
+  #editHolds = 0;
   #journal: PrimitiveChange[] | null = null;
   #registry = new Map<RegistryId, JsonObject>();
   #annotations = new Map<AnnotationId, JsonObject>();
@@ -678,7 +679,21 @@ export class MapDocument {
     }
     return Object.freeze({ minX, minY, maxX, maxY });
   }
+  /** Brief lifecycle commit barrier; detached reads and navigation remain available. */
+  holdEdits(): () => void {
+    this.assertCommittedRead();
+    this.#editHolds++;
+    let released = false;
+    return () => {
+      if (!released) {
+        released = true;
+        this.#editHolds--;
+      }
+    };
+  }
   #mutate<T>(action: () => T): T {
+    if (this.#editHolds)
+      throw new Error("Finishing document action; try the edit again.");
     if (this.#busy)
       throw new Error("Reentrant document mutation is not allowed.");
     this.#busy = true;

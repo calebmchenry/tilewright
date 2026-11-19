@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { exampleProject } from "./fixtures/project";
+import type { RecoveryCapture, RecoveryTicket } from "../src/editor/recovery";
 import { trackGpu } from "./gpu";
 
 // Exercise the shipping UI and Tauri adapter; only OS IPC/dialogs are substituted.
@@ -8,6 +9,12 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript((projectText: string) => {
     const project = JSON.parse(projectText) as typeof exampleProject;
     const probe = {
+      recoveries: [] as { capture: RecoveryCapture; project: typeof project }[],
+      recoveryControls: [] as {
+        status: string;
+        documentId: string;
+        epoch: number;
+      }[],
       cancel: false,
       fail: "",
       writes: [] as { token: string; project: typeof project }[],
@@ -29,6 +36,10 @@ test.beforeEach(async ({ page }) => {
     >();
     const callbacks = new Map<number, (event: { payload: string }) => void>();
     let callbackId = 0;
+    let pendingRecovery: {
+      capture: RecoveryCapture;
+      project: typeof project;
+    } | null = null;
     probe.requestClose = () => {
       probe.closePending = true;
       eventHandlers.get("document-close-requested")?.({ payload: "" });
@@ -51,6 +62,39 @@ test.beforeEach(async ({ page }) => {
         ) {
           if (probe.fail === command)
             throw `Could not ${command}: permission denied. Check folder permissions or use Save As.`;
+          if (command === "initialize_recovery") return;
+          if (command === "control_recovery") {
+            probe.recoveryControls.push(
+              (args as { control: (typeof probe.recoveryControls)[number] })
+                .control,
+            );
+            return null;
+          }
+          if (command === "prepare_recovery") {
+            pendingRecovery = {
+              capture: JSON.parse(options!.headers["x-recovery-capture"]),
+              project: JSON.parse(new TextDecoder().decode(args as Uint8Array)),
+            };
+            return {
+              ...pendingRecovery.capture,
+              sequence: probe.recoveries.length + 1,
+            };
+          }
+          if (command === "commit_recovery") {
+            const ticket = (args as { ticket: RecoveryTicket }).ticket;
+            if (
+              !pendingRecovery ||
+              pendingRecovery.capture.epoch !== ticket.epoch
+            )
+              throw new Error("Stale recovery");
+            probe.recoveries.push(pendingRecovery);
+            pendingRecovery = null;
+            return null;
+          }
+          if (command === "cancel_recovery") {
+            pendingRecovery = null;
+            return;
+          }
           if (command === "plugin:event|listen") {
             const { event, handler } = args as {
               event: string;
@@ -289,6 +333,11 @@ test("close requested before listener registration is protected, and native clos
 declare global {
   interface Window {
     fileProbe: {
+      recoveries: {
+        capture: RecoveryCapture;
+        project: typeof exampleProject;
+      }[];
+      recoveryControls: { status: string; documentId: string; epoch: number }[];
       cancel: boolean;
       fail: string;
       writes: { token: string; project: typeof exampleProject }[];
@@ -467,6 +516,10 @@ test("native New, draw, Cmd+S, edit, menu Save, Open round trip and one history 
   await expect(page.locator(".document-title")).toContainText(
     "café 地図 2.tilewright",
   );
+  // The session is visible while the successful-open recovery receipt finishes.
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: true });
   await menuAction(page, "save");
   await expect
     .poll(() => page.evaluate(() => window.fileProbe.writes.length))
@@ -596,4 +649,82 @@ test("canvas menu clipboard shares keyboard placement; name, description and mod
   expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(1);
   await expect(page.locator(".document-title")).not.toContainText("Unsaved");
   await dialog.press("Escape");
+});
+
+test("recovery checkpoints untitled and saved edits through binary IPC without writing the explicit file", async ({
+  page,
+}) => {
+  await page
+    .getByLabel("Layer name", { exact: true })
+    .fill("Untitled recovered");
+  await page.getByLabel("Layer name", { exact: true }).press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.recoveries.length))
+    .toBe(1);
+  const first = await page.evaluate(() => window.fileProbe.recoveries[0]);
+  expect(first.capture.saved).toBeNull();
+  expect(first.project.document.layers[0].name).toBe("Untitled recovered");
+  expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(0);
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator(".document-title")).not.toContainText("Unsaved");
+  const saved = await page.evaluate(() =>
+    JSON.stringify(window.fileProbe.writes),
+  );
+  await page
+    .getByLabel("Layer name", { exact: true })
+    .fill("Later unsaved 地図");
+  await page.getByLabel("Layer name", { exact: true }).press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.recoveries.length), {
+      timeout: 10000,
+    })
+    .toBe(2);
+  const second = await page.evaluate(() => window.fileProbe.recoveries[1]);
+  expect(second.capture.documentId).toBe(first.capture.documentId);
+  expect(second.capture.saved?.path).toBe("/maps/café 地図 1.tilewright");
+  expect(second.capture.saved?.byteHash).toMatch(/^[a-f0-9]{64}$/);
+  expect(second.project.document.layers[0].name).toBe("Later unsaved 地図");
+  expect(
+    await page.evaluate(() => JSON.stringify(window.fileProbe.writes)),
+  ).toBe(saved);
+  await expect(
+    page.getByRole("status", { name: "Recovery feedback" }),
+  ).toContainText("Last capture");
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
+  await page.setViewportSize({ width: 640, height: 480 });
+  await expect(
+    page.getByRole("status", { name: "Recovery feedback" }),
+  ).toBeVisible();
+});
+
+test("recovery failure remains visible with Retry while explicit Save stays available", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.fileProbe.fail = "prepare_recovery";
+  });
+  await expect(
+    page.getByRole("alert", { name: "Recovery feedback" }),
+  ).toContainText("permission denied");
+  await expect(
+    page.getByRole("button", { name: "Save", exact: true }),
+  ).toBeEnabled();
+  expect(await page.evaluate(() => window.fileProbe.recoveries.length)).toBe(0);
+  await page.evaluate(() => {
+    window.fileProbe.fail = "";
+  });
+  await page
+    .getByRole("button", { name: "Retry recovery", exact: true })
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => window.fileProbe.recoveries.length), {
+      timeout: 10000,
+    })
+    .toBe(1);
+  await expect(
+    page.getByRole("status", { name: "Recovery feedback" }),
+  ).toContainText("checkpoint ready");
+  expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(0);
+  await expect(page.locator(".document-title")).toContainText("Unsaved");
 });

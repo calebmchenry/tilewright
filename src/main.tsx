@@ -9,11 +9,14 @@ import { nativeProjectFiles } from "./native/project-files";
 import { DocumentLifecycle } from "./editor/document-lifecycle";
 import { bindNativeDocumentLifecycle } from "./native/document-lifecycle";
 import { ApplicationActions } from "./editor/application-actions";
+import { RecoveryCoordinator } from "./editor/recovery";
+import { nativeRecovery } from "./native/recovery";
 import { bindApplicationMenu } from "./native/application-menu";
 
 const root = createRoot(document.getElementById("root")!);
 const workspace = new EditorWorkspace();
-const files = new ProjectFiles(workspace, nativeProjectFiles);
+const recovery = new RecoveryCoordinator(workspace, nativeRecovery);
+const files = new ProjectFiles(workspace, nativeProjectFiles, recovery);
 const lifecycle = new DocumentLifecycle(files);
 const actions = new ApplicationActions(lifecycle);
 const unbindMenu = bindApplicationMenu(actions);
@@ -33,6 +36,7 @@ function dispose() {
   unbindNative();
   lifecycle.dispose();
   files.dispose();
+  recovery.dispose();
   workspace.dispose();
 }
 window.addEventListener("pagehide", dispose, { once: true });

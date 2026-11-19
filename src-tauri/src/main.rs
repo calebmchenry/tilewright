@@ -1,20 +1,28 @@
 #[cfg(all(target_os = "macos", not(feature = "performance")))]
 mod application_menu;
+mod atomic_io;
 mod document_lifecycle;
 mod project_files;
+mod recovery;
 use tauri::Manager;
 
 fn main() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(document_lifecycle::CloseGuard::default())
-        .manage(project_files::ProjectFiles::default());
+        .manage(project_files::ProjectFiles::default())
+        .manage(recovery::Recovery::default());
     #[cfg(all(target_os = "macos", not(feature = "performance")))]
     let builder = builder
         .menu(application_menu::menu)
         .on_menu_event(application_menu::dispatch);
     #[cfg(not(feature = "performance"))]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        recovery::initialize_recovery,
+        recovery::control_recovery,
+        recovery::prepare_recovery,
+        recovery::commit_recovery,
+        recovery::cancel_recovery,
         project_files::choose_project,
         project_files::read_project,
         project_files::write_project,
@@ -25,6 +33,11 @@ fn main() {
     ]);
     #[cfg(feature = "performance")]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        recovery::initialize_recovery,
+        recovery::control_recovery,
+        recovery::prepare_recovery,
+        recovery::commit_recovery,
+        recovery::cancel_recovery,
         project_files::choose_project,
         project_files::read_project,
         project_files::write_project,

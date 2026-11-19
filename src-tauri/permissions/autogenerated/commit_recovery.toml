@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-commit-recovery"
+description = "Enables the commit_recovery command without any pre-configured scope."
+commands.allow = ["commit_recovery"]
+
+[[permission]]
+identifier = "deny-commit-recovery"
+description = "Denies the commit_recovery command without any pre-configured scope."
+commands.deny = ["commit_recovery"]

@@ -1,6 +1,11 @@
 fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "initialize_recovery",
+            "control_recovery",
+            "prepare_recovery",
+            "commit_recovery",
+            "cancel_recovery",
             "choose_project",
             "read_project",
             "write_project",

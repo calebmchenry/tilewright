@@ -3,8 +3,8 @@
 Decision record for [TW-039](../.wrk/wrk-dbdc0004.md), subordinate to
 [INTENT.md](../INTENT.md#local-operation). The values and interactions below are
 implementation choices, not additional confirmed product requirements. This is
-a policy, not a claim that recovery already runs. TW-040 implements writing and
-lifecycle integration; TW-041 implements discovery/restore/discard; TW-042 proves
+a policy with [TW-040 writing and lifecycle integration](#writer-implementation-tw-040)
+now implemented. TW-041 implements discovery/restore/discard; TW-042 proves
 interruption behavior in the packaged app.
 
 ## Safety boundary and ownership
@@ -360,3 +360,91 @@ TW-040 should encode these ordering/cadence/retention cases using controlled clo
 and injected failures; TW-041 exercises the interface and complete decoded state;
 TW-042 force-quits/relaunches the packaged app and compares actual project/recovery
 bytes. These are the next tickets' validation obligations, not completed tests here.
+
+## Writer implementation (TW-040)
+
+`src/editor/recovery.ts` owns one coordinator outside React for the workspace.
+It implements the production 2s debounce / 10s maximum scheduling delay / 5s
+minimum start spacing with an injectable monotonic clock. UTC timestamps are
+metadata only. Revision equality drives pending work, including undo/redo;
+preference-only changes, no-ops and acknowledgements do not rearm the timer.
+An empty untitled map also receives its initial checkpoint. One detached snapshot
+is captured synchronously using `captureProjectSnapshot`, then encoded with the
+existing yielding `encodeProjectSnapshot`. Later edits coalesce into one pending
+request without retaining another full snapshot. Recovery acknowledges only the
+captured controller token after publication and never saves or changes history.
+
+`src/native/recovery.ts` exposes binary payload IPC plus ASCII-escaped JSON capture
+metadata. `src-tauri/src/recovery.rs` resolves the fixed application-data directory,
+validates identities and bounds, takes a process-lifetime `flock`, serializes native
+operations on blocking workers, reserves sequence numbers and disk bytes, and
+publishes payload/metadata together with a same-parent directory rename. Both
+explicit project saves and recovery use `src-tauri/src/atomic_io.rs` for partial
+write and sync handling. The five recovery commands are explicitly granted in
+`build.rs` and the local main-window capability; no general filesystem authority
+is added. Generation payloads use the existing v1 project format.
+
+All native descendants use directory-relative, no-follow file descriptors, private
+creation modes and bounded reads. Recovery never uses a source path as a write or
+delete destination. The two-generation retention, one global pending/rotation
+allowance, ten-lineage limit, 1 GiB logical-byte cap, 64 KiB state-replacement reserve
+and bounded directory entry counts are enforced before writes. After an interrupted
+prepare, startup removes private pending data while retaining completed copies.
+After a discarded/resolved marker commits, cleanup may be retried independently.
+A process-local retired-state map preserves epoch/sequence fences after an empty
+resolved lineage is removed from disk; it holds metadata only. A new process uses
+new writer identities, and existing on-disk generations also advance a stale
+sequence receipt before any new reservation.
+
+`ProjectFiles` and `DocumentLifecycle` pause/fence recovery before pickers or other
+asynchronous file work, including the unsaved-choice dialog. A late result cannot
+acknowledge through an Open checkpoint guard. The file coordinator records SHA-256
+of actual read/written bytes and canonical opened content; Save As keeps lineage
+identity. An explicit write remains successful if its recovery receipt fails.
+The file-action gate stays busy until that receipt finishes; a new visible path
+alone does not mean the next file action is enabled yet.
+
+New prepares its session privately; Open completely validates/constructs its
+candidate before resolving the outgoing lineage. `MapDocument.holdEdits()` briefly
+rejects committed mutations during final marker/install/close operations. It does
+not span pickers, decoding or ordinary save encoding; navigation and detached
+reads remain available. A failed marker keeps the current session and blocks the
+transition with Retry/Cancel guidance. Failed native close releases the gate and
+rearms dirty recovery. Returning to clean content by undo uses the same ordered
+marker and edit gate; redo activates a newer epoch. Normal New/Open/close discard
+only the departing lineage after validation. Abrupt termination does no final save.
+
+`RecoveryFeedback` shows pending work, the last completed capture, durability or
+cleanup warnings, persistent failure reasons and **Retry recovery**, separately
+from Saved/Unsaved. Transient errors use 5/15/30/60s retry backoff; capacity/invalid
+store errors wait for Retry or a content change. A second instance that cannot
+acquire ownership can still edit, explicitly save and close. Unrecognized or corrupt
+storage is preserved and recovery writing pauses conservatively; review/restore/
+discard controls for existing entries remain TW-041. Native checksum validation
+protects retention; full project decoding at restore is also TW-041. No restore
+interface or automatic overwrite of an explicit file is added here.
+
+Validation locations:
+
+- `tests/domain/recovery.test.ts`: controlled-clock cadence, idle work, coalescing,
+  detached revisions, saved/untitled fidelity, exact original-byte comparisons,
+  saved hashes, Save As and Open races, undo/redo, cancellation, transient/capacity
+  retry, ownership failure, disposal, failed markers and the final edit gate.
+- `tests/project-files.spec.ts`: shipping UI and binary/Unicode IPC adapter using
+  substituted native commands, checkpoint feedback, unchanged explicit-save
+  requests and Retry with Save still available, including a 640px viewport.
+- Native recovery tests: actual local changed project bytes and metadata, partial
+  payload/state writes, sync/rename failures, stale writer/epoch/sequence tickets,
+  canceled writes, two-generation rotation, ten-lineage and byte limits, exclusive
+  ownership, no-follow symlinks, conservative corrupt fallback preservation,
+  post-rename warnings and marker-before-cleanup. A subprocess exits mid-payload;
+  reopening verifies the prior complete pair and cleans the incomplete directory.
+
+Actual command outcomes are recorded in [TW-040](../.wrk/wrk-ff878665.md). This
+baseline still captures/encodes full sparse projects and transfers complete byte
+buffers; snapshot capture and some hashing/IPC allocation remain synchronous or
+whole-buffer operations. Neither small deterministic timing tests nor native
+fault tests establish foreground-frame, p95 latency or physical-memory budgets.
+Those measurements and refinement remain TW-049/TW-050 (persistence profiling in
+TW-051), as directed by AGENTS.md. Packaged force-quit/restore validation remains
+TW-042; full discovery and restoration remain TW-041.

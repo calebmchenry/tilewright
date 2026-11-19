@@ -30,33 +30,50 @@ export class EditorWorkspace {
   }
 
   createMap(width: number, height: number): readonly unknown[] {
+    return this.prepareMap(width, height).install();
+  }
+
+  /** Construct privately before a durable outgoing-recovery resolution. */
+  prepareMap(width: number, height: number) {
     this.#assertAvailable();
     const bounds = newMapBounds(width, height);
     const previous = this.state.getSnapshot();
     const session = new EditorSession(new MapDocument({ bounds }));
-    const observerErrors: unknown[] = [];
-    this.#loadRequest++;
-    try {
-      this.#publishing = true;
-      this.state.set(
-        Object.freeze({
-          session,
-          generation: previous.generation + 1,
-          savedPath: null,
-        }),
-      );
-    } catch (error) {
-      observerErrors.push(error);
-    } finally {
-      try {
-        previous.session.dispose();
-      } catch (error) {
-        observerErrors.push(error);
-      } finally {
-        this.#publishing = false;
-      }
-    }
-    return Object.freeze(observerErrors);
+    let installed = false;
+    return {
+      dispose: () => {
+        if (!installed) session.dispose();
+      },
+      install: (): readonly unknown[] => {
+        this.#assertAvailable();
+        if (this.state.getSnapshot() !== previous)
+          throw new Error("Workspace changed before New Map.");
+        installed = true;
+        const observerErrors: unknown[] = [];
+        this.#loadRequest++;
+        try {
+          this.#publishing = true;
+          this.state.set(
+            Object.freeze({
+              session,
+              generation: previous.generation + 1,
+              savedPath: null,
+            }),
+          );
+        } catch (error) {
+          observerErrors.push(error);
+        } finally {
+          try {
+            previous.session.dispose();
+          } catch (error) {
+            observerErrors.push(error);
+          } finally {
+            this.#publishing = false;
+          }
+        }
+        return Object.freeze(observerErrors);
+      },
+    };
   }
 
   /** Explicit-project load boundary for a future native read/Open coordinator.
@@ -65,7 +82,10 @@ export class EditorWorkspace {
    */
   async openProject(
     bytes: Uint8Array,
-    options: ProjectDecodeOptions & { readonly savedPath?: string | null } = {},
+    options: ProjectDecodeOptions & {
+      readonly savedPath?: string | null;
+      readonly beforeInstall?: () => Promise<() => void>;
+    } = {},
   ): Promise<
     Readonly<{ session: EditorSession; observerErrors: readonly unknown[] }>
   > {
@@ -141,6 +161,21 @@ export class EditorWorkspace {
     // Store.set publishes before notifying. Observer/cleanup errors cannot turn
     // an already successful installation into an apparent failed load/retry.
     this.#publishing = true;
+    let release: (() => void) | undefined;
+    try {
+      if (options.beforeInstall) release = await options.beforeInstall();
+      if (this.#closed || options.signal?.aborted)
+        throw new ProjectDecodingError(
+          "canceled",
+          "workspace",
+          "Workspace closed before project installation.",
+        );
+    } catch (error) {
+      this.#publishing = false;
+      release?.();
+      session.dispose();
+      throw error;
+    }
     try {
       this.state.set(
         Object.freeze({
@@ -160,6 +195,7 @@ export class EditorWorkspace {
         observerErrors.push(error);
       }
       this.#publishing = false;
+      release?.();
     }
     return Object.freeze({
       session,

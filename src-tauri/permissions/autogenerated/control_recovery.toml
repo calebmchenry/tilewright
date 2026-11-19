@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-control-recovery"
+description = "Enables the control_recovery command without any pre-configured scope."
+commands.allow = ["control_recovery"]
+
+[[permission]]
+identifier = "deny-control-recovery"
+description = "Denies the control_recovery command without any pre-configured scope."
+commands.deny = ["control_recovery"]

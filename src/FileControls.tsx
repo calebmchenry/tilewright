@@ -154,3 +154,34 @@ export function FileFeedback({ files }: { files: ProjectFiles }) {
     </div>
   ) : null;
 }
+
+export function RecoveryFeedback({
+  recovery,
+}: {
+  recovery: import("./editor/recovery").RecoveryCoordinator;
+}) {
+  const { pending, lastCapture, error, warning } = useStore(recovery.state);
+  if (!recovery.bridge.available) return null;
+  return (
+    <div
+      className={`feedback ${error ? "error" : "info"}`}
+      role={error ? "alert" : "status"}
+      aria-label="Recovery feedback"
+    >
+      {error ||
+        warning ||
+        (pending
+          ? "Recovery pending."
+          : lastCapture
+            ? "Recovery checkpoint ready."
+            : "Recovery ready.")}
+      {lastCapture !== null &&
+        ` Last capture: ${new Date(lastCapture).toLocaleTimeString()}.`}
+      {error && (
+        <button type="button" onClick={() => recovery.retry()}>
+          Retry recovery
+        </button>
+      )}
+    </div>
+  );
+}

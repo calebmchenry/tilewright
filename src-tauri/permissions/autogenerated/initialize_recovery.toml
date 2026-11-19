@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-initialize-recovery"
+description = "Enables the initialize_recovery command without any pre-configured scope."
+commands.allow = ["initialize_recovery"]
+
+[[permission]]
+identifier = "deny-initialize-recovery"
+description = "Denies the initialize_recovery command without any pre-configured scope."
+commands.deny = ["initialize_recovery"]

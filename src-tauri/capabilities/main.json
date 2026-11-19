@@ -5,6 +5,11 @@
   "windows": ["main"],
   "platforms": ["macOS"],
   "permissions": [
+    "allow-initialize-recovery",
+    "allow-control-recovery",
+    "allow-prepare-recovery",
+    "allow-commit-recovery",
+    "allow-cancel-recovery",
     "allow-choose-project",
     "allow-read-project",
     "allow-write-project",
