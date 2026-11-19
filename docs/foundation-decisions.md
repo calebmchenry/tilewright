@@ -94,7 +94,9 @@ write operations reject out-of-bounds addresses. Drawing tools intersect their
 candidate cells with the fixed bounds before submitting a command; a wholly
 outside stroke is a no-op. They neither clamp outside cells onto the nearest edge
 nor expand bounds. Flood fill is bounded by the same map rectangle. Selection
-move/paste policies at an edge remain for TW-023; they cannot implicitly grow it.
+move/paste/transform policies are defined in the [TW-023 selection contract](selection-decisions.md):
+the full destination rectangle must fit or the operation rejects atomically.
+Only selection creation clips; no selection operation implicitly grows the map.
 
 ### Visual chunks and storage
 

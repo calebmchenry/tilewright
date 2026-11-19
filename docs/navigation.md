@@ -31,6 +31,12 @@ observed even outside the canvas. Pointer capture lets a drag finish outside the
 host; cancellation and teardown release it. Navigation listeners are attached
 once per canvas and removed on disposal, including Strict Mode replay.
 
+The [TW-023 selection contract](selection-decisions.md) reserves arrows for tile
+nudging when Select has a selection or a placement preview is active (one tile,
+ten with Shift). Other contexts retain the camera shortcuts above. V selects
+Select; R remains the drawing Rectangle shortcut. These selection routes are
+specified for the following implementation tickets.
+
 `src/editor/navigation.ts` uses non-passive wheel/gesture listeners to prevent
 page scrolling and browser zoom over the canvas. Pixel deltas keep fractional
 trackpad motion; line deltas use 16 CSS pixels and page deltas use canvas height.

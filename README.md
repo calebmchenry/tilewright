@@ -58,6 +58,11 @@ preview and commit precise one-tile lines and filled or outlined footprints.
 [Four-way flood fill](docs/drawing-gestures.md#flood-fill-tw-022) fills active-layer
 regions with progress, cancellation and one undo step.
 
+The contract for rectangular selections, overlap-safe movement, clipboard layer
+mapping, transforms and fixed-boundary rejection is in
+[selection decisions](docs/selection-decisions.md). Selection implementation
+follows in TW-024 through TW-028.
+
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).
 

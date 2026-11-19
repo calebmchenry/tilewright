@@ -52,6 +52,12 @@ and navigation are independent of layer visibility. Painting and tile-selection
 UI remain their later feature tickets; this ticket validates their layer-target
 and command integration seams with independent terrain/building edits.
 
+The [TW-023 selection contract](selection-decisions.md) pins explicit membership
+by ID and clears a selection if an included layer is hidden or removed. Pending
+operations and clipboard placement reject invalid membership as a whole rather
+than silently editing a filtered subset. Its clipboard maps only to original
+layer IDs within the same document session.
+
 TW-020's [eyedropper](drawing-gestures.md#eraser-and-eyedropper-tw-020) is a read-only
 exception to the active-layer editing rule: it samples the topmost occupied visible
 cell, even if the active layer is hidden. Hidden layers never supply a sample.
