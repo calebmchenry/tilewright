@@ -12,8 +12,13 @@ import { LayerPanel } from "./LayerPanel";
 import { RegistryControls } from "./RegistryControls";
 import { AnnotationPanel } from "./AnnotationPanel";
 export { AnnotationPanel } from "./AnnotationPanel";
-import { FileControls, FileFeedback } from "./FileControls";
-import type { ProjectFiles } from "./editor/project-files";
+import {
+  FileControls,
+  FileFeedback,
+  UnsavedChanges,
+  LifecycleFeedback,
+} from "./FileControls";
+import type { DocumentLifecycle } from "./editor/document-lifecycle";
 import { SelectionPanel } from "./SelectionPanel";
 import {
   parseRgbFields,
@@ -424,31 +429,40 @@ function Feedback({ session }: Props) {
 
 export function Workspace({
   workspace,
-  files,
+  lifecycle,
 }: {
   workspace: EditorWorkspace;
-  files?: ProjectFiles;
+  lifecycle: DocumentLifecycle;
 }) {
   const { session, generation, savedPath } = useStore(workspace.state);
+  const state = useStore(lifecycle.state);
   return (
-    <App
-      key={generation}
-      session={session}
-      files={files}
-      savedPath={savedPath}
-      onCreateMap={(width, height) => workspace.createMap(width, height)}
-    />
+    <>
+      <App
+        key={generation}
+        session={session}
+        lifecycle={lifecycle}
+        savedPath={savedPath}
+        lifecycleBusy={state.busy}
+        onCreateMap={(width, height) => {
+          void lifecycle.newMap(width, height);
+        }}
+      />
+      <UnsavedChanges lifecycle={lifecycle} />
+    </>
   );
 }
 
 export function App({
   session,
   onCreateMap,
-  files,
+  lifecycle,
+  lifecycleBusy = false,
   savedPath,
 }: Props & {
   onCreateMap?: (width: number, height: number) => void;
-  files?: ProjectFiles;
+  lifecycle?: DocumentLifecycle;
+  lifecycleBusy?: boolean;
   savedPath?: string | null;
 }) {
   useEffect(() => {
@@ -484,12 +498,16 @@ export function App({
         </div>
         <div className="history-controls">
           {onCreateMap && (
-            <CanvasControls session={session} onCreateMap={onCreateMap} />
+            <CanvasControls
+              session={session}
+              onCreateMap={onCreateMap}
+              disabled={lifecycleBusy}
+            />
           )}
           <ActionButton session={session} action="undo" />
           <ActionButton session={session} action="redo" />
-          {files ? (
-            <FileControls files={files} />
+          {lifecycle ? (
+            <FileControls lifecycle={lifecycle} />
           ) : (
             <ActionButton session={session} action="save" />
           )}
@@ -513,7 +531,12 @@ export function App({
       <footer>
         <Readout session={session} />
         <Feedback session={session} />
-        {files && <FileFeedback files={files} />}
+        {lifecycle && (
+          <>
+            <FileFeedback files={lifecycle.files} />
+            <LifecycleFeedback lifecycle={lifecycle} />
+          </>
+        )}
       </footer>
     </main>
   );

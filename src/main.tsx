@@ -6,13 +6,17 @@ import { EditorWorkspace } from "./editor/workspace";
 
 import { ProjectFiles } from "./editor/project-files";
 import { nativeProjectFiles } from "./native/project-files";
+import { DocumentLifecycle } from "./editor/document-lifecycle";
+import { bindNativeDocumentLifecycle } from "./native/document-lifecycle";
 
 const root = createRoot(document.getElementById("root")!);
 const workspace = new EditorWorkspace();
 const files = new ProjectFiles(workspace, nativeProjectFiles);
+const lifecycle = new DocumentLifecycle(files);
+const unbindNative = bindNativeDocumentLifecycle(lifecycle);
 root.render(
   <StrictMode>
-    <Workspace workspace={workspace} files={files} />
+    <Workspace workspace={workspace} lifecycle={lifecycle} />
   </StrictMode>,
 );
 
@@ -20,6 +24,8 @@ root.render(
 function dispose() {
   window.removeEventListener("pagehide", dispose);
   root.unmount();
+  unbindNative();
+  lifecycle.dispose();
   files.dispose();
   workspace.dispose();
 }

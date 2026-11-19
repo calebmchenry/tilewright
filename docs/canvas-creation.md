@@ -21,8 +21,9 @@ still supports its existing safe-integer coordinate contract for fixtures and
 future import validation. Creating or growing an empty map allocates no tile
 partitions, palette entries, or map-sized tile buffers.
 
-New Map explicitly replaces the current map and clears its history. An unsaved
-map requires the **Discard the current unsaved map** checkbox. Cancel or Escape
+New Map explicitly replaces the current map and clears its history. After dimension validation, an unsaved
+map uses the shared **Save and continue / Discard changes / Cancel** workflow
+([TW-037 lifecycle](project-format.md#document-lifecycle-tw-037)). Cancel or Escape
 preserves the current session. A new document has one empty `Layer 1`, fresh
 unsaved history, default camera/tool state, and no registry or annotations.
 `src/editor/workspace.ts` owns replacement and session disposal outside React;

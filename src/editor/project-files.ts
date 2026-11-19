@@ -1,5 +1,5 @@
 import { encodeProjectSnapshot } from "../domain/project.ts";
-import type { EditorSession, KeyInput } from "./session.ts";
+import type { EditorSession } from "./session.ts";
 import { Store } from "./store.ts";
 import type { EditorWorkspace } from "./workspace.ts";
 
@@ -30,18 +30,25 @@ export class ProjectFiles {
   readonly bridge: ProjectFileBridge;
   #closed = false;
   #busy = false;
+  #unsubscribe: () => void;
   #association: { session: EditorSession; file: ProjectFileHandle } | null =
     null;
 
   constructor(workspace: EditorWorkspace, bridge: ProjectFileBridge) {
     this.workspace = workspace;
     this.bridge = bridge;
+    this.#unsubscribe = workspace.state.subscribe(() => {
+      if (this.#association?.session !== workspace.state.getSnapshot().session)
+        this.#association = null;
+    });
   }
   get available() {
     return this.bridge.available && !this.#closed;
   }
   dispose() {
     this.#closed = true;
+    this.#association = null;
+    this.#unsubscribe();
   }
   #publish(state: ProjectFileState) {
     // A failing view subscriber cannot turn a completed disk write into failure.
@@ -172,24 +179,5 @@ export class ProjectFiles {
       this.#association = { session, file };
       return `Saved ${file.path}.${warning ? ` ${warning}` : ""}${errors.length ? " Some interface observers failed; the file was saved." : ""}`;
     });
-  }
-  routeKey(input: KeyInput, open: () => void): boolean {
-    if (
-      input.defaultPrevented ||
-      input.isComposing ||
-      input.altKey ||
-      !(input.metaKey || input.ctrlKey)
-    )
-      return false;
-    const key = input.key.toLowerCase();
-    if (key === "s") {
-      void this.save(!!input.shiftKey);
-      return true;
-    }
-    if (key === "o" && !input.shiftKey) {
-      if (!this.#busy) open();
-      return true;
-    }
-    return false;
   }
 }

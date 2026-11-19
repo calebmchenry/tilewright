@@ -29,11 +29,12 @@ export class EditorWorkspace {
     );
   }
 
-  createMap(width: number, height: number): void {
+  createMap(width: number, height: number): readonly unknown[] {
     this.#assertAvailable();
     const bounds = newMapBounds(width, height);
     const previous = this.state.getSnapshot();
     const session = new EditorSession(new MapDocument({ bounds }));
+    const observerErrors: unknown[] = [];
     this.#loadRequest++;
     try {
       this.#publishing = true;
@@ -44,13 +45,18 @@ export class EditorWorkspace {
           savedPath: null,
         }),
       );
+    } catch (error) {
+      observerErrors.push(error);
     } finally {
       try {
         previous.session.dispose();
+      } catch (error) {
+        observerErrors.push(error);
       } finally {
         this.#publishing = false;
       }
     }
+    return Object.freeze(observerErrors);
   }
 
   /** Explicit-project load boundary for a future native read/Open coordinator.

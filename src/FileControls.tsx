@@ -1,91 +1,154 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import type {
+  DocumentAction,
+  DocumentLifecycle,
+} from "./editor/document-lifecycle";
 import type { ProjectFiles } from "./editor/project-files";
 import { useStore } from "./editor/useStore";
 
-function ConfirmOpen({ files, close }: { files: ProjectFiles; close(): void }) {
+export function UnsavedChanges({
+  lifecycle,
+}: {
+  lifecycle: DocumentLifecycle;
+}) {
+  const { prompt } = useStore(lifecycle.state);
+  return prompt ? (
+    <UnsavedDialog lifecycle={lifecycle} action={prompt} />
+  ) : null;
+}
+
+function UnsavedDialog({
+  lifecycle,
+  action,
+}: {
+  lifecycle: DocumentLifecycle;
+  action: DocumentAction;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current!;
     element.showModal();
     return () => element.close();
   }, []);
+  const title =
+    action === "new"
+      ? "Create another map"
+      : action === "open"
+        ? "Open another project"
+        : "Close Tilewright";
   return (
     <dialog
       ref={dialog}
       className="canvas-dialog"
-      aria-label="Open another project"
+      aria-label={title}
       onCancel={(event) => {
         event.preventDefault();
-        close();
+        lifecycle.choose("cancel");
       }}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      <h2>Open another project</h2>
+      <h2>{title}</h2>
       <p>
-        Opening another project discards the current unsaved map and its undo
-        history. Cancel and Save first to keep your changes.
+        Save changes to the current map before continuing? Discarding loses
+        unsaved changes and clears its undo history.
       </p>
       <div className="dialog-actions">
-        <button type="button" autoFocus onClick={close}>
+        <button
+          type="button"
+          autoFocus
+          onClick={() => lifecycle.choose("cancel")}
+        >
           Cancel
+        </button>
+        <button type="button" onClick={() => lifecycle.choose("discard")}>
+          Discard changes
         </button>
         <button
           type="button"
-          onClick={() => {
-            close();
-            void files.open();
-          }}
+          disabled={!lifecycle.files.available}
+          onClick={() => lifecycle.choose("save")}
         >
-          Discard and choose project…
+          Save and continue
         </button>
       </div>
+      {!lifecycle.files.available && (
+        <p>Saving requires the Tilewright desktop app.</p>
+      )}
     </dialog>
   );
 }
 
-export function FileControls({ files }: { files: ProjectFiles }) {
-  const { busy } = useStore(files.state);
-  const [confirm, setConfirm] = useState(false);
-  const open = useCallback(() => {
-    if (files.state.getSnapshot().busy || !files.available) return;
-    if (files.workspace.state.getSnapshot().session.history.state.dirty)
-      setConfirm(true);
-    else void files.open();
-  }, [files]);
+export function FileControls({ lifecycle }: { lifecycle: DocumentLifecycle }) {
+  const { busy } = useStore(lifecycle.state);
+  const files = lifecycle.files;
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
       if (document.querySelector("dialog[open]")) return;
-      if (files.routeKey(event, open)) event.preventDefault();
+      if (lifecycle.routeKey(event)) event.preventDefault();
     };
     window.addEventListener("keydown", keydown, true);
     return () => window.removeEventListener("keydown", keydown, true);
-  }, [files, open]);
+  }, [lifecycle]);
   const disabled = busy || !files.available;
   const title = files.available
     ? undefined
     : "Local project files are available in the Tilewright desktop app.";
   return (
     <span className="file-controls" title={title}>
-      <button type="button" disabled={disabled} onClick={open}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => void lifecycle.open()}
+      >
         Open…
       </button>
       <button
         type="button"
         disabled={disabled}
-        onClick={() => void files.save()}
+        onClick={() => void lifecycle.save()}
       >
         Save
       </button>
       <button
         type="button"
         disabled={disabled}
-        onClick={() => void files.save(true)}
+        onClick={() => void lifecycle.save(true)}
       >
         Save As…
       </button>
-      {confirm && <ConfirmOpen files={files} close={() => setConfirm(false)} />}
     </span>
   );
+}
+export function LifecycleFeedback({
+  lifecycle,
+}: {
+  lifecycle: DocumentLifecycle;
+}) {
+  const { error, busy, action, prompt } = useStore(lifecycle.state);
+  if (error)
+    return (
+      <div
+        className="feedback error"
+        role="alert"
+        aria-label="Document workflow feedback"
+      >
+        {error}
+      </div>
+    );
+  if (busy && !prompt)
+    return (
+      <div
+        className="feedback info"
+        role="status"
+        aria-label="Document workflow feedback"
+      >
+        {action === "close"
+          ? "Finishing before closing…"
+          : "Finishing document action…"}{" "}
+        Please wait before starting another action.
+      </div>
+    );
+  return null;
 }
 export function FileFeedback({ files }: { files: ProjectFiles }) {
   const { error, message } = useStore(files.state);

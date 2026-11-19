@@ -14,6 +14,7 @@ import { useStore } from "./editor/useStore";
 type Props = {
   session: EditorSession;
   onCreateMap?: (width: number, height: number) => void;
+  disabled?: boolean;
 };
 
 function SizePreview({ bounds }: { bounds: Bounds }) {
@@ -45,10 +46,8 @@ function CanvasDialog({
   const feedbackId = useId();
   const isNew = !!onCreateMap;
   const bounds = useStore(session.bounds);
-  const history = useStore(session.historyState);
   const [width, setWidth] = useState(String(DEFAULT_MAP_SIZE));
   const [height, setHeight] = useState(String(DEFAULT_MAP_SIZE));
-  const [discard, setDiscard] = useState(false);
   const [selected, setSelected] = useState({
     left: false,
     right: false,
@@ -107,7 +106,7 @@ function CanvasDialog({
         onChange={() => setFailure("")}
         onSubmit={(event) => {
           event.preventDefault();
-          if (error || !preview || (isNew && history.dirty && !discard)) return;
+          if (error || !preview) return;
           try {
             if (onCreateMap) onCreateMap(preview.maxX, preview.maxY);
             else if (!session.growCanvas(counts!)) {
@@ -201,28 +200,16 @@ function CanvasDialog({
           {failure || error}
         </p>
         {isNew && (
-          <>
-            <p>This replaces the current map and clears its undo history.</p>
-            {history.dirty && (
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={discard}
-                  onChange={(event) => setDiscard(event.target.checked)}
-                />
-                Discard the current unsaved map
-              </label>
-            )}
-          </>
+          <p>
+            This replaces the current map and clears its undo history. Unsaved
+            changes can be saved before continuing.
+          </p>
         )}
         <div className="dialog-actions">
           <button type="button" onClick={close}>
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={!!error || (isNew && history.dirty && !discard)}
-          >
+          <button type="submit" disabled={!!error}>
             {isNew ? "Create map" : "Apply growth"}
           </button>
         </div>
@@ -235,7 +222,11 @@ export function CanvasControls(props: Props) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        disabled={props.disabled}
+        onClick={() => setOpen(true)}
+      >
         {props.onCreateMap ? "New map" : "Grow canvas"}
       </button>
       {open && <CanvasDialog {...props} close={() => setOpen(false)} />}

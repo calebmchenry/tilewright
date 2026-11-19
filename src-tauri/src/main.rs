@@ -1,26 +1,65 @@
+mod document_lifecycle;
 mod project_files;
+use tauri::Manager;
 
 fn main() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .manage(document_lifecycle::CloseGuard::default())
         .manage(project_files::ProjectFiles::default());
+    #[cfg(all(target_os = "macos", not(feature = "performance")))]
+    let builder = builder
+        .menu(document_lifecycle::protected_menu)
+        .on_menu_event(|app, event| {
+            if event.id().as_ref() == "document-quit" {
+                document_lifecycle::request_close(app);
+            }
+        });
     #[cfg(not(feature = "performance"))]
     let builder = builder.invoke_handler(tauri::generate_handler![
         project_files::choose_project,
         project_files::read_project,
-        project_files::write_project
+        project_files::write_project,
+        document_lifecycle::take_document_close_request,
+        document_lifecycle::finish_document_close
     ]);
     #[cfg(feature = "performance")]
     let builder = builder.invoke_handler(tauri::generate_handler![
         project_files::choose_project,
         project_files::read_project,
         project_files::write_project,
+        document_lifecycle::take_document_close_request,
+        document_lifecycle::finish_document_close,
         performance_mode,
         performance_event
     ]);
-    builder
-        .run(tauri::generate_context!())
+    let app = builder
+        .build(tauri::generate_context!())
         .expect("Tilewright could not start its desktop shell");
+    app.run(|app, event| {
+        // The dedicated benchmark frontend owns no editable workspace.
+        if cfg!(feature = "performance") {
+            return;
+        }
+        if app.state::<document_lifecycle::CloseGuard>().approved() {
+            return;
+        }
+        match event {
+            tauri::RunEvent::WindowEvent {
+                label,
+                event: tauri::WindowEvent::CloseRequested { api, .. },
+                ..
+            } if label == "main" => {
+                api.prevent_close();
+                document_lifecycle::request_close(app);
+            }
+            tauri::RunEvent::ExitRequested { api, .. } => {
+                api.prevent_exit();
+                document_lifecycle::request_close(app);
+            }
+            _ => {}
+        }
+    });
 }
 
 // Compiled only into the dedicated local performance build. No filesystem or

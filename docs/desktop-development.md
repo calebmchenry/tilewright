@@ -107,16 +107,17 @@ for this baseline. Do not claim notarized distribution from this command.
   React root on `pagehide` and Vite module disposal.
 - The native identifier is `app.tilewright.desktop`; the window label is `main`.
   `src-tauri/capabilities/main.json` applies only to the local macOS main window
-  and grants only `choose_project`, `read_project`, and `write_project`. Rust
+  and grants `choose_project`, `read_project`, `write_project`, the two document
+  close-handshake commands, and event listen/unlisten. Rust
   opens native dialogs and issues handles for selected paths. There are no
   JavaScript filesystem/dialog/shell permissions or unrestricted home access.
   See [Tauri capabilities](https://v2.tauri.app/security/capabilities/).
 - Production CSP restricts scripts/assets to the bundled origin and connections
   to native IPC. The development CSP additionally permits Vite's local HMR and
   React refresh script. Remote capabilities are not configured.
-- The last window's close button exits this minimal app. Reopen by launching the
-  `.app` again (or rerunning `npm run dev`). A persistent macOS document/window
-  lifecycle is deferred to its document workflow ticket.
+- Window close and Quit pass through the shared Save/Discard/Cancel workflow
+  before exiting. Reopen by launching the `.app` again (or rerunning `npm run dev`).
+  See [document lifecycle](project-format.md#document-lifecycle-tw-037).
 
 ## Manual desktop smoke check
 

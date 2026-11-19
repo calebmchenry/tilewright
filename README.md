@@ -94,7 +94,9 @@ hidden content and persisted layer preferences. The
 validate complete projects before replacing the workspace, preserving the active
 session on failure. [Native project files](docs/project-format.md#native-file-workflow-tw-036)
 connect Open, Save and Save As to macOS dialogs and atomic local writes, with
-Cmd+O, Cmd+S and Cmd+Shift+S. Recovery follows in the project tickets.
+Cmd+O, Cmd+S and Cmd+Shift+S. [Document lifecycle](docs/project-format.md#document-lifecycle-tw-037)
+protects New/Open/window close/Quit with Save, Discard and Cancel, including edits
+during saves and fresh session/cache installation. Recovery follows in the project tickets.
 
 For domain tests, deterministic populated maps, performance measurement, and
 provisional budgets, see [testing and performance](docs/performance.md).

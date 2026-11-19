@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-take-document-close-request"
+description = "Enables the take_document_close_request command without any pre-configured scope."
+commands.allow = ["take_document_close_request"]
+
+[[permission]]
+identifier = "deny-take-document-close-request"
+description = "Denies the take_document_close_request command without any pre-configured scope."
+commands.deny = ["take_document_close_request"]

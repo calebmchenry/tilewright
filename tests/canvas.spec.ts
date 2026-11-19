@@ -13,8 +13,11 @@ async function createMap(page: Page, width: number, height: number) {
   const dialog = page.getByRole("dialog", { name: "New map" });
   await dialog.getByLabel("Width (tiles)").fill(String(width));
   await dialog.getByLabel("Height (tiles)").fill(String(height));
-  await dialog.getByLabel("Discard the current unsaved map").check();
   await dialog.getByRole("button", { name: "Create map" }).click();
+  await page
+    .getByRole("dialog", { name: "Create another map" })
+    .getByRole("button", { name: "Discard changes" })
+    .click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole("status", { name: "Canvas status" })).toHaveText(
     "Canvas ready",
@@ -44,8 +47,7 @@ test("New Map validates dimensions, cancels safely, and replaces sessions withou
   await expect(dialog).toContainText("4 × 4 chunks");
   await expect(
     dialog.getByRole("button", { name: "Create map" }),
-  ).toBeDisabled();
-  await dialog.getByLabel("Discard the current unsaved map").check();
+  ).toBeEnabled();
   for (const width of [
     "",
     "0",

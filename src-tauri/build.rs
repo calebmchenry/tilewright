@@ -4,6 +4,8 @@ fn main() {
             "choose_project",
             "read_project",
             "write_project",
+            "take_document_close_request",
+            "finish_document_close",
             // Only the dedicated performance config grants these permissions.
             "performance_mode",
             "performance_event",

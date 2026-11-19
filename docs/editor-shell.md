@@ -149,3 +149,14 @@ event; the density-only test supplies that event explicitly. It is a simulated
 notification test, not evidence of moving the native window between monitors.
 The shell is not a target-scale rendering/performance measurement, and historical
 fixture/model/history baselines have not been regenerated.
+
+## Document lifecycle integration (TW-037)
+
+`main.tsx` also owns `ProjectFiles`, `DocumentLifecycle`, and the native close-event
+subscription, disposing them on pagehide/HMR. `Workspace` routes New, Open and
+explicit saves through the coordinator, with one Save/Discard/Cancel modal shared
+with native close/Quit. `FileControls` routes Cmd+O/Cmd+S/Cmd+Shift+S through that
+same coordinator even from text inputs; editor modals isolate shortcuts. The
+header derives the path from workspace state and dirty status from the current
+history checkpoint. See [the lifecycle contract](project-format.md#document-lifecycle-tw-037)
+for asynchronous saves, failure preservation, session reset and validation.

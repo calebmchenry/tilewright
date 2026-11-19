@@ -553,15 +553,13 @@ Changes to the session, content, preferences or checkpoints during the picker/re
 supersede the request; the existing decoder protects the later decoding stage.
 An operation that finishes writing after New Map cannot mark the new map saved or
 associate its path. Interface observer exceptions after a successful write are
-reported as warnings, not a false I/O failure. The UI has a basic discard/cancel
-confirmation before replacing dirty content; the full Save/Discard/Cancel,
-window-close lifecycle, recovery and native menu coordination remain TW-037 and
-subsequent tickets.
+reported as warnings, not a false I/O failure. The shared lifecycle below adds
+Save/Discard/Cancel protection; recovery and full File/Edit menu coordination
+remain subsequent tickets.
 
 ### Native authority and paths
 
-[`project_files.rs`](../src-tauri/src/project_files.rs) exposes exactly three production app
-commands, explicitly listed by `build.rs` and the local macOS main-window
+[`project_files.rs`](../src-tauri/src/project_files.rs) exposes three file commands, explicitly listed by `build.rs` and the local macOS main-window
 capability. `choose_project` uses the Rust Tauri dialog plugin to select one
 `.tilewright` file or save destination, and issues an in-memory opaque handle.
 `read_project` and `write_project` accept only such handles; neither accepts an
@@ -624,3 +622,67 @@ and replacement, Save As association and post-commit warnings.
 binary adapter with substituted IPC, including keyboard focus and a 640-pixel
 window. The ticket records actual packaged macOS picker/read/write checks;
 browser tests alone do not claim native dialog coverage.
+
+## Document lifecycle (TW-037)
+
+[`DocumentLifecycle`](../src/editor/document-lifecycle.ts) is the application entry
+point for New, Open, Save, Save As and closing. `ProjectFiles` remains the lower
+level file-operation coordinator; `EditorWorkspace` owns validated installation.
+The active session plus monotonic workspace generation identify an installation;
+the explicit path and history's saved revision belong to that session. Saving
+changes its path/checkpoint without replacing its identity. New clears the path
+and begins dirty; opening restores the incoming metadata and exact active/hidden
+layer preferences in a new, clean history.
+
+The shared modal in `FileControls.tsx` offers **Save and continue**, **Discard
+changes**, and **Cancel**. New collects/validates dimensions first, then asks the
+same question as Open/close. Cancel/Escape leaves the workspace untouched. Save
+waits for the actual picker, snapshot encoding and atomic write; canceled dialogs
+or errors abort the transition. If edits arrive during Save, only the captured
+revision becomes saved and the transition stops with feedback. Undo to that
+revision is clean, redo away is dirty. Discard authorizes only the current content;
+concurrent edits/replacement while a decision is pending invalidate that decision.
+All actions recheck identity/version/checkpoint after asynchronous boundaries.
+
+Operations are serialized. Repeated shortcuts/close requests while an action is
+pending are ignored, never queued against a potentially different document. The
+buttons are disabled and pending work has visible status; retry close after it
+finishes. Ordinary Save allows continued editing. Open also checks concurrent
+content/preferences/checkpoint changes throughout reading/decoding. A canceled
+or failed load retains the existing session and history even after Discard; if a
+preceding Save succeeded, that legitimate checkpoint/path update is retained.
+Transient drafts and incomplete gestures are excluded from saves, as specified
+above. Preference-only changes retain their existing non-dirty policy.
+
+`Workspace` keeps the shared confirmation outside the generation-keyed editor.
+Installation remounts the editor, disposing old selections, clipboard, tools,
+fill jobs, renderer subscriptions, overview caches and GPU resources. File-handle
+association drops references to replaced sessions. Incoming document metadata is
+never reset with transient UI state. Observer failures after New installation,
+like Open, cannot masquerade as a failed replacement.
+
+[`document_lifecycle.rs`](../src-tauri/src/document_lifecycle.rs) prevents native
+window close synchronously, before notifying JavaScript. Pending requests survive
+frontend listener startup and are consumed once. Only a successful coordinator
+transition invokes `finish_document_close`. Exit requests also use this gate.
+The macOS default predefined Quit calls `NSApplication.terminate` without Tauri's
+exit-request event; a custom **Quit Tilewright / Cmd+Q** routes to the same guard.
+The other standard native menus stay intact for TW-038. The main-window capability
+adds only the two close commands and event listen/unlisten, with no generic window,
+process-exit, filesystem or shell authority. The dedicated performance frontend
+has no editable document and retains its normal close behavior.
+
+The guard covers application window close, File/Window Close, and the application's
+Quit action. Forced process termination, OS shutdown/Dock termination and crashes
+are not a JavaScript save handshake; separate crash recovery remains subsequent
+work. No recovery file is written by this ticket.
+
+Validation: `tests/domain/document-lifecycle.test.ts` exercises the complete
+New/Open/close choice/failure matrix, superseded decisions, save races, checkpoint
+undo/redo, operation ordering, native close errors and disposal. Existing
+`project-loading.test.ts` checks exact incoming metadata and all transient resets.
+`tests/project-files.spec.ts` exercises shipping UI/native adapter behavior with
+substituted IPC, startup close requests, and repeated GPU/session replacement;
+`tests/canvas.spec.ts` retains dimension and renderer teardown regressions. Rust
+checks the retained native close-request state. Actual commands, results and
+packaged WKWebView checks are recorded in the WRK ticket.

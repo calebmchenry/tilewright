@@ -2,15 +2,15 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
   "description": "Local macOS main window: project picker and bounded reads/atomic writes to picker-issued handles only.",
-  "windows": [
-    "main"
-  ],
-  "platforms": [
-    "macOS"
-  ],
+  "windows": ["main"],
+  "platforms": ["macOS"],
   "permissions": [
     "allow-choose-project",
     "allow-read-project",
-    "allow-write-project"
+    "allow-write-project",
+    "allow-take-document-close-request",
+    "allow-finish-document-close",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
   ]
 }
