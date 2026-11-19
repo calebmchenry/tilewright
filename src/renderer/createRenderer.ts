@@ -94,6 +94,8 @@ export async function createRenderer(
     stage.addChild(rectangle);
     const drawing = new Graphics();
     stage.addChild(drawing);
+    const selection = new Graphics();
+    stage.addChild(selection);
     const resize = () => {
       if (destroyed || !renderer) return;
       const { width, height } = host.getBoundingClientRect();
@@ -186,6 +188,21 @@ export async function createRenderer(
             alpha: 0.85,
             width: 1,
           });
+      }
+      selection.clear();
+      const selected =
+        session?.selection.preview.getSnapshot()?.bounds ??
+        session?.selection.state.getSnapshot()?.bounds;
+      if (selected) {
+        selection
+          .rect(
+            CANVAS_INSET + (selected.minX - view.x) * scale,
+            CANVAS_INSET + (selected.minY - view.y) * scale,
+            (selected.maxX - selected.minX) * scale,
+            (selected.maxY - selected.minY) * scale,
+          )
+          .fill({ color: "#87dfff", alpha: 0.12 })
+          .stroke({ color: "#87dfff", width: 2 });
       }
       renderer.render(stage);
       renders++;

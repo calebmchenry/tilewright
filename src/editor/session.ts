@@ -22,6 +22,7 @@ import {
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import { FillController } from "./fill.ts";
+import { SelectionController } from "./selection.ts";
 import { DrawingController, type DrawingToolId } from "./drawing.ts";
 import { assertPencilSize, eraserTool, pencilTool } from "./pencil.ts";
 import { lineTool, rectangleTool, type RectangleMode } from "./shapes.ts";
@@ -107,6 +108,7 @@ export class EditorSession {
   readonly registryCommands: RegistryCommands;
   readonly drawing: DrawingController;
   readonly fill: FillController;
+  readonly selection: SelectionController;
   readonly layers;
   readonly bounds;
   readonly registry;
@@ -115,7 +117,7 @@ export class EditorSession {
   readonly activeLayer;
   readonly hiddenLayers = new Store<readonly LayerId[]>(Object.freeze([]));
   readonly activeTool = new Store<
-    "inspect" | "pan" | "eyedropper" | DrawingToolId
+    "inspect" | "pan" | "eyedropper" | "select" | DrawingToolId
   >("inspect");
   readonly canvasSize = new Store<ViewSize>(
     Object.freeze({ width: 1, height: 1 }),
@@ -210,6 +212,7 @@ export class EditorSession {
       unsubscribeHistory();
     };
     this.fill = new FillController(this);
+    this.selection = new SelectionController(this);
     this.drawing = new DrawingController(this);
     this.drawing.register(
       "pencil",
@@ -228,6 +231,7 @@ export class EditorSession {
   dispose(): void {
     this.#closed = true;
     this.fill.dispose();
+    this.selection.dispose();
     this.drawing.dispose();
     this.#dispose();
   }
@@ -268,6 +272,16 @@ export class EditorSession {
       !canEditTiles(this.viewport.getSnapshot())
     )
       return { label: unavailable[id]!.label, reason: OVERVIEW_MESSAGE };
+    if (id === "select")
+      return {
+        label: "Select",
+        reason:
+          this.canvasState.getSnapshot() !== "ready"
+            ? "Wait for the map canvas to be ready."
+            : this.editableLayerIds().length
+              ? null
+              : "Show the active layer to create a selection.",
+      };
     if (id === "fill")
       return {
         label: "Fill",
@@ -325,12 +339,20 @@ export class EditorSession {
         };
   }
   perform(id: ActionId): boolean {
+    if (id === "undo" || id === "redo") this.selection.deselect();
     const state = this.action(id);
     if (state.reason) {
       this.report(state.reason);
       return false;
     }
     if (id === "add-layer") return this.addLayer();
+    if (id === "select") {
+      this.activeTool.set(id);
+      this.report(
+        "Select active. Drag a rectangle; choose its layers explicitly. Escape cancels a drag or deselects.",
+      );
+      return true;
+    }
     if (id === "fill") {
       this.activeTool.set(id);
       this.report(
@@ -705,6 +727,7 @@ export class EditorSession {
         l: "line",
         r: "rectangle",
         g: "fill",
+        v: "select",
       };
       if (toolKeys[key]) this.perform(toolKeys[key]);
       else if (

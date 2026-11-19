@@ -57,17 +57,19 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         Scroll to pan. Pinch or Cmd/Ctrl-scroll to zoom. Space-drag or
         middle-drag to pan. B selects Pencil; E selects Eraser; brackets change
         their shared size. D selects Eyedropper. G selects Fill. L selects Line;
-        R selects Rectangle. Shapes include both endpoints; lines and outlines
-        are one tile thick. H selects Pan; I selects Inspect. F fits the map; 0
-        resets to 100%; plus/minus zoom; arrows pan. Drag with Inspect to
-        measure a rectangle; Escape clears it.{" "}
+        R selects Rectangle. V selects tiles. Shapes include both endpoints;
+        lines and outlines are one tile thick. H selects Pan; I selects Inspect.
+        F fits the map; 0 resets to 100%; plus/minus zoom; arrows pan. Drag with
+        Inspect to measure a rectangle; Escape clears it.{" "}
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : tool === "fill"
-            ? "Click to fill a connected region on the active layer. Escape cancels a running fill. Pan and zoom remain available."
-            : tool === "eyedropper"
-              ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
-              : "Choose Pencil to paint the active layer."}
+          : tool === "select"
+            ? "Drag a rectangle, then choose included layers. Escape cancels creation or deselects."
+            : tool === "fill"
+              ? "Click to fill a connected region on the active layer. Escape cancels a running fill. Pan and zoom remain available."
+              : tool === "eyedropper"
+                ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
+                : "Choose Pencil to paint the active layer."}
       </p>
       {fill && (
         <div className="fill-progress" aria-label="Fill progress" role="status">

@@ -20,6 +20,7 @@ import { colorsDocument } from "./fixtures/colors";
 import { registryDocument, buildings } from "./fixtures/registry";
 
 import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
+import { selectionDocument, walls } from "./fixtures/selection";
 
 const fixture = new URLSearchParams(location.search).get("fixture");
 const session = new EditorSession(
@@ -29,22 +30,30 @@ const session = new EditorSession(
     fixture === "shapes" ||
     fixture === "fill"
     ? drawingDocument()
-    : fixture === "registry"
-      ? registryDocument()
-      : fixture === "colors"
-        ? colorsDocument()
-        : fixture === "grid"
-          ? gridDocument()
-          : fixture
-            ? populatedDocument(fixture === "heartland" ? 1 : 0)
-            : new MapDocument({
-                layers: [
-                  { id: layerId("terrain"), name: "Terrain" },
-                  { id: layerId("buildings"), name: "Buildings" },
-                ],
-              }),
+    : fixture === "selection"
+      ? selectionDocument()
+      : fixture === "registry"
+        ? registryDocument()
+        : fixture === "colors"
+          ? colorsDocument()
+          : fixture === "grid"
+            ? gridDocument()
+            : fixture
+              ? populatedDocument(fixture === "heartland" ? 1 : 0)
+              : new MapDocument({
+                  layers: [
+                    { id: layerId("terrain"), name: "Terrain" },
+                    { id: layerId("buildings"), name: "Buildings" },
+                  ],
+                }),
 );
 if (fixture === "registry") session.setLayerVisible(buildings, false);
+if (fixture === "selection") {
+  session.selectLayer(walls);
+  session.viewport.set({ x: 55, y: 55, zoom: 1 });
+  session.history.markSaved(session.history.captureCheckpoint());
+  session.history.markRecovery(session.history.captureCheckpoint());
+}
 if (
   fixture === "drawing" ||
   fixture === "pencil" ||

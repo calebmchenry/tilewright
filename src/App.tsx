@@ -10,6 +10,7 @@ import { CanvasControls } from "./CanvasControls";
 import type { EditorWorkspace } from "./editor/workspace";
 import { LayerPanel } from "./LayerPanel";
 import { RegistryControls } from "./RegistryControls";
+import { SelectionPanel } from "./SelectionPanel";
 import {
   parseRgbFields,
   rgbChannels,
@@ -29,18 +30,19 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
         : null,
   );
   useStoreField(session.canvasState, (state) =>
-    ["inspect", "pan", "fit-map", "eyedropper", "fill"].includes(action) ||
-    session.drawing.tool(action)
+    ["inspect", "pan", "fit-map", "eyedropper", "fill", "select"].includes(
+      action,
+    ) || session.drawing.tool(action)
       ? state
       : null,
   );
   useStoreField(session.hiddenLayers, () =>
-    session.drawing.tool(action) || action === "fill"
+    session.drawing.tool(action) || action === "fill" || action === "select"
       ? session.editableLayerIds().length > 0
       : null,
   );
   useStoreField(session.activeLayer, () =>
-    session.drawing.tool(action) || action === "fill"
+    session.drawing.tool(action) || action === "fill" || action === "select"
       ? session.editableLayerIds().length > 0
       : null,
   );
@@ -62,6 +64,7 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
           action === "pan" ||
           action === "eyedropper" ||
           action === "fill" ||
+          action === "select" ||
           session.drawing.tool(action)
             ? action === activeTool
             : undefined
@@ -158,15 +161,17 @@ export function ToolPanel({ session }: Props) {
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
         B: Pencil · E: Eraser · D: Eyedropper · G: Fill · L: Line · R: Rectangle
-        · [ / ]: Brush size · H: Pan · I: Inspect · F: Fit map. Drag with
-        Inspect to measure a rectangle; Escape clears it.{" "}
+        · V: Select · [ / ]: Brush size · H: Pan · I: Inspect · F: Fit map. Drag
+        with Inspect to measure a rectangle; Escape clears it.{" "}
         {session.drawing.tool(tool)
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : tool === "fill"
-            ? "Click to fill connected tiles on the active layer. Matching uses exact color or named identity; corners do not connect. Escape cancels a running fill."
-            : tool === "eyedropper"
-              ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
-              : "Choose Pencil to paint the active layer."}
+          : tool === "select"
+            ? "Drag to select tiles, then choose included layers. Escape cancels a drag or deselects."
+            : tool === "fill"
+              ? "Click to fill connected tiles on the active layer. Matching uses exact color or named identity; corners do not connect. Escape cancels a running fill."
+              : tool === "eyedropper"
+                ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
+                : "Choose Pencil to paint the active layer."}
       </p>
     </section>
   );
@@ -519,6 +524,7 @@ export function App({
         </div>
         <aside className="right-sidebar">
           <LayerPanel session={session} />
+          <SelectionPanel session={session} />
           <AnnotationPanel session={session} />
         </aside>
       </div>

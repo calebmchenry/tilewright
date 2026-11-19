@@ -21,6 +21,7 @@ export function bindNavigation(
   let lastPointer: Point | null = null;
   let drag: { id: number; x: number; y: number } | null = null;
   let drawing: number | null = null;
+  let selecting: number | null = null;
   let measure: { id: number; start: Point; previous: Bounds | null } | null =
     null;
   let gesture: { view: Viewport; anchor: Point } | null = null;
@@ -99,6 +100,17 @@ export function bindNavigation(
       if (host.hasPointerCapture(id)) host.releasePointerCapture(id);
     }
   };
+  const finishSelection = (point?: Point) => {
+    const id = selecting;
+    selecting = null;
+    if (id === null) return;
+    try {
+      if (point) session.selection.commit(id, local(point));
+      else session.selection.cancel(id);
+    } finally {
+      if (host.hasPointerCapture(id)) host.releasePointerCapture(id);
+    }
+  };
   const reset = () => {
     space = false;
     gesture = null;
@@ -106,6 +118,7 @@ export function bindNavigation(
     finishDrag();
     finishMeasure(true);
     finishDrawing();
+    finishSelection();
     updatePointer();
   };
   const down = (event: PointerEvent) => {
@@ -114,6 +127,7 @@ export function bindNavigation(
       drag ||
       measure ||
       drawing !== null ||
+      selecting !== null ||
       gesture ||
       !event.isPrimary ||
       !canvasTarget(event.target)
@@ -152,6 +166,20 @@ export function bindNavigation(
             session.reportError(
               error,
               "Drawing canceled: pointer capture failed",
+            );
+          }
+        }
+      } else if (session.activeTool.getSnapshot() === "select") {
+        event.preventDefault();
+        if (session.selection.begin(event.pointerId, local(lastPointer))) {
+          selecting = event.pointerId;
+          try {
+            host.setPointerCapture(event.pointerId);
+          } catch (error) {
+            finishSelection();
+            session.reportError(
+              error,
+              "Selection canceled: pointer capture failed",
             );
           }
         }
@@ -201,17 +229,23 @@ export function bindNavigation(
         }
       }
     }
+    if (selecting === event.pointerId) {
+      if (!(event.buttons & 1)) finishSelection();
+      else session.selection.sample(selecting, local(lastPointer));
+    }
     updatePointer();
   };
   const up = (event: PointerEvent) => {
     if (drawing === event.pointerId && event.button === 0)
       finishDrawing({ x: event.clientX, y: event.clientY });
+    if (selecting === event.pointerId && event.button === 0)
+      finishSelection({ x: event.clientX, y: event.clientY });
     if (drag?.id === event.pointerId) finishDrag();
     if (measure?.id === event.pointerId) finishMeasure(false);
     updatePointer();
   };
   const leave = () => {
-    if (!drag && !measure && drawing === null) {
+    if (!drag && !measure && drawing === null && selecting === null) {
       lastPointer = null;
       updatePointer();
     }
@@ -219,7 +253,8 @@ export function bindNavigation(
   const wheel = (event: WheelEvent) => {
     if (!ready() || !canvasTarget(event.target)) return;
     event.preventDefault();
-    if (gesture || drag || measure || drawing !== null) return;
+    if (gesture || drag || measure || drawing !== null || selecting !== null)
+      return;
     lastPointer = { x: event.clientX, y: event.clientY };
     const units =
       event.deltaMode === 1
@@ -257,11 +292,13 @@ export function bindNavigation(
       event.preventDefault();
       space = true;
       finishDrawing();
+      finishSelection();
       cursor();
       updatePointer();
     } else if (event.key === "Escape") {
       event.preventDefault();
       session.fill.cancel();
+      session.selection.escape();
       reset();
       session.setRectangle(null);
     }
@@ -280,6 +317,7 @@ export function bindNavigation(
     finishDrag();
     finishMeasure(true);
     finishDrawing();
+    finishSelection();
     const input = event as GestureInput;
     const point = { x: input.clientX, y: input.clientY };
     if (![point.x, point.y].every(Number.isFinite)) return;
@@ -302,6 +340,7 @@ export function bindNavigation(
     finishDrag();
     finishMeasure(true);
     finishDrawing();
+    finishSelection();
     lastPointer = null;
     updatePointer();
   };
@@ -314,7 +353,11 @@ export function bindNavigation(
       "pointercancel",
       (event) => {
         // A secondary pointer cannot cancel the captured drawing pointer.
-        if (drawing === null || (event as PointerEvent).pointerId === drawing)
+        const id = (event as PointerEvent).pointerId;
+        if (
+          (drawing === null || id === drawing) &&
+          (selecting === null || id === selecting)
+        )
           cancel();
       },
     ],
@@ -322,14 +365,26 @@ export function bindNavigation(
       "lostpointercapture",
       (event) => {
         // Releasing a completed drag also emits this event. Keep its cursor readout.
-        if (drag || measure || drawing === (event as PointerEvent).pointerId)
+        if (
+          drag ||
+          measure ||
+          drawing === (event as PointerEvent).pointerId ||
+          selecting === (event as PointerEvent).pointerId
+        )
           cancel();
         else updatePointer();
       },
     ],
     ["wheel", wheel as EventListener],
     ["keydown", keyDown as EventListener],
-    ["blur", reset],
+    [
+      "blur",
+      () => {
+        // Selection controls may take focus without discarding their pending preview.
+        // Window blur still cancels all input below.
+        if (selecting === null) reset();
+      },
+    ],
     ["gesturestart", gestureStart],
     ["gesturechange", gestureChange],
     ["gestureend", gestureEnd],
@@ -339,6 +394,10 @@ export function bindNavigation(
   window.addEventListener("keyup", keyUp);
   window.addEventListener("blur", reset);
   const stops = [
+    session.selection.preview.subscribe(() => {
+      if (selecting !== null && session.selection.pointerId === null)
+        finishSelection();
+    }),
     session.drawing.preview.subscribe(() => {
       if (drawing !== null && session.drawing.pointerId === null)
         finishDrawing();
