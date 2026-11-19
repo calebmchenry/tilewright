@@ -23,7 +23,7 @@ import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
 
 const fixture = new URLSearchParams(location.search).get("fixture");
 const session = new EditorSession(
-  fixture === "drawing" || fixture === "pencil"
+  fixture === "drawing" || fixture === "pencil" || fixture === "eraser-sampling"
     ? drawingDocument()
     : fixture === "registry"
       ? registryDocument()
@@ -41,7 +41,11 @@ const session = new EditorSession(
               }),
 );
 if (fixture === "registry") session.setLayerVisible(buildings, false);
-if (fixture === "drawing" || fixture === "pencil") {
+if (
+  fixture === "drawing" ||
+  fixture === "pencil" ||
+  fixture === "eraser-sampling"
+) {
   if (fixture === "drawing") installDrawingTools(session);
   session.selectLayer(layerId("buildings"));
   session.viewport.set({ x: 55, y: 55, zoom: 1 });

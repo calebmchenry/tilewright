@@ -52,6 +52,11 @@ and navigation are independent of layer visibility. Painting and tile-selection
 UI remain their later feature tickets; this ticket validates their layer-target
 and command integration seams with independent terrain/building edits.
 
+TW-020's [eyedropper](drawing-gestures.md#eraser-and-eyedropper-tw-020) is a read-only
+exception to the active-layer editing rule: it samples the topmost occupied visible
+cell, even if the active layer is hidden. Hidden layers never supply a sample.
+The eraser still targets only the active visible layer and reveals underlying tiles.
+
 Visibility and active selection are outside document history and are not a file
 format decision. Removal drops that layer's hidden preference; undo restores the
 layer **visible**, at its original position with its original ID, name, and all

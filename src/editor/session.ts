@@ -22,7 +22,8 @@ import {
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
 import { DrawingController, type DrawingToolId } from "./drawing.ts";
-import { assertPencilSize, pencilTool } from "./pencil.ts";
+import { assertPencilSize, eraserTool, pencilTool } from "./pencil.ts";
+import { sampleVisibleCell } from "./sampling.ts";
 import {
   assertBounds,
   containsTile,
@@ -110,12 +111,15 @@ export class EditorSession {
   readonly historyState;
   readonly activeLayer;
   readonly hiddenLayers = new Store<readonly LayerId[]>(Object.freeze([]));
-  readonly activeTool = new Store<"inspect" | "pan" | DrawingToolId>("inspect");
+  readonly activeTool = new Store<
+    "inspect" | "pan" | "eyedropper" | DrawingToolId
+  >("inspect");
   readonly canvasSize = new Store<ViewSize>(
     Object.freeze({ width: 1, height: 1 }),
   );
   readonly color = new Store(normalizePaintColor("#91baa1")!);
   readonly selectedRegistryId = new Store<RegistryId | null>(null);
+  /** Shared square-brush size for Pencil and Eraser; kept outside document history. */
   readonly pencilSize = new Store(1);
   readonly viewport = new Store<Viewport>(
     Object.freeze({ x: 0, y: 0, zoom: 1 }),
@@ -206,6 +210,10 @@ export class EditorSession {
       "pencil",
       pencilTool(() => this.pencilSize.getSnapshot()),
     );
+    this.drawing.register(
+      "eraser",
+      eraserTool(() => this.pencilSize.getSnapshot()),
+    );
   }
   dispose(): void {
     this.#closed = true;
@@ -260,16 +268,28 @@ export class EditorSession {
               ? null
               : "Show the active layer to draw on it.",
       };
-    const disabled = unavailable[id];
-    if (disabled) return disabled;
-    if (id === "inspect" || id === "pan" || id === "fit-map")
+    if (
+      id === "inspect" ||
+      id === "pan" ||
+      id === "fit-map" ||
+      id === "eyedropper"
+    )
       return {
-        label: id === "inspect" ? "Inspect" : id === "pan" ? "Pan" : "Fit map",
+        label:
+          id === "inspect"
+            ? "Inspect"
+            : id === "pan"
+              ? "Pan"
+              : id === "eyedropper"
+                ? "Eyedropper"
+                : "Fit map",
         reason:
           this.canvasState.getSnapshot() === "ready"
             ? null
             : "Wait for the map canvas to be ready.",
       };
+    const disabled = unavailable[id];
+    if (disabled) return disabled;
     const state = this.historyState.getSnapshot();
     return id === "undo"
       ? {
@@ -288,6 +308,13 @@ export class EditorSession {
       return false;
     }
     if (id === "add-layer") return this.addLayer();
+    if (id === "eyedropper") {
+      this.activeTool.set(id);
+      this.report(
+        "Eyedropper active. Click to sample the topmost visible tile; empty cells keep the current paint.",
+      );
+      return true;
+    }
     if (this.drawing.tool(id)) {
       this.activeTool.set(id as DrawingToolId);
       this.report(
@@ -494,6 +521,27 @@ export class EditorSession {
     const id = this.selectedRegistryId.getSnapshot();
     return id ? registeredColor(id) : rawColor(this.color.getSnapshot());
   }
+  /** Sampling changes only paint selection, including when the active layer is hidden. */
+  sampleColorAt(point: Point): boolean {
+    if (this.#closed) return false;
+    const reason = this.action("eyedropper").reason;
+    if (reason) {
+      this.report(reason);
+      return false;
+    }
+    const tile = this.editableTileAt(point);
+    const sample =
+      tile &&
+      sampleVisibleCell(this.document, tile, this.hiddenLayers.getSnapshot());
+    if (!sample) {
+      this.report("No visible tile to sample. Current paint unchanged.");
+      return false;
+    }
+    // The authoring palette is opaque. Legacy alpha values must never be flattened.
+    return sample.value.kind === "registered"
+      ? this.selectRegisteredColor(sample.value.registryId)
+      : this.setColor(sample.value.rgba);
+  }
   setCanvasSize(width: number, height: number): void {
     const previous = this.canvasSize.getSnapshot();
     if (
@@ -609,11 +657,17 @@ export class EditorSession {
       !input.ctrlKey &&
       this.canvasState.getSnapshot() === "ready"
     ) {
-      if (key === "i" || key === "h" || key === "b")
-        this.perform(key === "i" ? "inspect" : key === "h" ? "pan" : "pencil");
+      const toolKeys: Readonly<Record<string, ActionId>> = {
+        i: "inspect",
+        h: "pan",
+        b: "pencil",
+        e: "eraser",
+        d: "eyedropper",
+      };
+      if (toolKeys[key]) this.perform(toolKeys[key]);
       else if (
         (key === "[" || key === "]") &&
-        this.activeTool.getSnapshot() === "pencil"
+        ["pencil", "eraser"].includes(this.activeTool.getSnapshot())
       )
         this.setPencilSize(
           Math.max(

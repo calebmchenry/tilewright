@@ -63,9 +63,11 @@ raw value when that entry changes. Existing registered tiles keep their IDs.
 The [TW-015 registry decisions](registry-decisions.md) specify explicit adoption,
 collision rejection, and future-stroke identity; TW-016 implements registry
 editing/selection. Matching alone never opts into registration or adoption;
-select a named row to paint with its ID. Pencil/eraser gestures remain
-their drawing-tool tickets; the selected-paint and erasure command seams are
-validated here.
+select a named row to paint with its ID. The [pencil, eraser and eyedropper](drawing-gestures.md)
+now consume this selection contract. Eyedropper selects stored identity from the
+topmost occupied visible cell, preserving raw values even when they match an entry.
+Empty/outside samples keep the current paint; unsupported legacy alpha or registry
+records report an error without changing it.
 
 ## Empty is absence
 

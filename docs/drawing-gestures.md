@@ -3,8 +3,9 @@
 TW-018 supplies the shared drawing pipeline, following [INTENT.md](../INTENT.md),
 [coordinates](foundation-decisions.md), [navigation](navigation.md), and
 [history](command-history.md). These are implementation decisions. Tool algorithms,
-sizes and shortcuts are supplied by feature modules. TW-019 installs the pencil
-described below; the other unfinished drawing tools remain unavailable.
+sizes and shortcuts are supplied by feature modules. TW-019 installs the pencil;
+TW-020 adds the eraser and eyedropper described below. The other unfinished drawing
+tools remain unavailable.
 Test-only adapters also exercise the real controller and canvas.
 
 ## Adjustable pencil (TW-019)
@@ -57,6 +58,70 @@ outside no-ops and very distant endpoints.
 at DPR 1/2, hover/stroke screenshots, exact canvas pixels after undo/redo, raw and
 registered strokes, layer preservation, even dabs, size-change cancellation,
 clipped edges, text shortcuts and the minimum-window layout.
+
+## Eraser and eyedropper (TW-020)
+
+These are implementation decisions within INTENT.md's eraser/sampling scope.
+
+**Eraser** (canvas shortcut **E**) uses exactly the pencil's square footprint,
+1–32 tile range, even-size anchor, continuous interpolation and clipping rules.
+Pencil and Eraser share one transient size preference (initially 1); the Tools
+panel labels its selector for the active brush. **[ / ]** changes either brush's
+size. Switching tools or changing size cancels a pending stroke. The red hover
+and stroke overlay indicates affected cells, not the final composite appearance.
+
+Release writes `null` on the captured active visible layer in one **Eraser**
+history step, never a background-colored tile. Lower layers are untouched and
+become visible wherever no higher visible content remains. Undo restores every
+original raw value, registry ID and empty cell; redo clears the same cells again.
+Erasing empty space or an entirely outside footprint is a no-op, preserving redo
+and saved/recovery checkpoints. Navigation, overview, capture and cancellation
+rules are identical to Pencil. `src/editor/pencil.ts` shares the square-brush
+algorithm between the two tools; `DrawingController` owns staging and history.
+
+**Eyedropper** (canvas shortcut **D**, retaining **I** for Inspect) samples once
+on primary pointer-down. It stays selected until another tool is chosen; moving
+or releasing the pointer does not sample additional cells or paint. Choose Pencil
+or press B to paint with the selected value. The Tools hint describes the policy.
+
+Sampling uses the **visible layer stack**, not the active layer. At the pointed
+integer cell, `src/editor/sampling.ts` searches top to bottom, skips hidden layers
+and empty cells, and returns the first occupied stored value. Thus an empty top
+layer exposes underlying paint; a hidden top layer cannot supply paint. A hidden
+active layer does not prevent sampling visible content. Reordering/visibility
+affects the next sample immediately. There is no active-layer-only mode in this
+baseline. This default matches the opaque visible tile an author is pointing at.
+
+`EditorSession.sampleColorAt` selects an existing registry ID for registered
+content. Its current swatch resolves through the registry; subsequent Pencil
+strokes store that ID and follow future recolors. Raw samples select exact raw
+bytes, even when they match a registry entry's color. Sampling never adopts,
+registers, recolors or edits tiles. It reads the model rather than framebuffer
+pixels, so grid lines, preview overlays and display color blending cannot destroy
+identity. Black, white and map-background-colored tiles are ordinary raw samples.
+
+If all visible layers are empty (or hidden), or the pointer is outside fixed
+bounds, keep the current paint and explain that there is no visible tile.
+Sampling requires a ready canvas and the same 8 CSS px/tile detail threshold as
+painting. Space/middle navigation takes precedence; right clicks, secondary
+pointers, Cmd/Ctrl/Alt starts, panel/text input and IME do not sample. Sampling
+changes only transient paint selection/feedback; document version, tile allocation,
+registry, history, redo and checkpoints stay unchanged.
+
+The existing authoring palette accepts opaque colors only. Legacy nonopaque raw
+values (including alpha zero) still count as occupied, and missing/malformed or
+nonopaque registry records remain stored content. Sampling these reports the
+existing color/registry validation error and keeps the selection unchanged. It
+neither flattens a blended color nor skips the occupied cell to choose an unrelated
+lower-layer identity. This preserves the established legacy-data contract without
+adding transparency authoring or an import-repair policy.
+
+`tests/domain/eraser-sampling.test.ts` covers signed 32/64 boundaries, partial
+corners, mixed raw/registry erasure, lower-layer preservation, exact atomic undo/
+redo, no-ops/cancellation, stack/hidden/empty/outside/readiness cases and sampling
+followed by painting and recoloring. `tests/eraser-sampling.spec.ts` covers shipping
+controls and pointer routing, red previews and exact visible undo/redo at DPR 1/2,
+underlying-layer reveal, and registered versus raw painting after sampling.
 
 ## Tool contract and data ownership
 

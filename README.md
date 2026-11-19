@@ -51,6 +51,8 @@ are documented in [map navigation](docs/navigation.md).
 Shared pointer capture, transient previews, clipping and gesture history are documented
 in [drawing gestures](docs/drawing-gestures.md). The [adjustable pencil](docs/drawing-gestures.md#adjustable-pencil-tw-019)
 paints square footprints with raw or registered colors.
+The [eraser and eyedropper](docs/drawing-gestures.md#eraser-and-eyedropper-tw-020)
+clear active-layer content and sample visible tiles while preserving named-color identity.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).

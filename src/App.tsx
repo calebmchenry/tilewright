@@ -29,7 +29,7 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
         : null,
   );
   useStoreField(session.canvasState, (state) =>
-    ["inspect", "pan", "fit-map"].includes(action) ||
+    ["inspect", "pan", "fit-map", "eyedropper"].includes(action) ||
     session.drawing.tool(action)
       ? state
       : null,
@@ -53,6 +53,7 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
         aria-pressed={
           action === "inspect" ||
           action === "pan" ||
+          action === "eyedropper" ||
           session.drawing.tool(action)
             ? action === activeTool
             : undefined
@@ -104,11 +105,11 @@ export function ToolPanel({ session }: Props) {
           <ActionButton key={action} session={session} action={action} />
         ))}
       </div>
-      {tool === "pencil" && (
+      {(tool === "pencil" || tool === "eraser") && (
         <label>
-          Pencil size
+          {tool === "eraser" ? "Eraser size" : "Pencil size"}
           <select
-            aria-label="Pencil size"
+            aria-label={tool === "eraser" ? "Eraser size" : "Pencil size"}
             value={pencilSize}
             onChange={(event) =>
               session.setPencilSize(Number(event.target.value))
@@ -124,11 +125,14 @@ export function ToolPanel({ session }: Props) {
       )}
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
-        B: Pencil · [ / ]: Size · H: Pan · I: Inspect · F: Fit map. Drag with
-        Inspect to measure a rectangle; Escape clears it.{" "}
+        B: Pencil · E: Eraser · D: Eyedropper · [ / ]: Brush size · H: Pan · I:
+        Inspect · F: Fit map. Drag with Inspect to measure a rectangle; Escape
+        clears it.{" "}
         {session.drawing.tool(tool)
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : "Choose Pencil to paint the active layer."}
+          : tool === "eyedropper"
+            ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
+            : "Choose Pencil to paint the active layer."}
       </p>
     </section>
   );

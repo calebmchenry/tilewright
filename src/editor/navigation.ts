@@ -155,6 +155,9 @@ export function bindNavigation(
             );
           }
         }
+      } else if (session.activeTool.getSnapshot() === "eyedropper") {
+        event.preventDefault();
+        session.sampleColorAt(local(lastPointer));
       } else if (session.activeTool.getSnapshot() === "inspect") {
         const start = session.editableTileAt(local(lastPointer));
         if (start) {

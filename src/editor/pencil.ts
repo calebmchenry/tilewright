@@ -1,6 +1,6 @@
 import type { Bounds } from "../domain/coordinates.ts";
-import type { TileValue } from "../domain/values.ts";
-import type { DrawingTool, PaintSpan } from "./drawing.ts";
+import type { Cell } from "../domain/values.ts";
+import type { DrawingContext, DrawingTool, PaintSpan } from "./drawing.ts";
 import type { Point } from "./viewport.ts";
 
 export const MIN_PENCIL_SIZE = 1;
@@ -22,7 +22,7 @@ export function* pencilFootprint(
   tile: Point,
   size: number,
   bounds: Bounds,
-  value: TileValue,
+  value: Cell,
 ): Generator<PaintSpan> {
   assertPencilSize(size);
   const before = Math.floor((size - 1) / 2);
@@ -91,11 +91,26 @@ export function* pencilCenters(
 }
 
 export function pencilTool(getSize: () => number): DrawingTool {
+  return squareBrushTool(getSize, "Pencil", ({ paint }) => paint);
+}
+
+/** Erasure shares pencil geometry, but writes absence rather than a paint color. */
+export function eraserTool(getSize: () => number): DrawingTool {
+  return squareBrushTool(getSize, "Eraser", () => null);
+}
+
+function squareBrushTool(
+  getSize: () => number,
+  label: string,
+  value: (context: DrawingContext) => Cell,
+): DrawingTool {
   return {
-    label: "Pencil",
-    footprint: ({ start, bounds, paint }) =>
-      pencilFootprint(start, getSize(), bounds, paint),
-    create: ({ bounds, paint }) => {
+    label,
+    footprint: (context) =>
+      pencilFootprint(context.start, getSize(), context.bounds, value(context)),
+    create: (context) => {
+      const { bounds } = context;
+      const paint = value(context);
       const size = getSize();
       assertPencilSize(size);
       let sampled = false;

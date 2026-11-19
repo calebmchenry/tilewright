@@ -3,7 +3,7 @@ import { mountRenderer } from "./renderer/mountRenderer";
 import type { EditorSession } from "./editor/session";
 import { bindNavigation } from "./editor/navigation";
 import { canEditTiles, OVERVIEW_MESSAGE } from "./editor/viewport";
-import { useStoreField } from "./editor/useStore";
+import { useStore, useStoreField } from "./editor/useStore";
 
 export function MapCanvas({ session }: { session: EditorSession }) {
   const host = useRef<HTMLDivElement>(null);
@@ -14,10 +14,8 @@ export function MapCanvas({ session }: { session: EditorSession }) {
   const [detail, setDetail] = useState("");
 
   const editable = useStoreField(session.viewport, canEditTiles);
-  const drawing = useStoreField(
-    session.activeTool,
-    (tool) => !!session.drawing.tool(tool),
-  );
+  const tool = useStore(session.activeTool);
+  const drawing = !!session.drawing.tool(tool);
   useEffect(() => bindNavigation(host.current!, session), [session]);
 
   useEffect(() => {
@@ -56,13 +54,15 @@ export function MapCanvas({ session }: { session: EditorSession }) {
       />
       <p className="sr-only" id="canvas-help">
         Scroll to pan. Pinch or Cmd/Ctrl-scroll to zoom. Space-drag or
-        middle-drag to pan. B selects Pencil; brackets change its size. H
-        selects Pan; I selects Inspect. F fits the map; 0 resets to 100%;
-        plus/minus zoom; arrows pan. Drag with Inspect to measure a rectangle;
-        Escape clears it.{" "}
+        middle-drag to pan. B selects Pencil; E selects Eraser; brackets change
+        their shared size. D selects Eyedropper. H selects Pan; I selects
+        Inspect. F fits the map; 0 resets to 100%; plus/minus zoom; arrows pan.
+        Drag with Inspect to measure a rectangle; Escape clears it.{" "}
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
-          : "Choose Pencil to paint the active layer."}
+          : tool === "eyedropper"
+            ? "Click to sample the topmost visible tile. Empty cells keep the current paint. B returns to Pencil."
+            : "Choose Pencil to paint the active layer."}
       </p>
       {status === "ready" && !editable && (
         <p
