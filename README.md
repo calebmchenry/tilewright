@@ -64,7 +64,9 @@ mapping, transforms and fixed-boundary rejection is in
 support exact bounds, occupied counts and explicit layer inclusion. [Selection
 movement](docs/selection-decisions.md#selection-movement-implementation-tw-025)
 adds snapped composite drag previews and whole-tile arrow nudges with atomic undo.
-Clipboard and transforms follow in TW-026 through TW-028.
+[Clipboard placement](docs/selection-decisions.md#clipboard-implementation-tw-026)
+adds session-local cut/copy/paste, composited previews and repeated placement.
+Transforms follow in TW-027/TW-028.
 
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).

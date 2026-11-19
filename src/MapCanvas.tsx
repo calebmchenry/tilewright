@@ -65,7 +65,7 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         {drawing
           ? "Drag to preview; release to apply; Escape cancels drawing."
           : tool === "select"
-            ? "Drag a rectangle and choose layers; drag inside to move. Arrows nudge one tile, Shift ten. Escape cancels a drag or deselects."
+            ? "Drag a rectangle and choose layers; drag inside to move. Arrows nudge one tile, Shift ten. Cmd/Ctrl+C copies, X cuts, V previews paste. Move the pointer or use arrows; click or Enter applies. Escape cancels a preview or deselects."
             : tool === "fill"
               ? "Click to fill a connected region on the active layer. Escape cancels a running fill. Pan and zoom remain available."
               : tool === "eyedropper"

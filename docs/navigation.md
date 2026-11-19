@@ -35,8 +35,9 @@ The [TW-023 selection contract](selection-decisions.md) reserves arrows for tile
 nudging when Select has a selection or a placement preview is active (one tile,
 ten with Shift). Other contexts retain the camera shortcuts above. V selects
 Select; R remains the drawing Rectangle shortcut. These selection routes are
-implemented for movement/nudging in TW-025; paste/transform previews follow in
-TW-026/TW-027.
+implemented for movement/nudging in TW-025 and paste anchors in TW-026. Canvas
+Cmd/Ctrl+C/X/V copies/cuts/previews paste; click or Enter applies, Escape cancels.
+Text and panel clipboard shortcuts remain native. Transforms follow in TW-027.
 
 `src/editor/navigation.ts` uses non-passive wheel/gesture listeners to prevent
 page scrolling and browser zoom over the canvas. Pixel deltas keep fractional

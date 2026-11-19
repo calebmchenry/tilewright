@@ -7,6 +7,13 @@ import {
   type SelectionPayload,
 } from "../domain/selection.ts";
 import type { TileWrite } from "../domain/document.ts";
+import {
+  captureClipboard,
+  clipboardBounds,
+  planClipboardCut,
+  planClipboardPaste,
+  validateClipboard,
+} from "../domain/clipboard.ts";
 import type { LayerId } from "../domain/values.ts";
 import { rectangleBetween } from "./measurement.ts";
 import type { EditorSession } from "./session.ts";
@@ -21,6 +28,10 @@ import {
 export interface SelectionRectangle {
   readonly bounds: Bounds;
   readonly layerIds: readonly LayerId[];
+  readonly paste?: {
+    readonly writes: readonly TileWrite[];
+    readonly reason: string | null;
+  };
   readonly move?: {
     readonly dx: number;
     readonly dy: number;
@@ -33,6 +44,8 @@ export interface SelectionRectangle {
 export class SelectionController {
   readonly state = new Store<SelectionPayload | null>(null);
   readonly preview = new Store<SelectionRectangle | null>(null);
+  readonly clipboard = new Store<SelectionPayload | null>(null);
+  #paste: { payload: SelectionPayload; version: number } | null = null;
   #session: EditorSession;
   #current: {
     id: number;
@@ -75,6 +88,194 @@ export class SelectionController {
   get pointerId(): number | null {
     return this.#current?.id ?? null;
   }
+  get pasting(): boolean {
+    return this.#paste !== null;
+  }
+  clipboardReason(action: "copy" | "cut" | "paste"): string | null {
+    const session = this.#session;
+    if (this.#closed || session.canvasState.getSnapshot() !== "ready")
+      return "Wait for the map canvas to be ready.";
+    if (!canEditTiles(session.viewport.getSnapshot())) return OVERVIEW_MESSAGE;
+    if (
+      this.#current ||
+      session.drawing.pointerId !== null ||
+      session.fill.progress.getSnapshot() ||
+      (this.#paste && action !== "paste")
+    )
+      return "Apply or cancel the pending edit before copying or cutting.";
+    if (action !== "paste") {
+      const selected = this.state.getSnapshot();
+      return selected &&
+        this.#visible(selected.layers.map((layer) => layer.layerId))
+        ? null
+        : "Select a rectangle with visible layers first.";
+    }
+    const payload = this.clipboard.getSnapshot();
+    if (!payload)
+      return "Copy or cut tiles in this document first. Cross-document paste is not supported.";
+    try {
+      validateClipboard(
+        session.document,
+        this,
+        payload,
+        session.hiddenLayers.getSnapshot(),
+      );
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  }
+  copy(cut = false): boolean {
+    const session = this.#session,
+      label = cut ? "Cut" : "Copy";
+    let payload: SelectionPayload, result;
+    try {
+      const reason = this.clipboardReason(cut ? "cut" : "copy");
+      if (reason) throw new Error(reason);
+      const selected = this.state.getSnapshot()!;
+      payload = captureClipboard(
+        session.document,
+        this,
+        selected.bounds,
+        selected.layers.map((layer) => layer.layerId),
+      );
+      if (cut)
+        result = session.history.execute("Cut", [
+          {
+            kind: "tiles",
+            writes: planClipboardCut(
+              session.document,
+              this,
+              payload,
+              session.hiddenLayers.getSnapshot(),
+            ),
+          },
+        ]);
+    } catch (error) {
+      session.reportError(error, label);
+      return false;
+    }
+    // Publish only after successful capture/atomic Cut, including a no-op Cut.
+    try {
+      this.clipboard.set(payload);
+      if (result?.observerErrors.length) throw result.observerErrors[0];
+      session.report(
+        cut
+          ? "Cut. Paste to place tiles; Undo restores the source."
+          : "Copied tiles. Paste to choose a destination.",
+      );
+    } catch (error) {
+      session.reportError(
+        error,
+        `${label} completed, but a view could not update`,
+      );
+    }
+    return true;
+  }
+  startPaste(): boolean {
+    const session = this.#session,
+      reason = this.clipboardReason("paste");
+    if (reason) {
+      session.report(reason);
+      return false;
+    }
+    const payload = this.clipboard.getSnapshot()!,
+      pointer = session.pointer.getSnapshot();
+    const fallback = this.state.getSnapshot()?.bounds ?? payload.bounds;
+    const anchor =
+      pointer && containsTile(session.document.bounds, pointer.x, pointer.y)
+        ? pointer
+        : { x: fallback.minX, y: fallback.minY };
+    session.activeTool.set("select");
+    this.#paste = { payload, version: session.document.version };
+    return this.positionPaste(anchor);
+  }
+  /** World tile anchor; called only for actual pointer motion or arrow intent. */
+  positionPaste(anchor: Point): boolean {
+    const current = this.#paste;
+    if (!current) return false;
+    const session = this.#session;
+    try {
+      const bounds = clipboardBounds(current.payload, anchor.x, anchor.y);
+      let reason: string | null = null,
+        writes: readonly TileWrite[] = Object.freeze([]);
+      try {
+        if (current.version !== session.document.version)
+          throw new Error("Map changed; cancel and paste again.");
+        writes = planClipboardPaste(
+          session.document,
+          this,
+          current.payload,
+          anchor.x,
+          anchor.y,
+          session.hiddenLayers.getSnapshot(),
+        ).writes;
+      } catch (error) {
+        reason = error instanceof Error ? error.message : String(error);
+      }
+      this.preview.set(
+        Object.freeze({
+          bounds,
+          layerIds: Object.freeze(
+            current.payload.layers.map((layer) => layer.layerId),
+          ),
+          paste: Object.freeze({ reason, writes }),
+        }),
+      );
+      return true;
+    } catch (error) {
+      session.reportError(error, "Paste position");
+      return false;
+    }
+  }
+  commitPaste(): boolean {
+    const current = this.#paste,
+      preview = this.preview.getSnapshot(),
+      session = this.#session;
+    if (!current || !preview?.paste) return false;
+    let result;
+    try {
+      const reason = this.clipboardReason("paste");
+      if (reason) throw new Error(reason);
+      if (current.version !== session.document.version)
+        throw new Error("Map changed; cancel and paste again.");
+      const plan = planClipboardPaste(
+        session.document,
+        this,
+        current.payload,
+        preview.bounds.minX,
+        preview.bounds.minY,
+        session.hiddenLayers.getSnapshot(),
+      );
+      // Detach from synchronous publication; rejection retains the candidate.
+      this.#paste = null;
+      result = session.history.execute("Paste", [
+        { kind: "tiles", writes: plan.writes },
+      ]);
+    } catch (error) {
+      this.#paste = current;
+      session.reportError(error, "Paste");
+      return false;
+    }
+    try {
+      this.cancel();
+      this.state.set(
+        captureSelection(session.document, preview.bounds, preview.layerIds),
+      );
+      if (result.observerErrors.length) throw result.observerErrors[0];
+      session.report(
+        result.change
+          ? "Paste. Paste again to place another copy."
+          : "Paste positioned; no tile changes.",
+      );
+    } catch (error) {
+      session.reportError(
+        error,
+        "Paste committed, but a view could not update",
+      );
+    }
+    return true;
+  }
   #visible(ids: readonly LayerId[]): boolean {
     return ids.every(
       (id) =>
@@ -106,6 +307,7 @@ export class SelectionController {
     if (
       this.#closed ||
       this.#current ||
+      this.#paste ||
       session.activeTool.getSnapshot() !== "select"
     )
       return false;
@@ -228,6 +430,10 @@ export class SelectionController {
     return null;
   }
   nudge(dx: number, dy: number): boolean {
+    if (this.#paste) {
+      const bounds = this.preview.getSnapshot()!.bounds;
+      return this.positionPaste({ x: bounds.minX + dx, y: bounds.minY + dy });
+    }
     if (this.#current || this.#session.activeTool.getSnapshot() !== "select")
       return false;
     const reason = this.#moveReason();
@@ -319,10 +525,11 @@ export class SelectionController {
   cancel(id?: number): void {
     if (id !== undefined && this.#current?.id !== id) return;
     this.#current = null;
+    this.#paste = null;
     this.preview.set(null);
   }
   escape(): void {
-    if (this.#current) this.cancel();
+    if (this.#current || this.#paste) this.cancel();
     else this.deselect();
   }
   deselect(): void {
@@ -339,5 +546,6 @@ export class SelectionController {
     for (const stop of this.#stops) stop();
     this.#stops = [];
     this.deselect();
+    this.clipboard.set(null);
   }
 }

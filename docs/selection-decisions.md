@@ -4,7 +4,7 @@ Decision record for [TW-023](../.wrk/wrk-7cd74024.md), subordinate to
 [INTENT.md](../INTENT.md#drawing-and-rearranging). These are implementation
 decisions for TW-024 through TW-028. Rectangle creation and layer inclusion now
 ship in TW-024; overlap-safe movement and nudging ship in TW-025 as described below.
-Clipboard and transforms remain follow-on work.
+Clipboard placement ships in TW-026; transforms remain follow-on work.
 They extend the [coordinate](foundation-decisions.md),
 [layer](layers.md), [registry](registry-decisions.md),
 [input](navigation.md), and [atomic history](command-history.md) contracts.
@@ -59,7 +59,7 @@ Graphics overlay expose this state. Creation refreshes do not invalidate tile or
 overview caches. Selection is separate from Inspect and is not a painting mask.
 A new outside drag replaces the rectangle and resets scope to the active visible
 layer. TW-025 now supplies inside dragging and arrow nudges as described below;
-clipboard and transforms remain TW-026 through TW-028.
+clipboard placement ships in TW-026; transforms follow in TW-027/TW-028.
 
 `tests/domain/selection.test.ts` and `tests/selection.spec.ts` validate S01–S03
 using `tests/fixtures/selection.ts`: 64 registered wall cells crossing four visual
@@ -130,6 +130,58 @@ Snapshot/plan generation, history and preview rasterization are synchronous.
 Large or highly varied selections may pause; no new latency, native presentation
 or memory budget is claimed. Rendering refinement remains TW-049 and large-edit/
 history/memory refinement remains TW-050 under the current delivery priority.
+
+## Clipboard implementation (TW-026)
+
+The Tile selection panel provides **Copy**, **Cut**, and **Paste**, shared with
+canvas **Cmd/Ctrl+C/X/V**. Copy snapshots all included layers and changes no map
+content/history. Cut clears their occupied cells immediately in one **Cut** step,
+keeps the selection, and publishes the new clipboard only after success. Canceling
+a later paste does not undo Cut. Empty cuts and identical pastes add no history.
+
+Paste selects the Select tool and shows the composited destination with an outline.
+Its initial top-left uses the valid in-map pointer, then the current selection,
+then the original copied rectangle. Pointer motion sets that tile anchor; arrows
+move it one tile, Shift+arrow ten. Click, canvas Enter, or **Apply paste** commits
+one **Paste** step and selects the destination. **Cancel paste** or Escape restores
+the previous selection. Panel focus retains the preview. Another Paste resets a
+pending preview or starts another placement from the unchanged clipboard, without
+cascading offsets. Out-of-bounds candidates show red bounds and an explanation,
+remain adjustable after rejected Apply/Enter/click, and never clip or grow the map.
+
+Layer mapping uses exact original IDs, including empty included layers; active
+layer, names and order do not retarget it. Hidden/removed layers reject the entire
+paste with a reason. Registry references remain live identities: recolor updates
+originals, placed copies and future previews, while raw matching colors remain raw.
+Removed, malformed or ambiguously owned registry entries reject paste. Showing a
+layer or undoing removal of the original identity permits retry. Clipboard payloads
+contain no annotations and never move named areas or labels.
+
+`src/domain/clipboard.ts` adds immutable tile-only capture, session/document
+provenance, dependency validation and sparse cut/paste writes. Session provenance
+is held outside the payload in a WeakMap, so identical IDs or even the same model
+object in a replacement session cannot import it. `src/editor/selection.ts` owns
+the clipboard, version-bound candidate and atomic history publication; failed Cut
+preserves the previous clipboard, and failed Paste retains its candidate. Existing
+context/version cancellation drops the candidate while keeping the clipboard.
+New Map/session disposal clears it. There is no OS clipboard format, cross-document
+paste, serialization or automatic layer/registry creation in this version.
+
+`session.ts`, `navigation.ts`, `SelectionPanel.tsx` and `MapCanvas.tsx` provide the
+shared actions, pointer/keyboard paths and controls. Text inputs, contenteditable,
+IME and panel clipboard shortcuts remain native. Space/middle navigation, window
+blur, pointer cancellation/capture loss and teardown cancel pending paste. Preview
+writes use the same ordered-layer rasterization as movement through
+`renderer/createRenderer.ts`, without mutating document or overview caches.
+
+`tests/domain/clipboard.test.ts`, `clipboard-controller.test.ts` and
+`tests/clipboard.spec.ts` cover S07–S11: exact layered cell maps and inverses,
+immutable captures, cut/cancel, repeated/reset placement, all anchor fallbacks,
+bounds/capacity failures, stale dependencies and restored IDs, session replacement,
+text clipboard routing and DPR 1/2 real WebGL house/recolor pixels. Actual validation
+is recorded in TW-026. Captures, validation, planning and history are synchronous;
+large or highly varied selections may pause. No new latency or memory budget is
+claimed; rendering refinement remains TW-049, large-edit/history/memory TW-050.
 
 ## Rectangle and layer membership
 

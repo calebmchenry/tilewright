@@ -126,6 +126,10 @@ export function bindNavigation(
     finishSelection();
     updatePointer();
   };
+  const windowReset = () => {
+    session.selection.cancel();
+    reset();
+  };
   const down = (event: PointerEvent) => {
     if (
       !ready() ||
@@ -146,6 +150,7 @@ export function bindNavigation(
         (space || session.activeTool.getSnapshot() === "pan"))
     ) {
       event.preventDefault();
+      session.selection.cancel();
       drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
       host.setPointerCapture(event.pointerId);
       cursor();
@@ -160,7 +165,21 @@ export function bindNavigation(
       !event.metaKey &&
       !event.ctrlKey
     ) {
-      if (session.drawing.tool(session.activeTool.getSnapshot())) {
+      if (session.selection.pasting) {
+        event.preventDefault();
+        const { width, height } = host.getBoundingClientRect();
+        session.setCanvasSize(width, height);
+        if (
+          session.selection.positionPaste(
+            screenToTile(
+              local(lastPointer).x,
+              local(lastPointer).y,
+              session.viewport.getSnapshot(),
+            ),
+          )
+        )
+          session.selection.commitPaste();
+      } else if (session.drawing.tool(session.activeTool.getSnapshot())) {
         event.preventDefault();
         if (session.drawing.begin(event.pointerId, local(lastPointer))) {
           drawing = event.pointerId;
@@ -243,6 +262,14 @@ export function bindNavigation(
         session.selection.sample(id, local(lastPointer));
       }
     }
+    if (session.selection.pasting && !drag && !space && !gesture) {
+      const { width, height } = host.getBoundingClientRect();
+      session.setCanvasSize(width, height);
+      const point = local(lastPointer);
+      session.selection.positionPaste(
+        screenToTile(point.x, point.y, session.viewport.getSnapshot()),
+      );
+    }
     updatePointer();
   };
   const up = (event: PointerEvent) => {
@@ -288,6 +315,10 @@ export function bindNavigation(
     updatePointer();
   };
   const keyDown = (event: KeyboardEvent) => {
+    if (focusOwner(event.target) === "canvas") {
+      const { width, height } = host.getBoundingClientRect();
+      session.setCanvasSize(width, height);
+    }
     if (
       event.defaultPrevented ||
       event.isComposing ||
@@ -303,6 +334,7 @@ export function bindNavigation(
       space = true;
       finishDrawing();
       finishSelection();
+      session.selection.cancel();
       cursor();
       updatePointer();
     } else if (
@@ -342,6 +374,7 @@ export function bindNavigation(
     finishMeasure(true);
     finishDrawing();
     finishSelection();
+    session.selection.cancel();
     const input = event as GestureInput;
     const point = { x: input.clientX, y: input.clientY };
     if (![point.x, point.y].every(Number.isFinite)) return;
@@ -365,6 +398,7 @@ export function bindNavigation(
     finishMeasure(true);
     finishDrawing();
     finishSelection();
+    session.selection.cancel();
     lastPointer = null;
     updatePointer();
   };
@@ -393,7 +427,8 @@ export function bindNavigation(
           drag ||
           measure ||
           drawing === (event as PointerEvent).pointerId ||
-          selecting === (event as PointerEvent).pointerId
+          selecting === (event as PointerEvent).pointerId ||
+          session.selection.pasting
         )
           cancel();
         else updatePointer();
@@ -416,7 +451,7 @@ export function bindNavigation(
   for (const [type, listener] of listeners)
     host.addEventListener(type, listener, { passive: false });
   window.addEventListener("keyup", keyUp);
-  window.addEventListener("blur", reset);
+  window.addEventListener("blur", windowReset);
   const stops = [
     session.selection.preview.subscribe(() => {
       if (selecting !== null && session.selection.pointerId === null)
@@ -447,9 +482,9 @@ export function bindNavigation(
     for (const [type, listener] of listeners)
       host.removeEventListener(type, listener);
     window.removeEventListener("keyup", keyUp);
-    window.removeEventListener("blur", reset);
+    window.removeEventListener("blur", windowReset);
     for (const stop of stops) stop();
-    reset();
+    windowReset();
     session.fill.cancel();
     delete host.dataset.navigation;
   };

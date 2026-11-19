@@ -287,10 +287,13 @@ test("painting clears selection; gates/shortcuts and workspace disposal respect 
     assert.equal(s.routeKey({ key: "v" }, owner), false);
   for (const input of [
     { key: "v", isComposing: true },
-    { key: "v", metaKey: true },
     { key: "v", altKey: true },
   ])
     assert.equal(s.routeKey(input, "canvas"), false);
+  // TW-026 consumes Cmd+V as Paste without turning it into the Select shortcut.
+  assert.equal(s.routeKey({ key: "v", metaKey: true }, "canvas"), true);
+  assert.equal(s.selection.preview.getSnapshot(), null);
+  assert.match(s.feedback.getSnapshot().message, /Copy or cut tiles/);
   assert.equal(s.routeKey({ key: "v" }, "canvas"), true);
   for (const gate of ["hidden", "overview", "loading"]) {
     if (gate === "hidden") s.setLayerVisible(walls, false);

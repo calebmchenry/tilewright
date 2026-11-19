@@ -7,12 +7,44 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
   const layers = useStore(session.layers);
   const hidden = useStore(session.hiddenLayers);
   const active = useStore(session.activeLayer);
+  useStore(session.selection.clipboard);
+  useStore(session.canvasState);
+  useStore(session.viewport);
+  useStore(session.registry);
+  useStore(session.drawing.preview);
+  useStore(session.fill.progress);
   const bounds = preview?.bounds ?? selection?.bounds;
   const ids =
     preview?.layerIds ?? selection?.layers.map((layer) => layer.layerId) ?? [];
   return (
     <section className="panel selection-panel" aria-label="Tile selection">
       <h2>Tile selection</h2>
+      <div className="selection-actions">
+        {(["copy", "cut", "paste"] as const).map((id) => {
+          const action = session.action(id);
+          return (
+            <button
+              key={id}
+              type="button"
+              disabled={!!action.reason}
+              title={action.reason ?? undefined}
+              aria-describedby={`selection-${id}-reason`}
+              onClick={() => session.perform(id)}
+            >
+              {action.label}
+            </button>
+          );
+        })}
+      </div>
+      {(["copy", "cut", "paste"] as const).map((id) => (
+        <p
+          key={id}
+          id={`selection-${id}-reason`}
+          className={id === "paste" ? "hint" : "sr-only"}
+        >
+          {session.action(id).reason}
+        </p>
+      ))}
       {bounds ? (
         <>
           <p data-testid="selection-dimensions">
@@ -29,10 +61,13 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
           </p>
           {preview ? (
             <p className="hint" role="status" aria-label="Selection preview">
-              {preview.move
-                ? (preview.move.reason ??
-                  `Move ${preview.move.dx}, ${preview.move.dy} tiles. Release to apply; Escape cancels.`)
-                : "Release to capture tiles; Escape cancels."}
+              {preview.paste
+                ? (preview.paste.reason ??
+                  "Paste preview. Pointer sets the top-left; arrows nudge. Click, Enter or Apply paste to commit; Escape cancels.")
+                : preview.move
+                  ? (preview.move.reason ??
+                    `Move ${preview.move.dx}, ${preview.move.dy} tiles. Release to apply; Escape cancels.`)
+                  : "Release to capture tiles; Escape cancels."}
             </p>
           ) : (
             <>
@@ -90,6 +125,37 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
               </button>
             </>
           )}
+          {preview?.paste && (
+            <div
+              className="selection-actions"
+              onKeyDown={(event) => {
+                if (
+                  event.isDefaultPrevented() ||
+                  event.nativeEvent.isComposing ||
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.altKey
+                )
+                  return;
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  session.selection.cancel();
+                }
+              }}
+            >
+              <button
+                type="button"
+                disabled={!!preview.paste.reason}
+                title={preview.paste.reason ?? undefined}
+                onClick={() => session.selection.commitPaste()}
+              >
+                Apply paste
+              </button>
+              <button type="button" onClick={() => session.selection.cancel()}>
+                Cancel paste
+              </button>
+            </div>
+          )}
           <p className="hint">
             Drag inside to move, including from a hole. Arrows nudge one tile;
             Shift+arrow nudges ten. Deselect to start a rectangle inside this
@@ -108,6 +174,10 @@ export function SelectionPanel({ session }: { session: EditorSession }) {
           ; add other layers here after selecting.
         </p>
       )}
+      <p className="hint">
+        Canvas Cmd/Ctrl+C copies, X cuts, V previews paste. Paste again to place
+        another copy in this map. Text fields keep their own clipboard.
+      </p>
     </section>
   );
 }

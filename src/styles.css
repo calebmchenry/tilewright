@@ -691,6 +691,9 @@ footer {
   font-variant-numeric: tabular-nums;
 }
 
+.selection-panel {
+  position: relative;
+}
 .selection-panel p {
   overflow-wrap: anywhere;
 }
@@ -714,4 +717,10 @@ footer {
   display: block;
   margin-top: 3px;
   font-size: 10px;
+}
+
+.selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }

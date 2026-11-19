@@ -126,7 +126,8 @@ export async function createRenderer(
         )
         .fill("#1d2732");
       const selectionPreview = session?.selection.preview.getSnapshot();
-      tiles!.setPreview(selectionPreview?.move?.writes ?? null);
+      const placement = selectionPreview?.move ?? selectionPreview?.paste;
+      tiles!.setPreview(placement?.writes ?? null);
       tiles!.sync(
         view,
         width,
@@ -203,9 +204,9 @@ export async function createRenderer(
             (selected.maxX - selected.minX) * scale,
             (selected.maxY - selected.minY) * scale,
           )
-          .fill({ color: "#87dfff", alpha: selectionPreview?.move ? 0 : 0.12 })
+          .fill({ color: "#87dfff", alpha: placement ? 0 : 0.12 })
           .stroke({
-            color: selectionPreview?.move?.reason ? "#ff8080" : "#87dfff",
+            color: placement?.reason ? "#ff8080" : "#87dfff",
             width: 2,
           });
       }

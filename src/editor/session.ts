@@ -58,6 +58,9 @@ export type ActionId =
   | "line"
   | "rectangle"
   | "select"
+  | "copy"
+  | "cut"
+  | "paste"
   | "pan"
   | "fit-map"
   | "eyedropper"
@@ -258,6 +261,11 @@ export class EditorSession {
     );
   }
   action(id: ActionId): ActionState {
+    if (id === "copy" || id === "cut" || id === "paste")
+      return {
+        label: id === "copy" ? "Copy" : id === "cut" ? "Cut" : "Paste",
+        reason: this.selection.clipboardReason(id),
+      };
     if (id === "add-layer") return { label: "Add layer", reason: null };
     if (
       [
@@ -346,6 +354,8 @@ export class EditorSession {
       return false;
     }
     if (id === "add-layer") return this.addLayer();
+    if (id === "copy" || id === "cut") return this.selection.copy(id === "cut");
+    if (id === "paste") return this.selection.startPaste();
     if (id === "select") {
       this.activeTool.set(id);
       this.report(
@@ -708,6 +718,15 @@ export class EditorSession {
     )
       return false;
     const key = input.key.toLowerCase();
+    if (
+      owner === "canvas" &&
+      (input.metaKey || input.ctrlKey) &&
+      !input.shiftKey &&
+      ["c", "x", "v"].includes(key)
+    ) {
+      this.perform(key === "c" ? "copy" : key === "x" ? "cut" : "paste");
+      return true;
+    }
     if ((input.metaKey || input.ctrlKey) && ["z", "s"].includes(key)) {
       this.perform(key === "s" ? "save" : input.shiftKey ? "redo" : "undo");
       return true;
@@ -718,6 +737,10 @@ export class EditorSession {
       !input.ctrlKey &&
       this.canvasState.getSnapshot() === "ready"
     ) {
+      if (this.selection.pasting && key === "enter") {
+        this.selection.commitPaste();
+        return true;
+      }
       const toolKeys: Readonly<Record<string, ActionId>> = {
         i: "inspect",
         h: "pan",
@@ -755,7 +778,7 @@ export class EditorSession {
       ) {
         if (
           this.activeTool.getSnapshot() === "select" &&
-          this.selection.state.getSnapshot()
+          (this.selection.state.getSnapshot() || this.selection.pasting)
         ) {
           const step = input.shiftKey ? 10 : 1;
           this.selection.nudge(
