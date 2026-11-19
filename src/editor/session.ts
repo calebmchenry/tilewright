@@ -21,6 +21,7 @@ import {
 } from "../domain/registry.ts";
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
+import { DrawingController, type DrawingToolId } from "./drawing.ts";
 import {
   assertBounds,
   containsTile,
@@ -100,6 +101,7 @@ export class EditorSession {
   readonly document: MapDocument;
   readonly history: CommandHistory;
   readonly registryCommands: RegistryCommands;
+  readonly drawing: DrawingController;
   readonly layers;
   readonly bounds;
   readonly registry;
@@ -107,7 +109,7 @@ export class EditorSession {
   readonly historyState;
   readonly activeLayer;
   readonly hiddenLayers = new Store<readonly LayerId[]>(Object.freeze([]));
-  readonly activeTool = new Store<"inspect" | "pan">("inspect");
+  readonly activeTool = new Store<"inspect" | "pan" | DrawingToolId>("inspect");
   readonly canvasSize = new Store<ViewSize>(
     Object.freeze({ width: 1, height: 1 }),
   );
@@ -197,9 +199,11 @@ export class EditorSession {
       unsubscribeDocument();
       unsubscribeHistory();
     };
+    this.drawing = new DrawingController(this);
   }
   dispose(): void {
     this.#closed = true;
+    this.drawing.dispose();
     this.#dispose();
   }
   /** Visibility is a transient view preference until layer persistence is defined. */
@@ -239,6 +243,17 @@ export class EditorSession {
       !canEditTiles(this.viewport.getSnapshot())
     )
       return { label: unavailable[id]!.label, reason: OVERVIEW_MESSAGE };
+    const drawingTool = this.drawing.tool(id);
+    if (drawingTool)
+      return {
+        label: drawingTool.label,
+        reason:
+          this.canvasState.getSnapshot() !== "ready"
+            ? "Wait for the map canvas to be ready."
+            : this.editableLayerIds().length
+              ? null
+              : "Show the active layer to draw on it.",
+      };
     const disabled = unavailable[id];
     if (disabled) return disabled;
     if (id === "inspect" || id === "pan" || id === "fit-map")
@@ -267,6 +282,13 @@ export class EditorSession {
       return false;
     }
     if (id === "add-layer") return this.addLayer();
+    if (this.drawing.tool(id)) {
+      this.activeTool.set(id as DrawingToolId);
+      this.report(
+        `${state.label} tool active. Drag to preview; release to apply; Escape cancels.`,
+      );
+      return true;
+    }
     if (id === "inspect" || id === "pan") {
       this.activeTool.set(id);
       this.report(

@@ -45,8 +45,9 @@ editing its tiles.
 Drawing and tile selection default to the active **visible** layer. Future
 multi-layer selection may include explicitly chosen visible layers; hidden and
 missing IDs are excluded. `EditorSession.editableLayerIds()` supplies this target
-filter (with optional chosen IDs). Tile tools must also use `editableTileAt()`
-for the existing overview, readiness, and fixed-bounds gate. Inspect measurements
+filter (with optional chosen IDs). `editableTileAt()` provides inside-map picking.
+The [drawing pipeline](drawing-gestures.md) applies the same readiness/overview
+gates, captures the active ID and clips candidate footprints to fixed bounds. Inspect measurements
 and navigation are independent of layer visibility. Painting and tile-selection
 UI remain their later feature tickets; this ticket validates their layer-target
 and command integration seams with independent terrain/building edits.

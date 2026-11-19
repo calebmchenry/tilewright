@@ -19,24 +19,35 @@ import { gridDocument } from "./fixtures/grid";
 import { colorsDocument } from "./fixtures/colors";
 import { registryDocument, buildings } from "./fixtures/registry";
 
+import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
+
 const fixture = new URLSearchParams(location.search).get("fixture");
 const session = new EditorSession(
-  fixture === "registry"
-    ? registryDocument()
-    : fixture === "colors"
-      ? colorsDocument()
-      : fixture === "grid"
-        ? gridDocument()
-        : fixture
-          ? populatedDocument(fixture === "heartland" ? 1 : 0)
-          : new MapDocument({
-              layers: [
-                { id: layerId("terrain"), name: "Terrain" },
-                { id: layerId("buildings"), name: "Buildings" },
-              ],
-            }),
+  fixture === "drawing"
+    ? drawingDocument()
+    : fixture === "registry"
+      ? registryDocument()
+      : fixture === "colors"
+        ? colorsDocument()
+        : fixture === "grid"
+          ? gridDocument()
+          : fixture
+            ? populatedDocument(fixture === "heartland" ? 1 : 0)
+            : new MapDocument({
+                layers: [
+                  { id: layerId("terrain"), name: "Terrain" },
+                  { id: layerId("buildings"), name: "Buildings" },
+                ],
+              }),
 );
 if (fixture === "registry") session.setLayerVisible(buildings, false);
+if (fixture === "drawing") {
+  installDrawingTools(session);
+  session.selectLayer(layerId("buildings"));
+  session.viewport.set({ x: 55, y: 55, zoom: 1 });
+  session.setColor("#ff0000");
+  session.history.markSaved(session.history.captureCheckpoint());
+}
 const renders: Record<string, number> = {};
 const invalidations: CanvasInvalidation[] = [];
 const unbind = bindDocument(session, (change) => invalidations.push(change));

@@ -96,8 +96,10 @@ also return null instead of being clamped to an edge cell. Inspect and navigatio
 remain usable; clicking in overview reports the reason without any document edit.
 At detail scale, Inspect now supports [rectangle measurement](grid-and-scale.md)
 without selecting or changing tile content.
-At the threshold the gate permits picking. Drawing tools themselves remain their
-later tickets; they must use this gate when implementing pointer edits. Undo,
+At the threshold the gate permits picking. TW-018 adds the [shared drawing pipeline](drawing-gestures.md),
+which applies the same readiness/zoom policy and clips tool footprints to fixed
+bounds, including strokes entering from outside-map canvas margin. Tool algorithms
+remain their later tickets. Undo,
 metadata changes and document commands remain independent of camera scale.
 
 TW-010 now uses [cached composite regions](overview-rendering.md) below 2 CSS

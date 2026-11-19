@@ -48,6 +48,9 @@ documented in [overview rendering](docs/overview-rendering.md).
 Camera math, mouse/trackpad/keyboard controls and overview editing availability
 are documented in [map navigation](docs/navigation.md).
 
+Shared pointer capture, transient previews, clipping and gesture history are documented
+in [drawing gestures](docs/drawing-gestures.md). Tool algorithms follow in their feature tickets.
+
 Tile/chunk grids, scale readouts, and Inspect rectangle measurement are documented
 in [grids and scale](docs/grid-and-scale.md).
 

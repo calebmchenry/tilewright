@@ -18,6 +18,8 @@ import { overviewDocument } from "./fixtures/overview";
 import { colorsDocument } from "./fixtures/colors";
 import { recolorDocument } from "./fixtures/recolor";
 
+import { drawingDocument, installDrawingTools } from "./fixtures/drawing";
+
 const host = document.getElementById("tiles")!;
 let renderer: CanvasRenderer;
 let session: EditorSession;
@@ -87,6 +89,7 @@ function dispose() {
 async function load(
   kind:
     | "small"
+    | "drawing"
     | "empty"
     | "frontier"
     | "heartland"
@@ -98,19 +101,21 @@ async function load(
   dispose();
   queries = [];
   const document =
-    kind === "recolor"
-      ? recolorDocument()
-      : kind === "colors"
-        ? colorsDocument()
-        : kind === "overview"
-          ? overviewDocument()
-          : kind === "grid"
-            ? gridDocument()
-            : kind === "small"
-              ? small()
-              : kind === "empty"
-                ? new MapDocument()
-                : populatedDocument(kind === "frontier" ? 0 : 1);
+    kind === "drawing"
+      ? drawingDocument()
+      : kind === "recolor"
+        ? recolorDocument()
+        : kind === "colors"
+          ? colorsDocument()
+          : kind === "overview"
+            ? overviewDocument()
+            : kind === "grid"
+              ? gridDocument()
+              : kind === "small"
+                ? small()
+                : kind === "empty"
+                  ? new MapDocument()
+                  : populatedDocument(kind === "frontier" ? 0 : 1);
   // Record bounded queries, not pixels or model objects. Clear between measurements.
   const original = document.iterateRuns.bind(document);
   document.iterateRuns = (id, bounds) => {
@@ -118,12 +123,21 @@ async function load(
     return original(id, bounds);
   };
   session = new EditorSession(document);
+  if (kind === "drawing") {
+    installDrawingTools(session);
+    session.canvasState.set("ready");
+    session.selectLayer(layerId("buildings"));
+    session.setColor("#ff0000");
+    session.perform("pencil");
+    session.history.markSaved(session.history.captureCheckpoint());
+  }
   renderer = await createRenderer(host, session);
   stop = [
     bindDocument(session, (change) => renderer.invalidate(change)),
     session.viewport.subscribe(() => renderer.resize()),
     session.hiddenLayers.subscribe(() => renderer.resize()),
     session.rectangle.subscribe(() => renderer.resize()),
+    session.drawing.preview.subscribe(() => renderer.resize()),
   ];
   renderer.resize();
   return renderer.snapshot();

@@ -8,6 +8,7 @@ import { TileScene } from "./tileScene";
 import { MapDocument } from "../domain/document";
 import { CANVAS_INSET, TILE_PIXELS } from "../editor/viewport";
 import { gridLayout, type GridBand } from "./grid";
+import { resolveColor } from "./colors";
 
 export interface CanvasRenderer {
   resize(): void;
@@ -91,6 +92,8 @@ export async function createRenderer(
     stage.addChild(grid);
     const rectangle = new Graphics();
     stage.addChild(rectangle);
+    const drawing = new Graphics();
+    stage.addChild(drawing);
     const resize = () => {
       if (destroyed || !renderer) return;
       const { width, height } = host.getBoundingClientRect();
@@ -151,6 +154,35 @@ export async function createRenderer(
             (measured.maxY - measured.minY) * scale,
           )
           .stroke({ color: "#f5cf7d", width: 2 });
+      }
+      drawing.clear();
+      for (const run of session?.drawing.preview.getSnapshot()?.writes ?? []) {
+        // Display footprint above the composition; never bake it into tile caches.
+        const x = Math.max(0, CANVAS_INSET + (run.x - view.x) * scale);
+        const y = Math.max(0, CANVAS_INSET + (run.y - view.y) * scale);
+        const right = Math.min(
+          width,
+          CANVAS_INSET + (run.x + run.length - view.x) * scale,
+        );
+        const bottom = Math.min(
+          height,
+          CANVAS_INSET + (run.y + 1 - view.y) * scale,
+        );
+        if (right <= x || bottom <= y) continue;
+        const color = run.value
+          ? resolveColor(session!.document, run.value)
+          : [255, 128, 128];
+        drawing
+          .rect(x, y, right - x, bottom - y)
+          .fill({
+            color: (color[0] << 16) | (color[1] << 8) | color[2],
+            alpha: run.value ? 0.55 : 0.2,
+          })
+          .stroke({
+            color: run.value ? "#ffffff" : "#ff8080",
+            alpha: 0.85,
+            width: 1,
+          });
       }
       renderer.render(stage);
       renders++;

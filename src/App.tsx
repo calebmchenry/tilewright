@@ -29,7 +29,16 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
         : null,
   );
   useStoreField(session.canvasState, (state) =>
-    ["inspect", "pan", "fit-map"].includes(action) ? state : null,
+    ["inspect", "pan", "fit-map"].includes(action) ||
+    session.drawing.tool(action)
+      ? state
+      : null,
+  );
+  useStoreField(session.hiddenLayers, () =>
+    session.drawing.tool(action) ? session.editableLayerIds().length > 0 : null,
+  );
+  useStoreField(session.activeLayer, () =>
+    session.drawing.tool(action) ? session.editableLayerIds().length > 0 : null,
   );
   useStoreField(session.viewport, canEditTiles);
   const activeTool = useStore(session.activeTool);
@@ -42,7 +51,9 @@ function ActionButton({ session, action }: Props & { action: ActionId }) {
         disabled={!!state.reason}
         aria-describedby={state.reason ? id : undefined}
         aria-pressed={
-          action === "inspect" || action === "pan"
+          action === "inspect" ||
+          action === "pan" ||
+          session.drawing.tool(action)
             ? action === activeTool
             : undefined
         }
@@ -73,10 +84,7 @@ export function ToolPanel({ session }: Props) {
   return (
     <section className="panel tools" aria-label="Tools">
       <h2>
-        Tools{" "}
-        <span className="panel-value">
-          {tool === "inspect" ? "Inspect" : "Pan"}
-        </span>
+        Tools <span className="panel-value">{session.action(tool).label}</span>
       </h2>
       <div className="tool-grid">
         {(
@@ -98,7 +106,10 @@ export function ToolPanel({ session }: Props) {
       <p className="hint">
         Scroll to pan. Pinch or Cmd-scroll to zoom. Space-drag pans temporarily.
         H: Pan · I: Inspect · F: Fit map. Drag with Inspect to measure a
-        rectangle; Escape clears it. Drawing tools are not available yet.
+        rectangle; Escape clears it.{" "}
+        {session.drawing.tool(tool)
+          ? "Drag to preview; release to apply; Escape cancels drawing."
+          : "Drawing tools are not available yet."}
       </p>
     </section>
   );

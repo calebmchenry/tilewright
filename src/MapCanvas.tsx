@@ -14,6 +14,10 @@ export function MapCanvas({ session }: { session: EditorSession }) {
   const [detail, setDetail] = useState("");
 
   const editable = useStoreField(session.viewport, canEditTiles);
+  const drawing = useStoreField(
+    session.activeTool,
+    (tool) => !!session.drawing.tool(tool),
+  );
   useEffect(() => bindNavigation(host.current!, session), [session]);
 
   useEffect(() => {
@@ -54,8 +58,10 @@ export function MapCanvas({ session }: { session: EditorSession }) {
         Scroll to pan. Pinch or Cmd/Ctrl-scroll to zoom. Space-drag or
         middle-drag to pan. H selects Pan; I selects Inspect. F fits the map; 0
         resets to 100%; plus/minus zoom; arrows pan. Drag with Inspect to
-        measure a rectangle; Escape clears it. Drawing tools are not available
-        yet.
+        measure a rectangle; Escape clears it.{" "}
+        {drawing
+          ? "Drag to preview; release to apply; Escape cancels drawing."
+          : "Drawing tools are not available yet."}
       </p>
       {status === "ready" && !editable && (
         <p
