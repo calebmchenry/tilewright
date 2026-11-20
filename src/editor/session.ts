@@ -520,6 +520,21 @@ export class EditorSession {
       ]);
     });
   }
+  /** Move directly to a bottom-to-top stack index in one undoable operation. */
+  moveLayerTo(id: LayerId, index: number): boolean {
+    return this.#run("Reorder layers", () => {
+      const ids = this.document.layers.map((layer) => layer.id);
+      const from = ids.indexOf(id);
+      if (from < 0) throw new RangeError(`Unknown layer: ${id}`);
+      if (!Number.isInteger(index) || index < 0 || index >= ids.length)
+        throw new RangeError("Invalid layer position.");
+      ids.splice(from, 1);
+      ids.splice(index, 0, id);
+      return this.history.execute("Reorder layers", [
+        { kind: "reorder-layers", ids },
+      ]);
+    });
+  }
   layerHasContent(id: LayerId): boolean {
     // Only inspect the first occupied run, never materialize all layer content.
     return !this.document.iterateRuns(id).next().done;

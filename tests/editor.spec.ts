@@ -43,40 +43,42 @@ test("shell displays state, explains unavailable actions, and keeps native text 
   await expect(page.getByLabel("Current color", { exact: true })).toHaveValue(
     "#91baa1",
   );
-  const visibility = page.getByRole("checkbox", { name: "Show active layer" });
-  await expect(visibility).toBeChecked();
-  await visibility.uncheck();
-  await expect(visibility).not.toBeChecked();
+  const visibility = page.locator(
+    '.layer-row[data-active="true"] .layer-visibility-button',
+  );
+  await expect(visibility).toHaveAttribute("aria-pressed", "true");
+  await visibility.click();
+  await expect(visibility).toHaveAttribute("aria-pressed", "false");
   await expect(visibility).toBeFocused();
   await expect(
     page.getByRole("button", { name: "Undo", exact: true }),
   ).toHaveCount(0);
-  await visibility.check();
+  await visibility.click();
   const input = page.locator("main").getByLabel("Layer name", { exact: true });
   await input.fill("Terrain");
   await expect(input).toBeFocused();
   await input.press("Enter");
   await expect(input).toBeFocused();
   await expect(
-    page.getByRole("button", { name: "Terrain Active" }),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.locator('.layer-row[data-active="true"] .layer-name'),
+  ).toHaveValue("Terrain");
   const search = page.getByLabel("Find an area");
   await search.pressSequentially("village");
   await search.press("ControlOrMeta+z");
   await expect(
-    page.getByRole("button", { name: "Terrain Active" }),
-  ).toBeVisible();
+    page.locator("main").getByLabel("Layer name", { exact: true }),
+  ).toHaveValue("Terrain");
   const canvas = page.getByRole("region", { name: "Canvas keyboard input" });
   await canvas.click();
   await expect(canvas).toBeFocused();
   await canvas.press("ControlOrMeta+z");
   await expect(
-    page.getByRole("button", { name: "Layer 1 Active" }),
-  ).toBeVisible();
+    page.locator("main").getByLabel("Layer name", { exact: true }),
+  ).toHaveValue("Layer 1");
   await canvas.press("ControlOrMeta+Shift+z");
   await expect(
-    page.getByRole("button", { name: "Terrain Active" }),
-  ).toBeVisible();
+    page.locator("main").getByLabel("Layer name", { exact: true }),
+  ).toHaveValue("Terrain");
   await page.getByLabel("Hex color").fill("bad");
   await page.getByRole("button", { name: "Apply color" }).click();
   await expect(
@@ -220,7 +222,10 @@ test("small edit targets canvas spans/history without rendering unrelated panels
       (canvas) => canvas === document.querySelector("canvas"),
     ),
   ).toBe(true);
-  await page.getByRole("button", { name: "Buildings", exact: true }).click();
+  await page
+    .locator("main")
+    .getByLabel("Layer name: Buildings", { exact: true })
+    .click();
   await expect(
     page.locator("main").getByLabel("Layer name", { exact: true }),
   ).toHaveValue("Buildings");
@@ -233,8 +238,8 @@ test("small edit targets canvas spans/history without rendering unrelated panels
     .getByLabel("Layer name", { exact: true })
     .press("Enter");
   await expect(
-    page.getByRole("button", { name: "Structures Active" }),
-  ).toBeVisible();
+    page.locator("main").getByLabel("Layer name", { exact: true }),
+  ).toHaveValue("Structures");
   const after = await page.evaluate(() => window.editorProbe.renders);
   expect(after.layers).toBeGreaterThan(0);
   expect(after.colors + after.annotations + after.tools + after.view).toBe(0);

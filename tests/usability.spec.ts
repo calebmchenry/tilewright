@@ -180,6 +180,7 @@ test("names, descriptions, search, select and IME never invoke map keys or tile 
       "ControlOrMeta+Shift+z",
     ])
       await input.press(key);
+    if (field === "Layer name") await input.press("Escape"); // Cancel the inline draft before leaving the row.
     expect(await content(page)).toEqual(before);
     expect(
       await page.evaluate(() =>

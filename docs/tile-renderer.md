@@ -61,7 +61,7 @@ does not change the result. Black, white and canvas-colored paint are ordinary
 occupied cells. Reordering containers reuses their textures.
 
 `EditorSession.hiddenLayers` and `setLayerVisible` supply transient view visibility.
-The active layer's **Show active layer** checkbox uses that seam. Hiding releases
+Each layer row's visibility icon uses that seam. Hiding releases
 its renderer cache, leaves underlying model content untouched, and adds no history
 entry. Showing queries fresh content, including intervening hidden edits or registry
 changes. Removed layer IDs are dropped from the preference; undoing removal shows

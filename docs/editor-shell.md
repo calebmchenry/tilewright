@@ -57,7 +57,7 @@ names from composition changes. Unsubscription belongs to renderer teardown.
 **Rendering:** TW-007 now consumes this seam through the [visible tile renderer](tile-renderer.md).
 It renders sparse chunk textures in document layer order and invalidates only affected
 visible caches. The former origin marker has been removed. The active layer's
-visibility is a transient session store with a **Show active layer** checkbox;
+visibility is a transient session store with an eye icon on each layer row;
 hiding releases its render cache without changing document content or history.
 TW-013 completes [layer management](layers.md), including safe removal, last-layer
 protection, stack controls, and the visible-layer editing-target policy.

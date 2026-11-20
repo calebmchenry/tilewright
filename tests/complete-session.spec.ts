@@ -49,12 +49,14 @@ for (const multi of [false, true])
     const main = page.locator("main");
     await main
       .getByRole("group", { name: "Active layer" })
-      .getByRole("button", { name: /Furniture/ })
+      .getByLabel("Layer name: Furniture", { exact: true })
       .click();
-    await main.getByLabel("Show active layer").check();
+    await main
+      .getByRole("button", { name: "Show Furniture", exact: true })
+      .click();
     await main
       .getByRole("group", { name: "Active layer" })
-      .getByRole("button", { name: /Walls/ })
+      .getByLabel("Layer name: Walls", { exact: true })
       .click();
     const states = [await content(page)];
     const baseSteps = await page.evaluate(

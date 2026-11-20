@@ -213,3 +213,38 @@ test("empty and non-active removal remain undoable without switching a valid tar
   assert.equal(editor.activeLayer.getSnapshot(), buildings);
   editor.dispose();
 });
+
+test("direct reordering moves across the stack in one undo step and rejects invalid positions atomically", () => {
+  const editor = populated();
+  editor.addLayer();
+  editor.addLayer();
+  editor.selectLayer(terrain);
+  const before = snapshot(editor);
+  const history = editor.history.state;
+  assert.equal(editor.moveLayerTo(buildings, 0), true);
+  assert.equal(editor.document.layers[0].id, buildings);
+  assert.equal(editor.activeLayer.getSnapshot(), terrain);
+  assert.equal(editor.history.state.undoSteps, history.undoSteps + 1);
+  assert.deepEqual(
+    [...editor.document.iterateRuns(buildings)],
+    before.runs.filter((run) => run.layerId === buildings),
+  );
+  editor.perform("undo");
+  assert.deepEqual(snapshot(editor), before);
+  const undone = editor.history.state;
+  for (const index of [-1, 4, 1.5, NaN])
+    assert.equal(editor.moveLayerTo(buildings, index), false);
+  assert.equal(editor.moveLayerTo(layerId("missing"), 0), false);
+  assert.equal(
+    editor.moveLayerTo(
+      buildings,
+      before.layers.findIndex((layer) => layer.id === buildings),
+    ),
+    true,
+  );
+  assert.deepEqual(editor.history.state, undone);
+  editor.perform("redo");
+  assert.equal(editor.document.layers[0].id, buildings);
+  assert.deepEqual(editor.document.registryEntries, before.registry);
+  editor.dispose();
+});

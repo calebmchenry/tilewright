@@ -117,7 +117,7 @@ for (const dpr of [1, 2])
     expect(await persistent(page)).toEqual(before);
     await page
       .locator("main")
-      .getByRole("button", { name: "Terrain", exact: true })
+      .getByLabel("Layer name: Terrain", { exact: true })
       .click();
     await move(page, 70, 60);
     await host(page).press("Control+v");

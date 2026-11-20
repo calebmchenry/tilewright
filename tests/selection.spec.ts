@@ -98,7 +98,10 @@ for (const dpr of [1, 2])
     await expect(panel(page)).toContainText("walls · 64 occupied");
     await include(page, "Furniture").check();
     await expect(panel(page)).toContainText("furniture · 3 occupied");
-    await action(page, "Terrain").click();
+    await page
+      .locator("main")
+      .getByLabel("Layer name: Terrain", { exact: true })
+      .click();
     expect((await selected(page))!.layers.map((l) => l.layerId)).toEqual([
       "walls",
       "furniture",
@@ -329,30 +332,36 @@ test("scope controls, text shortcuts, gates, painting and small-window layout re
   await include(page, "Walls").uncheck();
   await expect(include(page, "Furniture")).toBeDisabled();
   await include(page, "Walls").check();
-  await action(page, "Terrain").click();
   await page
     .locator("main")
-    .getByRole("checkbox", { name: "Show active layer" })
-    .uncheck();
+    .getByLabel("Layer name: Terrain", { exact: true })
+    .click();
+  await page
+    .locator("main")
+    .locator('.layer-row[data-active="true"] .layer-visibility-button')
+    .click();
   await expect(include(page, "Terrain")).toBeDisabled();
   await expect(action(page, "Select")).toBeDisabled();
   expect((await selected(page))!.layers.map((l) => l.layerId)).toEqual([
     "furniture",
     "walls",
   ]);
-  await action(page, "Furniture").click();
   await page
     .locator("main")
-    .getByRole("checkbox", { name: "Show active layer" })
-    .uncheck();
+    .getByLabel("Layer name: Furniture", { exact: true })
+    .click();
+  await page
+    .locator("main")
+    .locator('.layer-row[data-active="true"] .layer-visibility-button')
+    .click();
   expect(await selected(page)).toBeNull();
   await expect(
     page.getByRole("status", { name: "Action feedback" }),
   ).toContainText("Selection cleared");
   await page
     .locator("main")
-    .getByRole("checkbox", { name: "Show active layer" })
-    .check();
+    .locator('.layer-row[data-active="true"] .layer-visibility-button')
+    .click();
   expect(await selected(page)).toBeNull();
   await selectHouse(page);
   await page.setViewportSize({ width: 640, height: 452 });

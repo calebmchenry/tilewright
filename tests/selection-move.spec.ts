@@ -1,8 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const host = (page: Page) => page.locator(".canvas-host");
-const action = (page: Page, name: string) =>
-  page.locator("main").getByRole("button", { name, exact: true });
 async function setup(page: Page) {
   await page.goto("/tests/editor.html?fixture=selection-move");
   await expect(page.getByRole("status", { name: "Canvas status" })).toHaveText(
@@ -70,7 +68,10 @@ for (const dpr of [1, 2])
       }),
       page = await context.newPage();
     await setup(page);
-    await action(page, "Terrain").click();
+    await page
+      .locator("main")
+      .getByLabel("Layer name: Terrain", { exact: true })
+      .click();
     const before = await persistent(page),
       original = await content(page);
     await move(page, 62, 62);

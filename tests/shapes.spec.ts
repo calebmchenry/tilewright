@@ -54,7 +54,10 @@ for (const dpr of [1, 2])
       page = await context.newPage();
     const host = await setup(page),
       canvas = host.locator("canvas");
-    await action(page, "Terrain").click();
+    await page
+      .locator("main")
+      .getByLabel("Layer name: Terrain", { exact: true })
+      .click();
     await action(page, "Paint with Grass").click();
     await action(page, "Rectangle").click();
     await expect(style(page)).toHaveValue("filled");
@@ -112,7 +115,10 @@ for (const dpr of [1, 2])
     await host.press("ControlOrMeta+Shift+z");
     expect((await state(page)).runs).toEqual(terrain.runs);
     expect(await canvas.screenshot()).toEqual(terrainPixels);
-    await action(page, "Buildings").click();
+    await page
+      .locator("main")
+      .getByLabel("Layer name: Buildings", { exact: true })
+      .click();
     await page
       .locator("main")
       .getByLabel("Hex color", { exact: true })
@@ -344,8 +350,8 @@ test("rectangle style cancellation, map-edge clipping, thin shapes, shortcuts an
   ).toBe(false);
   await page
     .locator("main")
-    .getByRole("checkbox", { name: "Show active layer" })
-    .uncheck();
+    .locator('.layer-row[data-active="true"] .layer-visibility-button')
+    .click();
   await expect(action(page, "Line")).toBeDisabled();
   await expect(action(page, "Rectangle")).toBeDisabled();
 });

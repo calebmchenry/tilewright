@@ -1,76 +1,108 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
-// The editor/tiles suites declare the shared test-only window probes.
-test("layer controls add above active, rename, reorder, remove empty layers and protect the last layer", async ({
+const panelFor = (page: Page) =>
+  page.locator("main").getByRole("region", { name: "Layers", exact: true });
+const activeName = (panel: Locator) =>
+  panel.getByLabel("Layer name", { exact: true });
+async function order(panel: Locator, names: string[]) {
+  await expect
+    .poll(() =>
+      panel
+        .locator(".layer-name")
+        .evaluateAll((inputs) =>
+          inputs.map((input) => (input as HTMLInputElement).value),
+        ),
+    )
+    .toEqual(names);
+}
+async function dragLayer(
+  page: Page,
+  panel: Locator,
+  from: string,
+  to: string,
+  edge: "top" | "bottom",
+  release = true,
+) {
+  const handle = panel.getByRole("button", {
+    name: `Reorder ${from}`,
+    exact: true,
+  });
+  await handle.scrollIntoViewIfNeeded();
+  const start = (await handle.boundingBox())!;
+  const end = (await panel
+    .locator(".layer-row")
+    .filter({
+      has: page.getByRole("button", { name: `Reorder ${to}`, exact: true }),
+    })
+    .boundingBox())!;
+  await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(
+    end.x + end.width / 2,
+    end.y + (edge === "top" ? 2 : end.height - 2),
+    { steps: 8 },
+  );
+  if (release) await page.mouse.up();
+}
+
+test("compact rows select and rename inline, add above active, and protect the last layer", async ({
   page,
 }, testInfo) => {
   await page.goto("/");
   await expect(page.getByRole("status", { name: "Canvas status" })).toHaveText(
     "Canvas ready",
   );
-  const panel = page.getByRole("region", { name: "Layers", exact: true });
-  const stack = panel.getByRole("group", { name: "Active layer" });
+  const panel = panelFor(page);
   const remove = panel.getByRole("button", {
-    name: "Remove layer",
+    name: "Remove Layer 1",
     exact: true,
   });
   await expect(remove).toBeDisabled();
   await expect(remove).toHaveAccessibleDescription(
     "Keep at least one layer in the map.",
   );
-  await panel.getByLabel("Layer name", { exact: true }).fill("Terrain");
-  await panel.getByRole("button", { name: "Rename", exact: true }).click();
+  await expect(
+    panel.locator(".hint, .layer-badges, .layer-actions"),
+  ).toHaveCount(0);
+  const name = activeName(panel);
+  await name.fill("  Terrain  ");
+  await name.press("Enter");
+  await expect(name).toHaveValue("Terrain");
+  await expect(name).toBeFocused();
+  await name.fill("Discard this");
+  await name.press("Escape");
+  await expect(name).toHaveValue("Terrain");
+  await name.fill("  ");
+  await name.press("Enter");
+  await expect(name).toHaveValue("Terrain");
   await panel.getByRole("button", { name: "Add layer", exact: true }).click();
-  await panel.getByLabel("Layer name", { exact: true }).fill("Buildings");
-  await panel.getByLabel("Layer name", { exact: true }).press("Enter");
-  await expect(stack.getByRole("button")).toHaveText([
-    "▱BuildingsActive",
-    "▱Terrain",
-  ]);
-  await expect(
-    panel.getByRole("button", { name: "Move layer up" }),
-  ).toBeDisabled();
-  await panel.getByRole("button", { name: "Move layer down" }).click();
-  await expect(stack.getByRole("button")).toHaveText([
-    "▱Terrain",
-    "▱BuildingsActive",
-  ]);
-  await expect(
-    panel.getByRole("button", { name: "Move layer down" }),
-  ).toBeDisabled();
-  await page.locator(".canvas-host").press("Meta+z");
-  await expect(stack.getByRole("button")).toHaveText([
-    "▱BuildingsActive",
-    "▱Terrain",
-  ]);
-  await page.locator(".canvas-host").press("Meta+Shift+z");
-  await panel.getByLabel("Layer name", { exact: true }).fill("  ");
-  await expect(
-    panel.getByRole("button", { name: "Rename", exact: true }),
-  ).toBeDisabled();
-  await stack.getByRole("button", { name: "Terrain", exact: true }).click();
+  await name.fill("Buildings");
+  // Clicking away saves the name; it does not require a Rename button.
+  await panel.getByRole("heading", { name: "Layers 2" }).click();
+  await order(panel, ["Buildings", "Terrain"]);
+  await panel.getByLabel("Layer name: Terrain", { exact: true }).click();
+  await expect(name).toHaveValue("Terrain");
   await panel.getByRole("button", { name: "Add layer", exact: true }).click();
-  await expect(stack.getByRole("button")).toHaveText([
-    "▱Layer 1Active",
-    "▱Terrain",
-    "▱Buildings",
-  ]);
-  await remove.click(); // Empty layers need no extra confirmation.
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(stack.getByRole("button")).toHaveText([
-    "▱TerrainActive",
-    "▱Buildings",
-  ]);
-  await page.locator(".canvas-host").press("Meta+z");
-  await expect(stack.getByRole("button")).toHaveText([
-    "▱Layer 1",
-    "▱TerrainActive",
-    "▱Buildings",
-  ]);
-  await page.setViewportSize({ width: 640, height: 452 });
+  await order(panel, ["Buildings", "Layer 1", "Terrain"]);
   await panel
-    .getByRole("button", { name: "Add layer", exact: true })
-    .scrollIntoViewIfNeeded();
+    .getByRole("button", { name: "Remove Buildings", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(name).toHaveValue("Layer 1"); // Removing another row preserves selection.
+  await panel
+    .getByRole("button", { name: "Remove Layer 1", exact: true })
+    .click();
+  await expect(name).toHaveValue("Terrain");
+  await expect(name).toBeFocused();
+  await page.locator(".canvas-host").press("Meta+z");
+  await order(panel, ["Layer 1", "Terrain"]);
+  await expect(name).toHaveValue("Terrain");
+  await panel
+    .getByLabel("Layer name: Layer 1", { exact: true })
+    .fill("Long layer name ".repeat(20));
+  await activeName(panel).press("Enter");
+  await page.setViewportSize({ width: 640, height: 452 });
+  await panel.scrollIntoViewIfNeeded();
   await page.screenshot({
     path: testInfo.outputPath("layers-small-window.png"),
   });
@@ -84,60 +116,135 @@ test("layer controls add above active, rename, reorder, remove empty layers and 
   ).toBe(true);
 });
 
-test("populated removal confirms the exact layer, cancel/Escape preserve history and undo restores hidden content", async ({
+test("drag handles reorder multiple positions atomically without changing selection; canceled drags preserve history", async ({
+  page,
+}) => {
+  await page.goto("/tests/editor.html?fixture=grid");
+  await expect(page.getByRole("status", { name: "Canvas status" })).toHaveText(
+    "Canvas ready",
+  );
+  const panel = panelFor(page);
+  for (const name of ["Objects", "Labels"]) {
+    await panel.getByRole("button", { name: "Add layer", exact: true }).click();
+    await activeName(panel).fill(name);
+    await activeName(panel).press("Enter");
+  }
+  await panel.getByLabel("Layer name: Terrain", { exact: true }).click();
+  const snapshot = () =>
+    page.evaluate(() => ({
+      layers: window.editorProbe.session.document.layers,
+      runs: [...window.editorProbe.session.document.iterateRuns()].sort(
+        (a, b) => a.layerId.localeCompare(b.layerId) || a.y - b.y || a.x - b.x,
+      ),
+      history: window.editorProbe.session.history.state,
+    }));
+  const before = await snapshot();
+  await order(panel, ["Buildings", "Labels", "Objects", "Terrain"]);
+  await dragLayer(page, panel, "Buildings", "Terrain", "bottom");
+  await order(panel, ["Labels", "Objects", "Terrain", "Buildings"]);
+  await expect(activeName(panel)).toHaveValue("Terrain");
+  expect((await snapshot()).history.undoSteps).toBe(
+    before.history.undoSteps + 1,
+  );
+  expect((await snapshot()).runs).toEqual(before.runs);
+  await page.locator(".canvas-host").press("Meta+z");
+  await order(panel, ["Buildings", "Labels", "Objects", "Terrain"]);
+  await page.locator(".canvas-host").press("Meta+Shift+z");
+  await order(panel, ["Labels", "Objects", "Terrain", "Buildings"]);
+  await dragLayer(page, panel, "Buildings", "Labels", "top");
+  await order(panel, ["Buildings", "Labels", "Objects", "Terrain"]);
+  const unchanged = await snapshot();
+  for (const cancel of [
+    "escape",
+    "outside",
+    "pointercancel",
+    "same-position",
+  ] as const) {
+    await dragLayer(
+      page,
+      panel,
+      "Buildings",
+      cancel === "same-position" ? "Buildings" : "Terrain",
+      "bottom",
+      false,
+    );
+    if (cancel === "escape") await page.keyboard.press("Escape");
+    if (cancel === "outside") await page.mouse.move(300, 100);
+    if (cancel === "pointercancel")
+      await panel
+        .getByRole("button", { name: "Reorder Buildings" })
+        .dispatchEvent("pointercancel");
+    await page.mouse.up();
+    expect(await snapshot()).toEqual(unchanged);
+    await expect(
+      panel.locator('[data-drop-before="true"], [data-drop-end="true"]'),
+    ).toHaveCount(0);
+  }
+  const handle = panel.getByRole("button", {
+    name: "Reorder Buildings",
+    exact: true,
+  });
+  await handle.press("ArrowDown");
+  await order(panel, ["Labels", "Buildings", "Objects", "Terrain"]);
+  await expect(handle).toBeFocused();
+  await handle.press("End");
+  await order(panel, ["Labels", "Objects", "Terrain", "Buildings"]);
+  await handle.press("Home");
+  await order(panel, ["Buildings", "Labels", "Objects", "Terrain"]);
+  const atTop = await snapshot();
+  await handle.press("ArrowUp");
+  expect(await snapshot()).toEqual(atTop);
+  await expect(activeName(panel)).toHaveValue("Terrain");
+});
+
+test("per-row visibility and populated removal preserve the selected target, and undo restores hidden content", async ({
   page,
 }, testInfo) => {
   await page.goto("/tests/editor.html?fixture=grid");
   await expect(page.getByRole("status", { name: "Canvas status" })).toHaveText(
     "Canvas ready",
   );
-  const panel = page
-    .locator("main")
-    .getByRole("region", { name: "Layers", exact: true });
-  await page.evaluate(() =>
-    window.editorProbe.session.viewport.set({ x: 55, y: 55, zoom: 1 }),
-  );
-  await panel.getByRole("button", { name: "Buildings", exact: true }).click();
+  const panel = panelFor(page);
   const original = await page.evaluate(() => ({
     layers: window.editorProbe.session.document.layers,
     runs: [...window.editorProbe.session.document.iterateRuns()],
   }));
-  await panel.getByRole("button", { name: "Move layer down" }).click();
-  await panel.getByLabel("Show active layer").uncheck();
+  await panel
+    .getByRole("button", { name: "Reorder Buildings" })
+    .press("ArrowDown");
+  await panel
+    .getByRole("button", { name: "Hide Buildings", exact: true })
+    .click();
   await expect(
-    panel.getByRole("button", { name: "Buildings Active Hidden" }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(panel).toContainText("Show this layer before drawing");
+    panel.getByRole("button", { name: "Show Buildings", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+  await expect(activeName(panel)).toHaveValue("Terrain");
   const before = await page.evaluate(() => ({
     history: window.editorProbe.session.history.state,
     runs: [...window.editorProbe.session.document.iterateRuns()],
   }));
-  await panel
-    .getByRole("button", { name: "Remove layer", exact: true })
-    .click();
+  const remove = panel.getByRole("button", {
+    name: "Remove Buildings",
+    exact: true,
+  });
+  await remove.click();
   const dialog = page.getByRole("dialog", { name: "Remove layer?" });
   await expect(dialog).toContainText("Buildings");
   await expect(dialog).toContainText("including hidden content");
   await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
-  await page.keyboard.press("Meta+z"); // Must not reorder behind the modal.
+  await page.keyboard.press("Meta+z");
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
-  await expect(
-    panel.getByRole("button", { name: "Remove layer", exact: true }),
-  ).toBeFocused();
+  await expect(remove).toBeFocused();
   expect(
     await page.evaluate(() => ({
       history: window.editorProbe.session.history.state,
       runs: [...window.editorProbe.session.document.iterateRuns()],
     })),
   ).toEqual(before);
-  await panel
-    .getByRole("button", { name: "Remove layer", exact: true })
-    .click();
+  await remove.click();
   await dialog.getByRole("button", { name: "Cancel" }).click();
-  await panel
-    .getByRole("button", { name: "Remove layer", exact: true })
-    .click();
+  await remove.click();
   await page.setViewportSize({ width: 640, height: 452 });
   await expect(
     dialog.getByRole("button", { name: "Remove layer", exact: true }),
@@ -149,19 +256,18 @@ test("populated removal confirms the exact layer, cancel/Escape preserve history
     .getByRole("button", { name: "Remove layer", exact: true })
     .click();
   await expect(dialog).toHaveCount(0);
+  await expect(activeName(panel)).toHaveValue("Terrain");
+  await expect(activeName(panel)).toBeFocused();
   await expect(
-    panel.getByRole("button", { name: "Terrain Active" }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    panel.getByRole("button", { name: "Remove layer", exact: true }),
+    panel.getByRole("button", { name: "Remove Terrain", exact: true }),
   ).toBeDisabled();
   await page.locator(".canvas-host").press("Meta+z");
   await expect(
-    panel.getByRole("button", { name: "Buildings", exact: true }),
+    panel.getByRole("button", { name: "Hide Buildings", exact: true }),
   ).toBeVisible();
   await page.locator(".canvas-host").press("Meta+Shift+z");
   await expect(
-    panel.getByRole("button", { name: "Buildings", exact: true }),
+    panel.getByRole("button", { name: "Remove Buildings", exact: true }),
   ).toHaveCount(0);
   await page.locator(".canvas-host").press("Meta+z");
   await page.locator(".canvas-host").press("Meta+z");

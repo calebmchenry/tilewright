@@ -239,8 +239,8 @@ test("sampling routing, hidden/empty cells, eraser size cancellation and small-w
   });
   await page
     .locator("main")
-    .getByRole("checkbox", { name: "Show active layer" })
-    .uncheck();
+    .locator('.layer-row[data-active="true"] .layer-visibility-button')
+    .click();
   await expect(action(page, "Eraser")).toBeDisabled();
   await expect(action(page, "Eyedropper")).toBeEnabled();
   await click(page, 62, 63);
@@ -248,8 +248,8 @@ test("sampling routing, hidden/empty cells, eraser size cancellation and small-w
   expect(await state(page)).toEqual(before);
   await page
     .locator("main")
-    .getByRole("checkbox", { name: "Show active layer" })
-    .check();
+    .locator('.layer-row[data-active="true"] .layer-visibility-button')
+    .click();
   const raw = await paint(page);
   for (const modifier of ["Alt", "Meta", "Control"]) {
     await page.keyboard.down(modifier);

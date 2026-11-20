@@ -39,7 +39,7 @@ test("New Map validates dimensions, cancels safely, and replaces sessions withou
   );
   const original = await page.locator("canvas").elementHandle();
   await page.getByLabel("Layer name", { exact: true }).fill("Keep this layer");
-  await page.getByRole("button", { name: "Rename", exact: true }).click();
+  await page.getByLabel("Layer name", { exact: true }).press("Enter");
   await page.locator(".canvas-host").press("Meta+n");
   const dialog = page.getByRole("dialog", { name: "New map" });
   await expect(dialog.getByLabel("Width (tiles)")).toHaveValue("256");

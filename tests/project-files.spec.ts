@@ -342,8 +342,10 @@ for (const action of ["new", "open", "close"] as const) {
           .toMatchObject({ enabled: false });
         if (action === "open") {
           await expect(
-            page.getByRole("checkbox", { name: "Show active layer" }),
-          ).not.toBeChecked();
+            page.locator(
+              '.layer-row[data-active="true"] .layer-visibility-button',
+            ),
+          ).toHaveAttribute("aria-pressed", "false");
           await expect(page.locator(".document-title")).not.toContainText(
             "Unsaved",
           );
@@ -506,8 +508,8 @@ test("native adapter controls, text-focused Cmd+S, Save As cancellation/failure 
   await expect(page.getByTestId("map-dimensions")).toContainText("6400 × 6400");
   await expect(name).toHaveValue("Buildings");
   await expect(
-    page.getByRole("checkbox", { name: "Show active layer" }),
-  ).not.toBeChecked();
+    page.locator('.layer-row[data-active="true"] .layer-visibility-button'),
+  ).toHaveAttribute("aria-pressed", "false");
   await expect(page.locator("canvas")).toHaveCount(1);
   await expect(page.locator(".canvas-host")).toBeFocused();
 });
@@ -539,7 +541,7 @@ test("Open cancellation/read errors preserve map; dirty Open can be declined; co
   );
   await expect(title).toContainText("café 地図 1.tilewright");
   await page.getByLabel("Layer name", { exact: true }).fill("Keep unsaved");
-  await page.getByRole("button", { name: "Rename", exact: true }).click();
+  await page.getByLabel("Layer name", { exact: true }).press("Enter");
   await page.locator(".canvas-host").press("Meta+o");
   const confirmation = page.getByRole("dialog", {
     name: "Open another project",
@@ -655,7 +657,7 @@ test("menu and shortcut save spam starts one native picker/write, and menu cance
   });
   await expect(page.locator(".document-title")).not.toContainText("Unsaved");
   await page.getByLabel("Layer name", { exact: true }).fill("Still unsaved");
-  await page.getByRole("button", { name: "Rename", exact: true }).click();
+  await page.getByLabel("Layer name", { exact: true }).press("Enter");
   await page.evaluate(() => {
     window.fileProbe.cancel = true;
   });

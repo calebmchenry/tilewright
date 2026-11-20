@@ -8,25 +8,31 @@ conventional defaults complete the existing [document](map-document.md),
 
 - Every document has at least one layer. New Map starts with one empty, visible
   `Layer 1`. A map may have no painted tiles, but may not have zero layers.
-  **Remove layer** is disabled for the last layer with an explanation; the session
-  and model also reject that removal.
+  The row's trash icon is disabled for the last layer with a tooltip and accessible
+  explanation; the session and model also reject that removal.
 - The panel lists the stack **top to bottom**; the model retains its established
-  bottom-to-top order. The active row is pressed and labeled **Active**. Selecting
-  a layer changes the editing target without moving it in the stack.
-- **Add layer** creates an empty visible layer immediately above the active layer
+  bottom-to-top order. The active row has a highlighted border and background.
+  Clicking or tabbing into a row's inline name selects its layer without moving
+  it in the stack. Drag handles and visibility/removal icons operate on their
+  own row without changing the active editing target.
+- The borderless **+** icon in the header creates an empty visible layer immediately above the active layer
   and selects it. The initial name is the first unused `Layer N`. IDs use
   `layer-` plus a random UUID, independent of names and indices. Undo/redo restores
   the same ID; creating after undo generates a fresh ID for the new history branch.
-- Rename trims surrounding whitespace and rejects blank names. Duplicate display
-  names are allowed; identity and tile ownership never depend on a name.
-- **Move layer up/down** swaps the active layer with its immediate neighbor.
-  Buttons at the top/bottom explain why no further move is possible. Rename and
+- Names are edited inline. Enter or leaving the field commits a trimmed name;
+  Escape cancels the draft. Blank drafts revert to the existing name. Unchanged
+  names do not add history. Duplicate display names are allowed; identity and
+  tile ownership never depend on a name. Text fields retain native text shortcuts.
+- Drag a row's grip to a highlighted insertion point to reorder. A completed drop
+  moves any distance in one undo step. Escape, pointer cancellation, or releasing
+  outside the list cancels without changing history. The focused grip also accepts
+  Up/Down to move one position and Home/End to move to the top/bottom. Rename and
   reorder preserve every layer's cells and registry associations.
 - An empty layer removes immediately. A populated layer opens a modal naming the
   layer and explaining that its tiles (including hidden content) will be removed
   and can be restored with Undo. Cancel receives initial focus; Cancel and Escape
   leave content/history untouched. Map shortcuts do not run behind the dialog.
-  Removal captures the selected ID, and revalidates at confirmation. Errors stay
+  Removal captures the clicked row's ID, and revalidates at confirmation. Errors stay
   visible in the dialog; an oversized history operation is rejected atomically,
   never silently made irreversible.
 - If an operation removes the active layer, select the top remaining layer, even
@@ -35,12 +41,13 @@ conventional defaults complete the existing [document](map-document.md),
 
 ## Visibility, drawing, and selection
 
-**Show active layer** is a transient view preference, as established in TW-007.
-Hidden rows are explicitly marked **Hidden**. Hiding leaves every stored tile,
+Each row's right-aligned eye icon toggles its visibility, a transient view
+preference established in TW-007. Hidden rows use a crossed-out eye and muted
+name; accessible names announce Show/Hide and the layer name. Hiding leaves every stored tile,
 registry association, and layer order untouched. It does not add undo steps,
 change the content revision, or discard redo. All layers may be hidden. Selecting
-one does not silently reveal it; the panel asks the author to show it before
-editing its tiles.
+one does not silently reveal it; drawing and tile-selection controls remain
+unavailable until it is shown.
 
 Drawing and tile selection default to the active **visible** layer. Future
 multi-layer selection may include explicitly chosen visible layers; hidden and
@@ -93,7 +100,8 @@ order. Both preserve the authoritative hidden data.
   complete populated lifecycle undo/redo, all run/registry preservation, independent
   active-layer edits, invalid/no-op operations preserving redo, and visibility's
   interactive target policy.
-- `tests/layers.spec.ts` exercises real controls, order/active/hidden indicators,
+- `tests/layers.spec.ts` exercises inline drafts, blur/Enter/Escape, pointer and
+  keyboard reordering, canceled drops, selection independence, per-row visibility,
   populated confirmation, Cancel/Escape, modal shortcut isolation, restored focus,
   640 × 452 layout, and populated removal undo/redo. WebGL pixel readbacks at
   DPR 1 and 2 compare overlapping registered building/terrain content before and
