@@ -71,7 +71,6 @@ for (const multi of [false, true])
       ).toBe(baseSteps + states.length - 1);
     };
     await main.getByLabel("Hex color", { exact: true }).fill("#112233");
-    await button(page, "Apply color").click();
     await main.getByLabel("Pencil size", { exact: true }).selectOption("3");
     await host(page).press("b");
     await drag(page, 74, 74);
@@ -91,7 +90,6 @@ for (const multi of [false, true])
     await drag(page, 80, 80, 85, 85);
     await checkpoint();
     await main.getByLabel("Hex color", { exact: true }).fill("#998877");
-    await button(page, "Apply color").click();
     await host(page).press("g");
     await drag(page, 73, 81);
     await expect
@@ -102,7 +100,9 @@ for (const multi of [false, true])
     await checkpoint();
     await host(page).press("d");
     await drag(page, 58, 55);
-    await expect(main.getByTestId("color-association")).toContainText("Grass");
+    await expect(
+      main.getByRole("button", { name: "Paint with Grass" }),
+    ).toHaveAttribute("aria-pressed", "true");
     expect(await content(page)).toEqual(states.at(-1));
     await host(page).press("v");
     await drag(page, 60, 60, 67, 67);

@@ -154,8 +154,8 @@ for (const dpr of [1, 2]) {
       registryId: "grass",
     });
     await expect(
-      page.locator("main").getByTestId("color-association"),
-    ).toHaveText("Named color · Grass");
+      page.locator("main").getByRole("button", { name: "Paint with Grass" }),
+    ).toHaveAttribute("aria-pressed", "true");
     expect(await state(page)).toEqual(before);
     await host.press("b");
     await click(page, 62, 65);
@@ -163,8 +163,7 @@ for (const dpr of [1, 2]) {
     await page
       .locator("main")
       .getByLabel("Hex color", { exact: true })
-      .fill("#00ff00");
-    await action(page, "Apply color").click();
+      .fill("#00ff00FF");
     await click(page, 64, 65);
     await host.press("d");
     const beforeRawSample = await state(page);
@@ -186,9 +185,9 @@ for (const dpr of [1, 2]) {
     await dialog
       .getByRole("button", { name: "Edit named color", exact: true })
       .click();
-    await expect(page.locator("main").getByLabel("Selected color")).toHaveText(
-      "#557755",
-    );
+    await expect(
+      page.locator("main").getByLabel("Current color", { exact: true }),
+    ).toHaveValue("#557755");
     await page.mouse.move(10, 10);
     expect(await tilePixels(page, 62, 65)).not.toEqual(registeredPixels);
     expect(await tilePixels(page, 66, 65)).toEqual(registeredPixels);

@@ -6,29 +6,28 @@ defaults, not additional requirements or registry collision/adoption decisions.
 
 ## Inputs and canonical color
 
-The picker and editable Hex / Red / Green / Blue fields can choose any of the
-16,777,216 opaque 8-bit sRGB colors without creating a registry entry. The picker
-applies immediately; typed fields apply together on their form's Apply button or
-Enter. Drafts never partially change the selected color. Successful submission
-synchronizes all inputs and the selected-color swatch/readout, even when the
-canonical value was already selected. Native text undo and arrow keys stay in
-the fields rather than operating on the map.
+The Color panel has a native swatch picker and one editable hex field with an
+accessible name. Both update the selected paint immediately when their value is
+valid. The hex field preserves typed text and the caret while editing, then
+normalizes to six lowercase digits on blur or Enter. Incomplete or invalid drafts
+retain the last valid paint. There is no Apply button, RGB form, duplicate swatch,
+or repeated raw/named-match text. Native text undo and arrow keys stay in the
+field rather than operating on the map.
 
 `src/domain/colors.ts` defines `PaintColor`: lowercase `#rrggbbff`, matching the
 existing model's RGBA encoding with alpha fixed at 255. The hex control displays
 six digits and accepts `#RGB`, `#RRGGBB`, and fully opaque `#RGBA` / `#RRGGBBAA`.
 Case and surrounding whitespace normalize; shorthand repeats each nibble. For
 example, `#AbC`, `#ABCF`, `#AABBCCFF`, and RGB `(170,187,204)` all become
-`#aabbccff`. The `#` is required. RGB fields accept decimal whole channels 0–255,
-with surrounding whitespace and up to three digits (including leading zeroes).
-No rounding, clamping, exponent notation, percentages, CSS names or CSS functions
-are accepted. Blank channels are invalid, never implicitly zero.
+`#aabbccff`. The `#` is required. The session API still accepts numeric RGB
+channels, and named-color dialogs retain their RGB input option; the main panel
+uses hex only.
 
 Malformed input and any alpha below 255 leave the selected color, swatch,
-document, registry, and history unchanged. Errors appear beside the relevant
-fields with accessible invalid/error descriptions and in shared action feedback.
-There is no opacity slider or transparent paint choice. Erasing is a separate
-operation, not a color-picker value.
+document, registry, and history unchanged. Validation appears beside the hex field
+with an accessible invalid/error description and shared action feedback on blur
+or Enter, rather than interrupting partial input. There is no opacity slider or
+transparent paint choice. Erasing is a separate operation, not a picker value.
 
 The RGB bytes denote sRGB; the controls do not offer Display P3, HDR, ICC profiles,
 or custom color management. Solid opaque tile centers preserve those bytes in
@@ -49,14 +48,10 @@ in the [registry implementation](registry-decisions.md#tw-016-implementation). S
 does not allocate tile storage, add undo steps, discard redo, or alter saved
 revisions. A new session starts with `#91baa1ff`.
 
-The Color panel displays the current swatch and exact hex value. It explicitly
-labels raw selection **Raw color · Not linked to a named entry** (or the selected
-named entry with TW-016) and shows either
-**Unregistered color · No named match** or the names of exact matching entries.
-Matching uses the existing registry `rgba` convention (eight digits, case
-insensitive), and updates on registry changes and undo/redo. Multiple matches
-are all shown; this does not invent a collision policy. A record without a string
-name displays its ID, as in the existing metadata list.
+The Color panel displays the current color once, in the picker and editable hex
+field. Named-color rows indicate the selected entry through their pressed state.
+Registry selection, recoloring, history, and eyedropper sampling synchronize the
+controls without additional association or matching-color text.
 
 An equal RGB value does not attach raw paint to an entry or recolor the selected
 raw value when that entry changes. Existing registered tiles keep their IDs.
@@ -84,9 +79,9 @@ paint color for emptiness and no change to storage or file formats.
   invalid, nonopaque and malformed runtime inputs; RGB field parsing; transient
   selected state and redo/saved-checkpoint preservation; raw/registered separation;
   occupied black/white/background/transparent paint; erasure and exact undo/redo.
-- `tests/colors.spec.ts`: actual picker, hex and RGB input synchronization,
-  invalid-draft feedback, native text shortcut isolation, 640 × 452 layout,
-  named matches after rename/recolor/removal/undo, and selected raw-paint identity.
+- `tests/colors.spec.ts`: live picker and hex synchronization, character-by-character
+  typing, invalid-draft feedback, native text shortcut isolation, 640 × 452 layout,
+  registry changes/undo, named selection, and selected raw-paint identity.
 - `tests/fixtures/colors.ts`: two layers and seven unregistered swatches, including
   `#808080` and `#818181`, black, white, background, orange and teal. WebGL readback
   at DPR 1/2 verifies exact colors in detail and cached overview, selected gray

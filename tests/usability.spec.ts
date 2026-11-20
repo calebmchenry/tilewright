@@ -48,7 +48,7 @@ test("continuous keyboard/mouse tool session, panel shortcuts, preview cancel an
     ["l", "Line"],
     ["r", "Rectangle"],
   ]) {
-    await button(page, "Apply color").focus();
+    await button(page, "Register color").focus();
     await page.keyboard.press(key);
     await expect(button(page, name)).toHaveAttribute("aria-pressed", "true");
     const before = await content(page);
@@ -85,7 +85,7 @@ test("continuous keyboard/mouse tool session, panel shortcuts, preview cancel an
       return [r.maxX - r.minX, r.maxY - r.minY];
     }),
   ).toEqual([3, 3]);
-  await button(page, "Apply color").press("Escape");
+  await button(page, "Register color").press("Escape");
   expect(
     await page.evaluate(() =>
       window.editorProbe.session.rectangle.getSnapshot(),
@@ -104,7 +104,7 @@ test("continuous keyboard/mouse tool session, panel shortcuts, preview cancel an
   await host(page).press("ControlOrMeta+v");
   const beforeCancel = await content(page);
   await host(page).press("z");
-  await button(page, "Apply color").press("Escape");
+  await button(page, "Register color").press("Escape");
   await expect(button(page, "Apply paste")).toHaveCount(0);
   expect(await content(page)).toEqual(beforeCancel);
   await host(page).press("x");
@@ -199,7 +199,7 @@ test("names, descriptions, search, select and IME never invoke map keys or tile 
     .locator("main")
     .getByLabel("Tier", { exact: true })
     .press("ArrowDown");
-  await button(page, "Apply color").dispatchEvent("keydown", {
+  await button(page, "Register color").dispatchEvent("keydown", {
     key: "b",
     isComposing: true,
     bubbles: true,

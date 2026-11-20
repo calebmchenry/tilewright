@@ -123,7 +123,6 @@ for (const dpr of [1, 2])
       .locator("main")
       .getByLabel("Hex color", { exact: true })
       .fill("#ff0000");
-    await action(page, "Apply color").click();
     await style(page).selectOption("outline");
     const beforeHouse = await state(page);
     await move(page, 67, 67);

@@ -80,12 +80,11 @@ test("shell displays state, explains unavailable actions, and keeps native text 
     page.locator("main").getByLabel("Layer name", { exact: true }),
   ).toHaveValue("Terrain");
   await page.getByLabel("Hex color").fill("bad");
-  await page.getByRole("button", { name: "Apply color" }).click();
+  await page.getByLabel("Hex color").blur();
   await expect(
     page.getByRole("alert", { name: "Action feedback" }),
   ).toContainText("#RRGGBB");
   await page.getByLabel("Hex color").fill("#AB1020");
-  await page.getByRole("button", { name: "Apply color" }).click();
   await expect(page.getByLabel("Current color", { exact: true })).toHaveValue(
     "#ab1020",
   );

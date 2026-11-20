@@ -61,9 +61,9 @@ test("registry creates stable meanings, adopts hidden/covered cells, edits atomi
   await start(page);
   const original = await snapshot(page);
   const id = await addGrass(page, true);
-  await expect(panel(page).getByTestId("color-association")).toHaveText(
-    "Named color · Grass",
-  );
+  await expect(
+    panel(page).getByRole("button", { name: "Paint with Grass" }),
+  ).toHaveAttribute("aria-pressed", "true");
   const linked = await snapshot(page);
   expect(linked.history.undoSteps).toBe(1);
   expect(
@@ -96,15 +96,17 @@ test("registry creates stable meanings, adopts hidden/covered cells, edits atomi
   await dialog
     .getByRole("button", { name: "Edit named color", exact: true })
     .click();
-  await expect(panel(page).getByTestId("color-association")).toHaveText(
-    "Named color · Meadow",
-  );
-  await expect(panel(page).getByLabel("Selected color")).toHaveText("#557755");
+  await expect(
+    panel(page).getByRole("button", { name: "Paint with Meadow" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    panel(page).getByLabel("Current color", { exact: true }),
+  ).toHaveValue("#557755");
   expect((await snapshot(page)).runs).toEqual(linked.runs);
   await page.evaluate(() => window.editorProbe.session.perform("undo"));
-  await expect(panel(page).getByTestId("color-association")).toContainText(
-    "Grass",
-  );
+  await expect(
+    panel(page).getByRole("button", { name: "Paint with Grass" }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.evaluate(() => window.editorProbe.session.perform("redo"));
   await panel(page)
     .getByRole("button", { name: "Remove Meadow", exact: true })
@@ -137,10 +139,7 @@ test("registry creates stable meanings, adopts hidden/covered cells, edits atomi
   expect(restored.paint).toEqual(removed.paint);
   await panel(page).getByRole("button", { name: "Paint with Meadow" }).click();
   const state = await snapshot(page);
-  await panel(page).getByLabel("Hex color", { exact: true }).fill("#557755");
-  await panel(page)
-    .getByRole("button", { name: "Apply color", exact: true })
-    .click();
+  await panel(page).getByLabel("Hex color", { exact: true }).fill("#557755FF");
   expect((await snapshot(page)).paint).toEqual({
     kind: "raw",
     rgba: "#557755ff",
@@ -215,10 +214,12 @@ test("R09: Edit recolors the selected named swatch through history while raw sel
       .click();
   };
   await edit("#557755");
-  await expect(panel(page).getByLabel("Selected color")).toHaveText("#557755");
-  await expect(panel(page).getByTestId("color-association")).toHaveText(
-    "Named color · Grass",
-  );
+  await expect(
+    panel(page).getByLabel("Current color", { exact: true }),
+  ).toHaveValue("#557755");
+  await expect(
+    panel(page).getByRole("button", { name: "Paint with Grass" }),
+  ).toHaveAttribute("aria-pressed", "true");
   for (const [action, color] of [
     ["undo", "#335C46"],
     ["redo", "#557755"],
@@ -227,25 +228,24 @@ test("R09: Edit recolors the selected named swatch through history while raw sel
       (action) => window.editorProbe.session.perform(action),
       action,
     );
-    await expect(panel(page).getByLabel("Selected color")).toHaveText(color);
+    await expect(
+      panel(page).getByLabel("Current color", { exact: true }),
+    ).toHaveValue(color.toLowerCase());
     expect((await snapshot(page)).paint).toEqual({
       kind: "registered",
       registryId: id,
     });
   }
   await panel(page).getByLabel("Hex color", { exact: true }).fill("#335c46");
-  await panel(page)
-    .getByRole("button", { name: "Apply color", exact: true })
-    .click();
   await edit("#446644"); // A previously unused shade, with raw paint selected.
   for (const action of ["undo", "redo"] as const) {
     await page.evaluate(
       (action) => window.editorProbe.session.perform(action),
       action,
     );
-    await expect(panel(page).getByLabel("Selected color")).toHaveText(
-      "#335C46",
-    );
+    await expect(
+      panel(page).getByLabel("Current color", { exact: true }),
+    ).toHaveValue("#335c46");
     expect((await snapshot(page)).paint).toEqual({
       kind: "raw",
       rgba: "#335c46ff",

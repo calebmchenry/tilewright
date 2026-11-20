@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { RegistryId } from "../src/domain/values";
 
-test("picker, hex and numeric RGB stay synchronized and reject invalid drafts without changing paint or history", async ({
+test("picker and hex update live while incomplete drafts preserve paint and history", async ({
   page,
 }, testInfo) => {
   await page.goto("/tests/editor.html");
@@ -13,7 +13,6 @@ test("picker, hex and numeric RGB stay synchronized and reject invalid drafts wi
     .getByRole("region", { name: "Color controls" });
   const hex = panel.getByLabel("Hex color");
   const picker = panel.getByLabel("Current color", { exact: true });
-  const selected = panel.getByLabel("Selected color");
   const snapshot = () =>
     page.evaluate(() => ({
       version: window.editorProbe.session.document.version,
@@ -23,72 +22,56 @@ test("picker, hex and numeric RGB stay synchronized and reject invalid drafts wi
     }));
   const original = await snapshot();
   await hex.fill(" #AbCf ");
+  await expect(picker).toHaveValue("#aabbcc");
+  await expect(hex).toHaveValue(" #AbCf ");
   await hex.press("Enter");
   await expect(hex).toHaveValue("#aabbcc");
-  await expect(picker).toHaveValue("#aabbcc");
-  for (const [channel, value] of [
-    ["Red", "170"],
-    ["Green", "187"],
-    ["Blue", "204"],
-  ])
-    await expect(panel.getByLabel(channel, { exact: true })).toHaveValue(value);
+
+  // Shorthand updates paint without expanding the text or moving the caret.
+  await hex.fill("");
+  await hex.pressSequentially("#123");
+  await expect(picker).toHaveValue("#112233");
+  await expect(hex).toHaveValue("#123");
+  await hex.pressSequentially("456");
+  await expect(picker).toHaveValue("#123456");
+  await expect(hex).toHaveValue("#123456");
+  expect(
+    await page.evaluate(() => window.editorProbe.session.currentPaint()),
+  ).toEqual({ kind: "raw", rgba: "#123456ff" });
   await picker.fill("#808080");
-  await expect(selected).toHaveText("#808080");
   await expect(hex).toHaveValue("#808080");
-  await expect(panel.getByTestId("color-match")).toContainText("Unregistered");
-  await expect(panel.getByTestId("color-association")).toContainText(
-    "Not linked",
-  );
-  for (const bad of ["#12345", "#80808080", "transparent"]) {
+  for (const bad of ["", "#12345", "#80808080", "transparent"]) {
     await hex.fill(bad);
-    await panel
-      .getByRole("button", { name: "Apply color", exact: true })
-      .click();
+    await expect(picker).toHaveValue("#808080");
+    expect(
+      await page.evaluate(() => window.editorProbe.session.currentPaint()),
+    ).toEqual({ kind: "raw", rgba: "#808080ff" });
+    await hex.blur();
     await expect(hex).toHaveAttribute("aria-invalid", "true");
     await expect(hex).toHaveAccessibleDescription(/fully opaque/);
-    await expect(picker).toHaveValue("#808080");
-    await expect(selected).toHaveText("#808080");
   }
-  for (const bad of ["", "-1", "256", "1.5", "1e2"]) {
-    await panel.getByLabel("Red", { exact: true }).fill(bad);
-    await panel.getByRole("button", { name: "Apply RGB" }).click();
-    await expect(panel.getByLabel("Red", { exact: true })).toHaveAttribute(
-      "aria-invalid",
-      "true",
-    );
-    await expect(selected).toHaveText("#808080");
-  }
-  for (const channel of ["Red", "Green", "Blue"])
-    await panel.getByLabel(channel, { exact: true }).fill("129");
-  await panel.getByLabel("Blue", { exact: true }).press("Enter");
+  await picker.fill("#818181");
   await expect(hex).toHaveValue("#818181");
-  await expect(picker).toHaveValue("#818181");
-  await expect(selected).toHaveText("#818181");
-  await expect(panel.locator('[aria-invalid="true"]')).toHaveCount(0);
-  // Equivalent input still resets drafts, even without a store notification.
-  await panel.getByLabel("Red", { exact: true }).fill("bad");
-  await panel.getByRole("button", { name: "Apply RGB" }).click();
+  await expect(hex).toHaveAttribute("aria-invalid", "false");
+  // Equivalent input normalizes on blur even without a color-store change.
   await hex.fill("#818181FF");
-  await hex.press("Enter");
+  await hex.blur();
   await expect(hex).toHaveValue("#818181");
-  await expect(panel.getByLabel("Red", { exact: true })).toHaveValue("129");
-  await expect(panel.locator('[aria-invalid="true"]')).toHaveCount(0);
   expect(await snapshot()).toEqual(original);
   expect(
     await page.evaluate(() => window.editorProbe.session.currentPaint()),
   ).toEqual({ kind: "raw", rgba: "#818181ff" });
 
-  // RGB fields retain native text/arrow shortcuts and cannot undo a map edit.
+  // Hex retains native text/arrow shortcuts and cannot undo a map edit.
   await page.evaluate(() => window.editorProbe.edit());
   const edited = await snapshot();
   const view = await page.evaluate(() =>
     window.editorProbe.session.viewport.getSnapshot(),
   );
-  const red = panel.getByLabel("Red", { exact: true });
-  await red.fill("");
-  await red.pressSequentially("100");
-  await red.press("ControlOrMeta+z");
-  await red.press("ArrowUp");
+  await hex.fill("");
+  await hex.pressSequentially("#100");
+  await hex.press("ControlOrMeta+z");
+  await hex.press("ArrowUp");
   expect(await snapshot()).toEqual(edited);
   expect(
     await page.evaluate(() =>
@@ -96,21 +79,22 @@ test("picker, hex and numeric RGB stay synchronized and reject invalid drafts wi
     ),
   ).toEqual(view);
   await hex.fill("#818181");
-  await hex.press("Enter");
+  await hex.blur();
   await page.setViewportSize({ width: 640, height: 452 });
-  await panel.getByLabel("Selected color").scrollIntoViewIfNeeded();
+  await hex.scrollIntoViewIfNeeded();
   expect(
     await page
       .locator(".left-sidebar")
       .evaluate((sidebar) => sidebar.scrollWidth <= sidebar.clientWidth),
   ).toBe(true);
-  await expect(panel.getByLabel("Selected color")).toBeInViewport();
+  await expect(hex).toBeInViewport();
+  await expect(picker).toBeInViewport();
   await page.screenshot({
     path: testInfo.outputPath("color-controls-small.png"),
   });
 });
 
-test("named matches track registry changes and undo without linking or recoloring selected raw paint", async ({
+test("registry changes preserve raw paint and named selection synchronizes the compact controls", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1400, height: 900 });
@@ -121,8 +105,11 @@ test("named matches track registry changes and undo without linking or recolorin
   const panel = page
     .locator("main")
     .getByRole("region", { name: "Color controls" });
-  await panel.getByLabel("Hex color").fill("#808080");
-  await panel.getByLabel("Hex color").press("Enter");
+  const hex = panel.getByLabel("Hex color");
+  const picker = panel.getByLabel("Current color", { exact: true });
+  const paint = () =>
+    page.evaluate(() => window.editorProbe.session.currentPaint());
+  await hex.fill("#808080");
   await page.evaluate(() =>
     window.editorProbe.session.viewport.set({ x: 0, y: 0, zoom: 0.5 }),
   );
@@ -138,37 +125,44 @@ test("named matches track registry changes and undo without linking or recolorin
         ]),
       { name, rgba },
     );
-  await registry("Stone", "#808080FF");
-  await expect(panel.getByTestId("color-match")).toHaveText(
-    "Named match: Stone",
-  );
-  await panel.getByTestId("color-match").scrollIntoViewIfNeeded();
+  await registry("Stone", "#808080ff");
+  await expect(
+    panel.getByRole("button", { name: "Paint with Stone" }),
+  ).toHaveAttribute("aria-pressed", "false");
   await page.screenshot({
     path: testInfo.outputPath("color-controls-and-raw-fixture.png"),
   });
   await registry("Mountain", "#808080ff");
-  await expect(panel.getByTestId("color-match")).toHaveText(
-    "Named match: Mountain",
-  );
+  await expect(
+    panel.getByRole("button", { name: "Paint with Mountain" }),
+  ).toHaveAttribute("aria-pressed", "false");
   await registry("Mountain", "#818181ff");
-  await expect(panel.getByTestId("color-match")).toContainText("Unregistered");
+  await expect(picker).toHaveValue("#808080");
+  expect(await paint()).toEqual({ kind: "raw", rgba: "#808080ff" });
   await page.evaluate(() => window.editorProbe.session.perform("undo"));
-  await expect(panel.getByTestId("color-match")).toHaveText(
-    "Named match: Mountain",
-  );
+  await expect(picker).toHaveValue("#808080");
   await page.evaluate(() =>
     window.editorProbe.session.execute("Remove registry fixture", [
       { kind: "registry", id: "stone" as RegistryId, value: null },
     ]),
   );
-  await expect(panel.getByTestId("color-match")).toContainText("Unregistered");
-  await expect(panel.getByTestId("color-association")).toContainText(
-    "Not linked",
-  );
-  await expect(panel.getByLabel("Selected color")).toHaveText("#808080");
-  expect(
-    await page.evaluate(() => window.editorProbe.session.currentPaint()),
-  ).toEqual({ kind: "raw", rgba: "#808080ff" });
+  await expect(
+    panel.getByRole("button", { name: "Paint with Mountain" }),
+  ).toHaveCount(0);
+  await expect(hex).toHaveValue("#808080");
+  expect(await paint()).toEqual({ kind: "raw", rgba: "#808080ff" });
+
+  await registry("Mountain", "#818181ff");
+  await hex.fill("invalid");
+  await hex.blur();
+  await panel.getByRole("button", { name: "Paint with Mountain" }).click();
+  await expect(hex).toHaveValue("#818181");
+  await expect(picker).toHaveValue("#818181");
+  await expect(hex).toHaveAttribute("aria-invalid", "false");
+  await hex.focus();
+  await hex.press("Enter");
+  await hex.blur();
+  expect(await paint()).toEqual({ kind: "registered", registryId: "stone" });
 });
 
 for (const dpr of [1, 2]) {

@@ -213,28 +213,14 @@ h3 {
 }
 .color-row {
   display: flex;
-  align-items: end;
+  align-items: center;
   gap: 8px;
 }
-.color-row label {
+.color-row input:not([type="color"]) {
   min-width: 0;
 }
 form > button {
   margin-top: 8px;
-}
-.current-color {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #bbc8d7;
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  margin-top: 12px;
-}
-.current-color i {
-  width: 12px;
-  height: 12px;
-  border: 1px solid #a0abba;
 }
 .rgb-fields {
   display: grid;
@@ -252,15 +238,6 @@ form > button {
 }
 .rgb-fields input {
   padding: 7px 5px;
-}
-.color-association {
-  overflow-wrap: anywhere;
-  margin: 12px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-}
-.color-match {
-  overflow-wrap: anywhere;
 }
 input[aria-invalid="true"] {
   border-color: #f2b8af;
