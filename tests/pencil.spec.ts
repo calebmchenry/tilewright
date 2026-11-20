@@ -37,6 +37,124 @@ async function state(page: Page) {
 }
 
 for (const dpr of [1, 2])
+  test(`large brushes paint and erase in cached overview with exact undo at DPR ${dpr}`, async ({
+    browser,
+  }, info) => {
+    const context = await browser.newContext({
+      deviceScaleFactor: dpr,
+      viewport: { width: 1200, height: 800 },
+    });
+    const page = await context.newPage();
+    const host = await setup(page),
+      canvas = host.locator("canvas");
+    // Compare map pixels independently of mouse/keyboard focus-ring changes.
+    const snapshot = (stage?: string) =>
+      canvas.screenshot({
+        path: stage
+          ? info.outputPath(`overview-brush-${stage}-dpr${dpr}.png`)
+          : undefined,
+        style: ".canvas-host { outline: none !important; }",
+      });
+    const button = (name: string) =>
+      page.locator("main").getByRole("button", { name, exact: true });
+    await page
+      .locator("main")
+      .getByLabel("Pencil size", { exact: true })
+      .selectOption("32");
+    // Leave Pencil selected while crossing the old cutoff into cached overview.
+    await page.evaluate(() =>
+      window.editorProbe.session.viewport.set({ x: -65, y: -65, zoom: 1 / 16 }),
+    );
+    await expect(button("Pencil")).toBeEnabled();
+    await expect(button("Eraser")).toBeEnabled();
+    await expect(button("Line")).toBeDisabled();
+    await expect(
+      page.getByRole("status", { name: "Editing availability" }),
+    ).toHaveCount(0);
+    await host.press("i");
+    await expect(
+      page.getByRole("status", { name: "Editing availability" }),
+    ).toContainText("Pencil and Eraser work at any zoom");
+    // Toolbar and keyboard activation both work while already zoomed out.
+    await button("Pencil").click();
+    await expect(button("Pencil")).toHaveAttribute("aria-pressed", "true");
+    await page.mouse.move(10, 10);
+    const before = await state(page),
+      pixels = await snapshot("before");
+    await move(page, 60, 63);
+    expect(
+      await page.evaluate(() =>
+        window.editorProbe.session.drawing.footprint
+          .getSnapshot()!
+          .writes.map(({ x, y, length }) => ({ x, y, length })),
+      ),
+    ).toEqual(
+      Array.from({ length: 32 }, (_, i) => ({ x: 45, y: 48 + i, length: 32 })),
+    );
+    await page.mouse.down();
+    await move(page, 100, 63);
+    expect(await state(page)).toEqual(before);
+    await snapshot("preview");
+    await page.mouse.up();
+    await page.mouse.move(10, 10);
+    const painted = await state(page);
+    expect(painted.history.undoSteps).toBe(1);
+    expect(painted.bounds).toEqual(before.bounds);
+    expect(painted.runs.filter((r) => r.layerId === "terrain")).toEqual(
+      before.runs.filter((r) => r.layerId === "terrain"),
+    );
+    expect(painted.runs.filter((r) => r.layerId === "buildings")).toEqual(
+      Array.from({ length: 32 }, (_, i) => ({
+        layerId: "buildings",
+        x: 45,
+        y: 48 + i,
+        length: 72,
+        value: { kind: "raw", rgba: "#ff0000ff" },
+      })),
+    );
+    const paintedPixels = await snapshot("painted");
+    expect(paintedPixels).not.toEqual(pixels);
+    await host.press("ControlOrMeta+z");
+    expect((await state(page)).runs).toEqual(before.runs);
+    await expect
+      .poll(async () => (await snapshot("undone")).equals(pixels))
+      .toBe(true);
+    await host.press("ControlOrMeta+Shift+z");
+    expect((await state(page)).runs).toEqual(painted.runs);
+    await expect
+      .poll(async () => (await snapshot()).equals(paintedPixels))
+      .toBe(true);
+    await host.press("e");
+    await expect(button("Eraser")).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      page.locator("main").getByLabel("Eraser size", { exact: true }),
+    ).toHaveValue("32");
+    await move(page, 60, 63);
+    await page.mouse.down();
+    await move(page, 100, 63);
+    await page.mouse.up();
+    await page.mouse.move(10, 10);
+    const erased = await state(page);
+    expect(erased.history.undoSteps).toBe(2);
+    expect(erased.runs).toEqual(
+      before.runs.filter((r) => r.layerId === "terrain"),
+    );
+    const erasedPixels = await snapshot("erased");
+    expect(erasedPixels).not.toEqual(paintedPixels);
+    await host.press("ControlOrMeta+z");
+    expect((await state(page)).runs).toEqual(painted.runs);
+    await expect
+      .poll(async () => (await snapshot()).equals(paintedPixels))
+      .toBe(true);
+    await host.press("ControlOrMeta+Shift+z");
+    expect((await state(page)).runs).toEqual(erased.runs);
+    await expect
+      .poll(async () => (await snapshot()).equals(erasedPixels))
+      .toBe(true);
+    await context.close();
+  });
+
+for (const dpr of [1, 2])
   test(`shipping pencil hover, diagonal stroke, layer isolation and exact visual undo at DPR ${dpr}`, async ({
     browser,
   }, info) => {

@@ -126,6 +126,8 @@ The editor should support both detailed tile editing and an overview of the
 large map. Meaningful individual-tile editing is not expected when all 100 × 100
 chunks are visible. Responsive navigation and editing at the target map size are
 core requirements; exact performance targets and zoom behavior remain open.
+Pencil and Eraser remain available at every supported zoom so larger brushes can
+be used while viewing a broad area; zooming out must not disable these brushes.
 
 ## Project files and agent exports
 

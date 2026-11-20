@@ -293,13 +293,17 @@ test("navigation, panel/text input, nonprimary pointers and overview are isolate
   ).toEqual(view);
   await page.keyboard.press("Escape");
   await page.mouse.up();
+  await host.press("r");
   await host.press("f");
   await expect(
-    page.locator("main").getByRole("button", { name: "Pencil", exact: true }),
+    page
+      .locator("main")
+      .getByRole("button", { name: "Rectangle", exact: true }),
   ).toBeDisabled();
   await host.click();
   expect(await persistent(page)).toEqual(before);
   await host.press("0");
+  await host.press("b");
   // Even a text input nested in the host cannot initiate editing or Space navigation.
   await host.evaluate((e) => {
     const input = document.createElement("input");

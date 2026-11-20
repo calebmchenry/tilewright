@@ -21,7 +21,7 @@ export const MAX_ZOOM = 8;
 export const MIN_ZOOM = 1 / 1024;
 export const MIN_EDIT_PIXELS = 8;
 export const OVERVIEW_MESSAGE =
-  "Overview · Zoom in to edit tiles (8 px per tile minimum).";
+  "Overview · Zoom in for this tool (8 px per tile minimum). Pencil and Eraser work at any zoom.";
 
 export function worldToScreen(x: number, y: number, view: Viewport): Point {
   const scale = TILE_PIXELS * view.zoom;
@@ -69,8 +69,13 @@ export function screenToTile(x: number, y: number, view: Viewport): Point {
     ),
   });
 }
-export function canEditTiles(view: Viewport): boolean {
-  return view.zoom * TILE_PIXELS >= MIN_EDIT_PIXELS;
+/** Brushes work at every zoom; precise tile picking keeps the detail threshold. */
+export function canEditTiles(view: Viewport, tool?: string): boolean {
+  return (
+    tool === "pencil" ||
+    tool === "eraser" ||
+    view.zoom * TILE_PIXELS >= MIN_EDIT_PIXELS
+  );
 }
 export function viewCenter(size: ViewSize): Point {
   return { x: size.width / 2, y: size.height / 2 };

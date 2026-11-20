@@ -118,9 +118,9 @@ the actual camera zoom changes. If the current tier has no visible areas, show n
 normal labels; do not fall back to a cloud of house labels. Area size never changes
 its tier. Names and descriptions stay in the document regardless of visibility.
 
-The tile-editing threshold is also 8 CSS pixels/tile, but area metadata can be
-edited at all scales. The renderer's 2 CSS pixels/tile overview-cache switch is a
-separate decision: it does not change Locality labels.
+The precise tile-tool threshold is also 8 CSS pixels/tile; Pencil, Eraser and
+area metadata editing are available at all scales. The renderer's 2 CSS pixels/tile
+overview-cache switch is a separate decision: it does not change Locality labels.
 
 One **selected area** is a deliberate inspection exception: show its outline and
 label at any tier, if in view, in a distinct selected style. At most one area gets

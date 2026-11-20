@@ -325,7 +325,7 @@ export class EditorSession {
         "select",
         "eyedropper",
       ].includes(id) &&
-      !canEditTiles(this.viewport.getSnapshot())
+      !canEditTiles(this.viewport.getSnapshot(), id)
     )
       return { label: unavailable[id]!.label, reason: OVERVIEW_MESSAGE };
     if (id === "select")

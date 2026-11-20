@@ -141,8 +141,8 @@ for (const dpr of [1, 2]) {
       page.getByRole("status", { name: "Editing availability" }),
     ).toContainText("Overview");
     await expect(
-      page.locator("main").getByRole("button", { name: "Pencil", exact: true }),
-    ).toHaveAccessibleDescription(/Zoom in to edit tiles/);
+      page.locator("main").getByRole("button", { name: "Line", exact: true }),
+    ).toHaveAccessibleDescription(/Zoom in for this tool/);
     await host.click();
     await expect(
       page.getByRole("status", { name: "Action feedback" }),

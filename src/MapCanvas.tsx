@@ -16,8 +16,10 @@ export function MapCanvas({ session }: { session: EditorSession }) {
   );
   const [detail, setDetail] = useState("");
 
-  const editable = useStoreField(session.viewport, canEditTiles);
   const tool = useStore(session.activeTool);
+  const editable = useStoreField(session.viewport, (view) =>
+    canEditTiles(view, tool),
+  );
   const fill = useStore(session.fill.progress);
   const drawing = !!session.drawing.tool(tool);
   useEffect(

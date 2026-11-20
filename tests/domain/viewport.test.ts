@@ -150,7 +150,9 @@ test("session navigation is transient, tool picking is gated, and text keeps sho
   session.perform("pan");
   assert.equal(session.activeTool.getSnapshot(), "pan");
   session.fitMap();
-  assert.match(session.action("pencil").reason!, /Overview/);
+  assert.equal(session.action("pencil").reason, null);
+  assert.equal(session.action("eraser").reason, null);
+  assert.match(session.action("line").reason!, /Overview/);
   assert.equal(session.editableTileAt({ x: 100, y: 100 }), null);
   assert.equal(session.routeKey({ key: "0" }, "text"), false);
   session.routeKey({ key: "0" }, "canvas");

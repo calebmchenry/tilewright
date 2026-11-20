@@ -13,7 +13,7 @@ import {
   pencilFootprint,
   pencilTool,
 } from "../../src/editor/pencil.ts";
-import { tileToScreen } from "../../src/editor/viewport.ts";
+import { MIN_ZOOM, tileToScreen } from "../../src/editor/viewport.ts";
 
 const terrain = layerId("terrain"),
   buildings = layerId("buildings");
@@ -272,4 +272,85 @@ test("shipping pencil size and hover are transient; changes cancel strokes and s
     assert.equal(s.drawing.footprint.getSnapshot(), null);
   }
   assert.deepEqual(s.history.state, before);
+});
+
+test("Pencil and Eraser keep exact footprints and atomic history at every zoom", () => {
+  for (const tool of ["pencil", "eraser"] as const)
+    for (const zoom of [1 / 3, 1 / 3 - 1e-10, 0.25, 1 / 16, MIN_ZOOM])
+      for (const size of [1, 32]) {
+        const s = setup(size, true);
+        s.setPencilSize(size);
+        s.viewport.set({ x: -65, y: -65, zoom });
+        assert.equal(s.action(tool).reason, null);
+        assert.equal(s.perform(tool), true);
+        const before = [...s.document.iterateRuns()];
+        const base = [...s.document.iterateRuns(terrain)];
+        const at = (x: number) => tileToScreen(x, 63, s.viewport.getSnapshot());
+        const offset = Math.floor((size - 1) / 2);
+        s.drawing.hover(at(60));
+        assert.deepEqual(
+          s.drawing.footprint
+            .getSnapshot()!
+            .writes.map(({ x, y, length }) => ({ x, y, length })),
+          Array.from({ length: size }, (_, i) => ({
+            x: 60 - offset,
+            y: 63 - offset + i,
+            length: size,
+          })),
+        );
+        assert.equal(s.drawing.begin(1, at(60)), true);
+        assert.equal(s.drawing.sample(1, at(70)), true);
+        assert.deepEqual([...s.document.iterateRuns()], before);
+        assert.equal(s.history.state.undoSteps, 0);
+        assert.equal(s.drawing.commit(1, at(70)), true);
+        const value =
+          tool === "eraser" ? null : registeredColor(registryId("grass"));
+        for (let y = 63 - offset; y < 63 - offset + size; y++)
+          for (let x = 60 - offset; x < 70 - offset + size; x++)
+            assert.deepEqual(s.document.getCell(buildings, x, y), value);
+        assert.deepEqual([...s.document.iterateRuns(terrain)], base);
+        assert.deepEqual(s.document.bounds, bounds);
+        assert.equal(s.history.state.undoSteps, 1);
+        const after = [...s.document.iterateRuns()];
+        s.history.undo();
+        assert.deepEqual([...s.document.iterateRuns()], before);
+        s.history.redo();
+        assert.deepEqual([...s.document.iterateRuns()], after);
+        s.dispose();
+      }
+});
+
+test("zoom changes cancel brush strokes but allow new strokes; hidden and unready brushes stay gated", () => {
+  for (const tool of ["pencil", "eraser"] as const) {
+    const s = setup(32);
+    s.setPencilSize(32);
+    s.perform(tool);
+    const before = [...s.document.iterateRuns()];
+    assert.equal(s.drawing.begin(1, point(63, 63)), true);
+    s.viewport.set({ x: -65, y: -65, zoom: 1 / 16 });
+    const at = tileToScreen(63, 63, s.viewport.getSnapshot());
+    assert.equal(s.drawing.pointerId, null);
+    assert.equal(s.drawing.preview.getSnapshot(), null);
+    assert.equal(s.drawing.commit(1, at), false);
+    assert.deepEqual([...s.document.iterateRuns()], before);
+    assert.equal(s.history.state.undoSteps, 0);
+    s.drawing.hover(at);
+    assert.ok(s.drawing.footprint.getSnapshot());
+    assert.equal(s.drawing.begin(2, at), true);
+    s.drawing.cancel();
+    for (const change of [
+      () => s.setLayerVisible(buildings, false),
+      () => {
+        s.setLayerVisible(buildings, true);
+        s.canvasState.set("error");
+      },
+    ]) {
+      change();
+      assert.ok(s.action(tool).reason);
+      assert.equal(s.drawing.begin(3, at), false);
+      s.drawing.hover(at);
+      assert.equal(s.drawing.footprint.getSnapshot(), null);
+    }
+    s.dispose();
+  }
 });

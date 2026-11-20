@@ -9,7 +9,8 @@ These are implementation defaults, not additional product requirements.
 At **2 CSS pixels per tile or above**, the existing visible, per-layer 32-tile
 textures render detail. Below that threshold, `TileScene` releases those textures
 and uses `OverviewScene` composite region images. This rendering threshold is
-independent of the **8 CSS pixels per tile** editing gate. Camera coordinates,
+independent of the **8 CSS pixels per tile** gate for precise tile tools;
+Pencil and Eraser work at every supported zoom. Camera coordinates,
 layer order, grid overlays, map bounds, and the tile model stay unchanged.
 
 `overviewRegions` starts with world-zero-anchored **256-tile regions**. It doubles

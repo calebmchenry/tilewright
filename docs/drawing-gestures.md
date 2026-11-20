@@ -41,6 +41,12 @@ resets size to 1. Changing size cancels an in-progress stroke, preserving redo;
 the next stroke captures the new size. Other cancellation/readiness rules below
 also apply. Inspect remains the initial tool.
 
+Pencil and Eraser remain available at every supported zoom, including Fit and
+cached overview scales. There is no minimum on-screen brush size. This replaces
+the original blanket 8 CSS px/tile cutoff following user feedback on large
+brushes (2026-11-19). Brush sizes still describe exact tile footprints. Changing
+the view cancels a pending stroke; a new stroke can begin at the new zoom.
+
 Hover shows a clipped square in the selected raw/registered paint; dragging shows
 the accumulated stroke. Both use the existing Pixi overlay and never enter the
 document or tile/overview caches. The hover store is separate from the gesture
@@ -102,8 +108,8 @@ identity. Black, white and map-background-colored tiles are ordinary raw samples
 
 If all visible layers are empty (or hidden), or the pointer is outside fixed
 bounds, keep the current paint and explain that there is no visible tile.
-Sampling requires a ready canvas and the same 8 CSS px/tile detail threshold as
-painting. Space/middle navigation takes precedence; right clicks, secondary
+Sampling requires a ready canvas and an 8 CSS px/tile detail threshold.
+Space/middle navigation takes precedence; right clicks, secondary
 pointers, Cmd/Ctrl/Alt starts, panel/text input and IME do not sample. Sampling
 changes only transient paint selection/feedback; document version, tile allocation,
 registry, history, redo and checkpoints stay unchanged.
@@ -177,7 +183,7 @@ terrain/house drawing, release endpoints, cancellation and DPR 1/2 canvas pixels
 
 `src/editor/drawing.ts` owns a session's `DrawingController`. Feature modules
 register a `DrawingTool` under its existing action ID before mounting controls.
-The session then uses that tool's label and normal readiness/overview/visible-layer
+The session then uses that tool's label and readiness/tool-specific zoom/visible-layer
 gates. A tool creates one synchronous operation per pointer gesture. Its immutable
 context captures the start tile, bounds, active layer ID, and raw/registered paint
 identity. Each sample supplies start, previous and current integer tiles, including
@@ -222,8 +228,9 @@ priority over editing. Only primary pointer input starting directly on the host
 or its WebGL canvas can draw; panel controls, nested text fields, secondary
 pointers, right clicks and Cmd/Ctrl/Alt drawing starts are excluded. Keyboard
 routing retains native text editing and IME behavior. Drawing requires a ready
-canvas, a visible active layer and **at least 8 CSS pixels per tile**. Below that
-threshold the existing overview message applies, while navigation and history
+canvas and a visible active layer. Pencil and Eraser work at every supported zoom;
+other tile tools require **at least 8 CSS pixels per tile**. Below that threshold
+the overview message applies to gated tools, while brushes, navigation and history
 remain available. Input uses CSS pixels and the current host rectangle, never DPR.
 
 | Event                                                                      | Drawing result                                                                              |

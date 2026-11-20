@@ -100,17 +100,23 @@ a pan clamp during zoom would unexpectedly move the intended pointer anchor.
 
 ## Overview and tools
 
-Below **8 CSS pixels per tile**, the canvas displays “Overview · Zoom in to edit
-tiles (8 px per tile minimum).” Tile tool controls expose that reason, and the
-shared `EditorSession.editableTileAt` returns null. Out-of-bounds coordinates
-also return null instead of being clamped to an edge cell. Inspect and navigation
-remain usable; clicking in overview reports the reason without any document edit.
+Pencil and Eraser work at **every supported zoom**, including Fit and cached
+overview scales. Brush size remains measured in tiles; hover and stroke previews
+use the same clipped footprint at every scale. This revises the original blanket
+editing cutoff following user feedback on large brushes (2026-11-19).
+
+Other tile tools require **8 CSS pixels per tile**. Below that threshold, their
+controls and the canvas explain “Overview · Zoom in for this tool (8 px per tile
+minimum). Pencil and Eraser work at any zoom.” The canvas hides this notice when
+either brush is selected. The precise-picking helper
+`EditorSession.editableTileAt` still returns null below the threshold or outside
+fixed bounds, instead of clamping to an edge cell. Navigation remains usable;
+clicking with a gated tool reports the reason without any document edit.
 At detail scale, Inspect now supports [rectangle measurement](grid-and-scale.md)
 without selecting or changing tile content.
 At the threshold the gate permits picking. TW-018 adds the [shared drawing pipeline](drawing-gestures.md),
-which applies the same readiness/zoom policy and clips tool footprints to fixed
-bounds, including strokes entering from outside-map canvas margin. Tool algorithms
-remain their later tickets. Undo,
+which applies this readiness/tool-specific zoom policy and clips footprints to fixed
+bounds, including strokes entering from outside-map canvas margin. Undo,
 metadata changes and document commands remain independent of camera scale.
 
 TW-010 now uses [cached composite regions](overview-rendering.md) below 2 CSS

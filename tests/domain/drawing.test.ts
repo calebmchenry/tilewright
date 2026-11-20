@@ -206,9 +206,11 @@ test("context changes cancel, hidden/overview/unready/closed sessions cannot beg
   s.setLayerVisible(target, false);
   assert.equal(s.drawing.begin(1, point(1)), false);
   s.setLayerVisible(target, true);
+  s.perform("rectangle");
   s.viewport.set({ x: 0, y: 0, zoom: 0.1 });
   assert.equal(s.drawing.begin(1, point(1)), false);
   s.viewport.set({ x: 0, y: 0, zoom: 1 });
+  s.perform("pencil");
   s.drawing.begin(1, point(60));
   s.renameLayer(target, "Other");
   assert.equal(s.drawing.commit(1, point(70)), false);

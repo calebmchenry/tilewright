@@ -1,7 +1,7 @@
 ---
 id: wrk-58cdb442
 title: 'TW-008: Implement pan, anchored zoom, fit-to-map, and coordinate conversion'
-status: blocked
+status: done
 created_at: 2026-11-18T16:50:30Z
 depends_on:
   - wrk-c92d1a4b

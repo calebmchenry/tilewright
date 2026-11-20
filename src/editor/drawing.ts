@@ -156,7 +156,10 @@ export class DrawingController {
       this.#current ||
       !tool?.footprint ||
       session.canvasState.getSnapshot() !== "ready" ||
-      !canEditTiles(session.viewport.getSnapshot()) ||
+      !canEditTiles(
+        session.viewport.getSnapshot(),
+        session.activeTool.getSnapshot(),
+      ) ||
       !session.editableLayerIds().length
     ) {
       this.#hoverTile = null;
@@ -195,7 +198,10 @@ export class DrawingController {
       this.#current ||
       !tool ||
       session.canvasState.getSnapshot() !== "ready" ||
-      !canEditTiles(session.viewport.getSnapshot()) ||
+      !canEditTiles(
+        session.viewport.getSnapshot(),
+        session.activeTool.getSnapshot(),
+      ) ||
       !session.editableLayerIds().length
     )
       return false;

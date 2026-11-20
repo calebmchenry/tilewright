@@ -189,7 +189,10 @@ export function bindNavigation(
       }
     } else if (
       event.button === 0 &&
-      !canEditTiles(session.viewport.getSnapshot())
+      !canEditTiles(
+        session.viewport.getSnapshot(),
+        session.activeTool.getSnapshot(),
+      )
     )
       session.report(OVERVIEW_MESSAGE);
     else if (
