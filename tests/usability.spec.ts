@@ -65,21 +65,32 @@ test("continuous keyboard/mouse tool session, panel shortcuts, preview cancel an
     .getByLabel("Rectangle style")
     .selectOption("outline");
   await drag(page, [64, 60], [66, 62]);
-  await expect(button(page, "Undo Rectangle")).toBeEnabled();
+  expect(
+    await page.evaluate(
+      () => window.editorProbe.session.history.state.undoLabel,
+    ),
+  ).toBe("Rectangle");
   await host(page).press("d");
   await move(page, 60, 60);
   await page.mouse.down();
   await page.mouse.up();
-  await expect(page.getByTestId("tool-color-readout")).toContainText(
-    "Eyedropper · #FF0000",
-  );
+  expect(
+    await page.evaluate(() => window.editorProbe.session.color.getSnapshot()),
+  ).toBe("#ff0000ff");
   await host(page).press("i");
   await drag(page, [60, 60], [62, 62]);
-  await expect(page.getByTestId("rectangle-readout")).toHaveText(
-    "Rectangle 3 × 3 tiles",
-  );
+  expect(
+    await page.evaluate(() => {
+      const r = window.editorProbe.session.rectangle.getSnapshot()!;
+      return [r.maxX - r.minX, r.maxY - r.minY];
+    }),
+  ).toEqual([3, 3]);
   await button(page, "Apply color").press("Escape");
-  await expect(page.getByTestId("rectangle-readout")).toHaveText("Rectangle —");
+  expect(
+    await page.evaluate(() =>
+      window.editorProbe.session.rectangle.getSnapshot(),
+    ),
+  ).toBeNull();
   await host(page).press("v");
   await drag(page, [60, 60], [62, 62]);
   await expect(page.getByTestId("selection-dimensions")).toContainText(
@@ -128,7 +139,11 @@ test("continuous keyboard/mouse tool session, panel shortcuts, preview cancel an
   await move(page, 61, 60);
   await page.mouse.down();
   await page.mouse.up();
-  await expect(button(page, "Undo Fill")).toBeEnabled();
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.editorProbe.session.history.state.undoLabel),
+    )
+    .toBe("Fill");
 });
 
 test("names, descriptions, search, select and IME never invoke map keys or tile clipboard", async ({
@@ -291,6 +306,7 @@ test("populated long-name panels, error feedback and controls remain reachable a
       path: info.outputPath(`populated-${size.width}x${size.height}.png`),
     });
   }
+  await page.getByRole("button", { name: "Dismiss notification" }).click();
   await button(page, "Cancel area edit").click();
   await expect(button(page, "New area")).toBeFocused();
 });
@@ -321,9 +337,11 @@ test("mouse tool activation leaves text ownership and window refocus refreshes t
   await expect(button(page, "Eraser")).toHaveAttribute("aria-pressed", "true");
   await host(page).focus();
   await page.evaluate(() => window.dispatchEvent(new Event("blur")));
-  await expect(page.getByTestId("focus-readout")).toHaveText(
-    "Workspace inactive",
-  );
+  expect(
+    await page.evaluate(() => window.editorProbe.session.focus.getSnapshot()),
+  ).toBe("outside");
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
-  await expect(page.getByTestId("focus-readout")).toHaveText("Canvas keyboard");
+  expect(
+    await page.evaluate(() => window.editorProbe.session.focus.getSnapshot()),
+  ).toBe("canvas");
 });

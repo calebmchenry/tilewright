@@ -98,29 +98,25 @@ h3 {
 }
 .app-header {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 24px;
-  padding: 12px 18px;
+  gap: 12px;
+  height: 36px;
+  padding: 0 12px;
   border-bottom: 1px solid #34404f;
   background: #202a36;
+  user-select: none;
 }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.brand-mark {
-  color: #a3cfb5;
-  font-size: 25px;
+.app-header.native-titlebar {
+  padding-left: 88px;
 }
 .document-title {
   display: flex;
   min-width: 0;
   align-items: center;
-  flex: 1 1 140px;
+  flex: 1;
   color: #c4cfdd;
-  font-size: 13px;
+  font-size: 12px;
+  height: 100%;
 }
 .document-status {
   color: #b6b3a5;
@@ -128,21 +124,33 @@ h3 {
   margin-left: 12px;
   white-space: nowrap;
 }
-.history-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-width: 0;
-  max-width: 100%;
+.overflow-button {
+  padding: 0;
+  width: 28px;
+  height: 26px;
+  font-size: 22px;
+  line-height: 1;
+  background: transparent;
+  border-color: transparent;
 }
-.history-controls > .action {
-  min-width: 0;
+.app-overflow {
+  position: fixed;
+  inset: 38px 8px auto auto;
+  margin: 0;
+  max-width: min(340px, calc(100vw - 16px));
+  padding: 8px;
+  border: 1px solid #3d4b5b;
+  border-radius: 6px;
+  background: #202a36;
+  color: #e1e6ef;
+  box-shadow: 0 6px 24px #0006;
 }
-.history-controls > .action button {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.app-overflow .recovery-entrypoint {
+  display: grid;
+  padding: 0;
+}
+.action {
+  min-width: 0;
 }
 .action {
   position: relative;
@@ -384,40 +392,52 @@ input[aria-invalid="true"] {
   margin-top: 14px;
 }
 footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 28px;
+  padding: 0 12px;
   min-width: 0;
-  max-height: 30dvh;
-  overflow: auto;
   background: #1c2632;
   border-top: 1px solid #34404f;
   font-size: 11px;
   color: #a6b2c6;
+  white-space: nowrap;
 }
 .readout {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  padding: 8px 16px;
-  border-bottom: 1px solid #293544;
+  gap: 18px;
+  font-variant-numeric: tabular-nums;
 }
-.readout > span {
-  min-width: 0;
+.save-timestamp {
+  margin-left: auto;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.notifications {
+  position: fixed;
+  bottom: 36px;
+  right: 12px;
+  max-width: min(480px, calc(100vw - 24px));
+  z-index: 10;
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+}
+.notifications .feedback {
+  background: #202a36;
+  border-radius: 5px;
+}
+.notifications
+  .feedback:not(.error):not(.busy):not(:has(button)):not(:has(progress)) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-}
-.readout > span:first-child {
-  min-width: 138px;
-  font-family: ui-monospace, monospace;
-}
-.readout > [data-testid="focus-readout"] {
-  margin-left: auto;
-  /* Changing focus during pointer-down must not move the button under it. */
-  flex: 0 0 120px;
-}
-.readout > .grid-scale {
-  flex-basis: 100%;
-  white-space: normal;
-  color: #96c9d9;
+  border: 0;
 }
 .feedback {
   padding: 7px 16px;
@@ -454,25 +474,17 @@ footer {
   }
   .app-header {
     gap: 12px;
-    padding: 10px 12px;
+    padding: 0 12px;
   }
   .document-title {
     font-size: 12px;
   }
   .document-status {
-    display: block;
-    margin: 3px 0 0;
+    margin-left: 8px;
   }
   .workspace-toolbar {
     flex-wrap: wrap;
     padding: 8px;
-  }
-  .history-controls button {
-    padding: 6px 8px;
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 }
 
@@ -832,11 +844,6 @@ footer {
   margin-bottom: 10px;
 }
 
-.file-controls {
-  display: inline-flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
 .project-filename {
   overflow: hidden;
   text-overflow: ellipsis;

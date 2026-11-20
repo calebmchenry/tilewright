@@ -9,7 +9,7 @@ declare global {
 }
 
 async function createMap(page: Page, width: number, height: number) {
-  await page.getByRole("button", { name: "New map", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+n");
   const dialog = page.getByRole("dialog", { name: "New map" });
   await dialog.getByLabel("Width (tiles)").fill(String(width));
   await dialog.getByLabel("Height (tiles)").fill(String(height));
@@ -40,7 +40,7 @@ test("New Map validates dimensions, cancels safely, and replaces sessions withou
   const original = await page.locator("canvas").elementHandle();
   await page.getByLabel("Layer name", { exact: true }).fill("Keep this layer");
   await page.getByRole("button", { name: "Rename", exact: true }).click();
-  await page.getByRole("button", { name: "New map", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+n");
   const dialog = page.getByRole("dialog", { name: "New map" });
   await expect(dialog.getByLabel("Width (tiles)")).toHaveValue("256");
   await expect(dialog.getByLabel("Height (tiles)")).toHaveValue("256");
@@ -80,7 +80,7 @@ test("New Map validates dimensions, cancels safely, and replaces sessions withou
     await expect(page.locator("canvas")).toHaveCount(1);
     await expect(
       page.getByRole("button", { name: "Undo", exact: true }),
-    ).toBeDisabled();
+    ).toHaveCount(0);
     await expect(page.getByLabel("Layer name", { exact: true })).toHaveValue(
       "Layer 1",
     );
@@ -92,7 +92,7 @@ test("New Map validates dimensions, cancels safely, and replaces sessions withou
   await page.getByRole("button", { name: "Fit map", exact: true }).click();
   await page.screenshot({ path: testInfo.outputPath("target-new-map.png") });
   await page.setViewportSize({ width: 640, height: 452 });
-  await page.getByRole("button", { name: "New map", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+n");
   await expect(dialog.getByRole("button", { name: "Cancel" })).toBeInViewport({
     ratio: 1,
   });
@@ -129,21 +129,15 @@ test("Grow Canvas supports every edge, combined increments, validation and chron
     await expect(page.getByTestId("map-dimensions")).toContainText(
       `${dimensions} tiles`,
     );
-    await page
-      .getByRole("button", { name: "Undo Grow canvas", exact: true })
-      .click();
+    await page.locator(".canvas-host").press("Meta+z");
     await expect(page.getByTestId("map-dimensions")).toContainText(
       "101 × 130 tiles",
     );
-    await page
-      .getByRole("button", { name: "Redo Grow canvas", exact: true })
-      .click();
+    await page.locator(".canvas-host").press("Meta+Shift+z");
     await expect(page.getByTestId("map-dimensions")).toContainText(
       `${dimensions} tiles`,
     );
-    await page
-      .getByRole("button", { name: "Undo Grow canvas", exact: true })
-      .click();
+    await page.locator(".canvas-host").press("Meta+z");
   }
   await page.getByRole("button", { name: "Grow canvas", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Grow canvas" });
@@ -164,9 +158,7 @@ test("Grow Canvas supports every edge, combined increments, validation and chron
     "229 × 194 tiles",
   );
   expect(await original!.evaluate((canvas) => canvas.isConnected)).toBe(true);
-  await page
-    .getByRole("button", { name: "Undo Grow canvas", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
   await expect(page.getByTestId("map-dimensions")).toContainText(
     "101 × 130 tiles",
   );
@@ -185,7 +177,7 @@ test("Grow Canvas supports every edge, combined increments, validation and chron
   );
   await expect(
     page.getByRole("button", { name: "Redo Grow canvas", exact: true }),
-  ).toBeEnabled();
+  ).toHaveCount(0);
 });
 
 for (const density of [1, 2]) {

@@ -47,14 +47,14 @@ test("shell displays state, explains unavailable actions, and keeps native text 
   await expect(visibility).toBeChecked();
   await visibility.uncheck();
   await expect(visibility).not.toBeChecked();
-  await expect(page.getByTestId("focus-readout")).toHaveText("Panel controls");
+  await expect(visibility).toBeFocused();
   await expect(
     page.getByRole("button", { name: "Undo", exact: true }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
   await visibility.check();
   const input = page.locator("main").getByLabel("Layer name", { exact: true });
   await input.fill("Terrain");
-  await expect(page.getByTestId("focus-readout")).toHaveText("Text editing");
+  await expect(input).toBeFocused();
   await input.press("Enter");
   await expect(input).toBeFocused();
   await expect(
@@ -68,7 +68,7 @@ test("shell displays state, explains unavailable actions, and keeps native text 
   ).toBeVisible();
   const canvas = page.getByRole("region", { name: "Canvas keyboard input" });
   await canvas.click();
-  await expect(page.getByTestId("focus-readout")).toHaveText("Canvas keyboard");
+  await expect(canvas).toBeFocused();
   await canvas.press("ControlOrMeta+z");
   await expect(
     page.getByRole("button", { name: "Layer 1 Active" }),
@@ -190,9 +190,11 @@ test("small edit targets canvas spans/history without rendering unrelated panels
   await page.evaluate(() => window.editorProbe.reset());
   const original = await page.locator("canvas").elementHandle();
   await page.evaluate(() => window.editorProbe.edit());
-  await expect(
-    page.getByRole("button", { name: "Undo Small edit", exact: true }),
-  ).toBeEnabled();
+  expect(
+    await page.evaluate(
+      () => window.editorProbe.session.history.state.undoLabel,
+    ),
+  ).toBe("Small edit");
   const measured = await page.evaluate(() => ({
     renders: window.editorProbe.renders,
     dirty: window.editorProbe.invalidations,

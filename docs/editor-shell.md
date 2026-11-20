@@ -65,7 +65,7 @@ protection, stack controls, and the visible-layer editing-target policy.
 ## Controls and focus
 
 The responsive layout contains a tools/color sidebar, flexing canvas workspace,
-layer/annotation sidebar, header and two compact status lines. Sidebars scroll
+layer/annotation sidebar, a 36-pixel title strip and one 28-pixel status line. Sidebars scroll
 independently at the existing 640 × 480 minimum window size. Height follows the content viewport, including the 452-pixel
 content area beneath the native title bar at minimum height. Active controls have
 visible state and accessible names/pressed state. Disabled buttons have a native
@@ -79,7 +79,7 @@ in a 256 × 256 map. Named metadata lists use a string `name` if present, otherw
 the stable ID; the shell does not invent registry/annotation schemas.
 
 TW-009 adds [tile/chunk grids and Inspect rectangle measurement](grid-and-scale.md).
-The transient rectangle store updates its readout and renderer overlay, without
+The transient rectangle store updates its renderer overlay, without
 document/history notifications. Future selection tools can use the same validated
 rectangle display seam.
 
@@ -96,12 +96,11 @@ use validated names and opaque colors at this feature boundary.
 outside. Inputs, textarea, selects, contenteditable descendants and textbox roles
 retain native keyboard handling. `routeKey` ignores those targets, composition,
 already-handled events and Alt combinations. Canvas/panel Cmd/Ctrl+Z and Shift+Z
-share `perform` with toolbar undo/redo. In the shipping workspace, TW-038
+share the history command path. In the shipping workspace, TW-038
 `ApplicationActions` owns file/history/clipboard shortcuts and native menus;
 `routeKey` retains canvas tools/navigation and the standalone test-shell fallback.
 Canvas `I` selects Inspect; TW-008 adds [navigation controls](navigation.md). Clicking/Tabbing into the canvas
-sets focus ownership; window blur marks it inactive. The readout distinguishes
-text editing, panel controls and canvas keyboard input without stealing focus.
+sets focus ownership; window blur marks it inactive. Focus ownership stays internal; the footer only displays tile/chunk coordinates and the last successful explicit save time.
 
 Errors from model commands, color input and renderer startup use the shared
 feedback store (`role=alert`). Renderer errors additionally retain technical
@@ -202,21 +201,22 @@ retains its explicit Review opener across asynchronous scanning. A newer dialog
 or a field the user moved to keeps focus. Native mouse clicks explicitly focus
 buttons at pointer-down and accessibility activation because WKWebView otherwise
 can leave the previous text field or webview root as keyboard owner. Returning from a native dialog/window
-blur refreshes the focus readout. A replacement canvas takes abandoned focus
+blur refreshes internal focus ownership. A replacement canvas takes abandoned focus
 when it becomes ready; an already focused field or modal keeps ownership.
 Keyboard focus has a visible outline; pressed tool, layer and named-color states
 remain accessible.
 
-`src/styles.css` constrains the editor's grid and flexible header so long layer
-names and history labels cannot widen the window. The header wraps controls;
-sidebars, toolbar, dialogs and the bounded feedback footer scroll independently.
-Long paths, names and errors wrap or expose their full value through a field or
-tooltip. At the 640 × 480 native minimum (640 × 452 content), all actions remain
-reachable without horizontal page overflow. The footer cannot consume the entire
-canvas when file/export/recovery messages stack. Tool/color and active-layer
-readouts remain available alongside map/selection dimensions, dirty state and
-operation feedback. The focus readout reserves its width so changing focus
-during mouse-down cannot reflow the footer and move the clicked control.
+`src/styles.css` constrains the editor to the viewport. The macOS native traffic
+lights share the compact title strip using Tauri's overlay title bar, with a
+reserved left inset and draggable title region. File actions and undo/redo live
+in the native menus and keyboard shortcuts. The top-right three-dot popover
+contains Review recovery; dismissal returns focus to its trigger.
+The footer remains one line: Tile X, Y; Chunk X, Y · Local X, Y; and the time of
+the last successful explicit save in this session. Canceled/failed saves and
+recovery checkpoints do not update that time; switching maps clears it.
+Routine action feedback remains available to assistive technology without
+occupying screen space. Errors, recovery warnings/retry and export progress or
+cancellation appear above the footer. Sidebars and dialogs scroll independently.
 These are usability constraints, not performance budgets.
 
 `tests/usability.spec.ts` walks all tools with keyboard/mouse input, text/clipboard/

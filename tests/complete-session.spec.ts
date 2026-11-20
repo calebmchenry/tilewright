@@ -92,7 +92,11 @@ for (const multi of [false, true])
     await button(page, "Apply color").click();
     await host(page).press("g");
     await drag(page, 73, 81);
-    await expect(button(page, "Undo Fill")).toBeEnabled();
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.editorProbe.session.history.state.undoLabel),
+      )
+      .toBe("Fill");
     await checkpoint();
     await host(page).press("d");
     await drag(page, 58, 55);

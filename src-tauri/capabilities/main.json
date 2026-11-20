@@ -27,6 +27,8 @@
     "allow-update-application-menu",
     "allow-edit-focused-text",
     "core:event:allow-listen",
-    "core:event:allow-unlisten"
+    "core:event:allow-unlisten",
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize"
   ]
 }

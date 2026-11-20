@@ -160,13 +160,13 @@ for (const dpr of [1, 2])
       maxX: 71,
       maxY: 68,
     });
-    await action(page, "Undo Edit area").click();
+    await page.locator(".canvas-host").press("Meta+z");
     expect((await persistent(page)).records).toEqual(created.records);
-    await action(page, "Redo Edit area").click();
+    await page.locator(".canvas-host").press("Meta+Shift+z");
     expect((await persistent(page)).records).toEqual(changed.records);
     await action(page, "Delete area").click();
     expect((await persistent(page)).records).toEqual([]);
-    await action(page, "Undo Delete area").click();
+    await page.locator(".canvas-host").press("Meta+z");
     expect((await persistent(page)).records).toEqual(changed.records);
     await page.evaluate(() => window.editorProbe.dispose());
     expect(await page.evaluate(() => window.gpuProbe())).toEqual({

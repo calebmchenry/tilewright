@@ -96,9 +96,12 @@ for (const density of [1, 2]) {
     await page.mouse.down();
     await page.mouse.move(end.x, end.y, { steps: 8 });
     await page.mouse.up();
-    await expect(page.getByTestId("rectangle-readout")).toHaveText(
-      "Rectangle 8 × 8 tiles",
-    );
+    expect(
+      await page.evaluate(() => {
+        const r = window.editorProbe.session.rectangle.getSnapshot()!;
+        return [r.maxX - r.minX, r.maxY - r.minY];
+      }),
+    ).toEqual([8, 8]);
     await expect(page.getByTestId("chunk-readout")).toHaveText(
       "Chunk 0, 0 · Local 60, 60",
     );
@@ -122,27 +125,32 @@ for (const density of [1, 2]) {
     await page.mouse.down();
     await canvas.dispatchEvent("pointercancel");
     await page.mouse.up();
-    await expect(page.getByTestId("rectangle-readout")).toHaveText(
-      "Rectangle 8 × 8 tiles",
-    );
+    expect(
+      await page.evaluate(() => {
+        const r = window.editorProbe.session.rectangle.getSnapshot()!;
+        return [r.maxX - r.minX, r.maxY - r.minY];
+      }),
+    ).toEqual([8, 8]);
     await page.mouse.down();
     await canvas.dispatchEvent("lostpointercapture");
     await page.mouse.up();
-    await expect(page.getByTestId("rectangle-readout")).toHaveText(
-      "Rectangle 8 × 8 tiles",
-    );
+    expect(
+      await page.evaluate(() => {
+        const r = window.editorProbe.session.rectangle.getSnapshot()!;
+        return [r.maxX - r.minX, r.maxY - r.minY];
+      }),
+    ).toEqual([8, 8]);
     await canvas.press("f");
-    await expect(page.getByTestId("grid-scale")).toContainText(
-      "64-tile chunk lines",
-    );
-    await expect(page.getByTestId("grid-scale")).not.toContainText("Tile grid");
+
     await page.screenshot({
       path: testInfo.outputPath(`grid-overview-dpr${density}.png`),
     });
     await canvas.press("Escape");
-    await expect(page.getByTestId("rectangle-readout")).toHaveText(
-      "Rectangle —",
-    );
+    expect(
+      await page.evaluate(() =>
+        window.editorProbe.session.rectangle.getSnapshot(),
+      ),
+    ).toBeNull();
     expect(
       await page.evaluate(() => {
         const session = window.editorProbe.session;
@@ -154,7 +162,7 @@ for (const density of [1, 2]) {
       }),
     ).toEqual(before);
     await page.setViewportSize({ width: 640, height: 452 });
-    await expect(page.getByTestId("grid-scale")).toBeVisible();
+    await expect(page.getByTestId("chunk-readout")).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBe(640);

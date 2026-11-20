@@ -51,7 +51,11 @@ for (const dpr of [1, 2])
     await expect(action(page, "Fill")).toHaveAttribute("aria-pressed", "true");
     const p = await point(page, 64, 63);
     await page.mouse.click(p.x, p.y);
-    await expect(action(page, "Undo Fill")).toBeEnabled();
+    await expect
+      .poll(() =>
+        page.evaluate(() => window.editorProbe.session.history.state.undoLabel),
+      )
+      .toBe("Fill");
     await expect(
       page.getByRole("status", { name: "Fill progress" }),
     ).toHaveCount(0);

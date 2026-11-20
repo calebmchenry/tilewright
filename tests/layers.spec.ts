@@ -38,16 +38,12 @@ test("layer controls add above active, rename, reorder, remove empty layers and 
   await expect(
     panel.getByRole("button", { name: "Move layer down" }),
   ).toBeDisabled();
-  await page
-    .getByRole("button", { name: "Undo Reorder layers", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
   await expect(stack.getByRole("button")).toHaveText([
     "▱BuildingsActive",
     "▱Terrain",
   ]);
-  await page
-    .getByRole("button", { name: "Redo Reorder layers", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+Shift+z");
   await panel.getByLabel("Layer name", { exact: true }).fill("  ");
   await expect(
     panel.getByRole("button", { name: "Rename", exact: true }),
@@ -65,9 +61,7 @@ test("layer controls add above active, rename, reorder, remove empty layers and 
     "▱TerrainActive",
     "▱Buildings",
   ]);
-  await page
-    .getByRole("button", { name: "Undo Remove layer", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
   await expect(stack.getByRole("button")).toHaveText([
     "▱Layer 1",
     "▱TerrainActive",
@@ -161,24 +155,16 @@ test("populated removal confirms the exact layer, cancel/Escape preserve history
   await expect(
     panel.getByRole("button", { name: "Remove layer", exact: true }),
   ).toBeDisabled();
-  await page
-    .getByRole("button", { name: "Undo Remove layer", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
   await expect(
     panel.getByRole("button", { name: "Buildings", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Redo Remove layer", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+Shift+z");
   await expect(
     panel.getByRole("button", { name: "Buildings", exact: true }),
   ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Undo Remove layer", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Undo Reorder layers", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
+  await page.locator(".canvas-host").press("Meta+z");
   expect(
     await page.evaluate(() => ({
       layers: window.editorProbe.session.document.layers,

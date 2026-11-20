@@ -1,3 +1,4 @@
+import { isTauri } from "@tauri-apps/api/core";
 import { RecoveryPanel } from "./RecoveryPanel";
 import type {
   RecoveryBrowser,
@@ -11,7 +12,6 @@ import { type ActionId, type EditorSession } from "./editor/session";
 import { canEditTiles } from "./editor/viewport";
 import { useStore, useStoreField } from "./editor/useStore";
 import { VISUAL_CHUNK_SIZE, visualChunkAt } from "./domain/coordinates";
-import { gridScale } from "./renderer/grid";
 import { CanvasControls, CanvasDialog } from "./CanvasControls";
 import type { ApplicationActions } from "./editor/application-actions";
 import type { EditorWorkspace } from "./editor/workspace";
@@ -20,9 +20,9 @@ import { RegistryControls } from "./RegistryControls";
 import { AnnotationPanel } from "./AnnotationPanel";
 export { AnnotationPanel } from "./AnnotationPanel";
 import {
-  FileControls,
   AgentExportFeedback,
   FileFeedback,
+  SaveTimestamp,
   RecoveryFeedback,
   UnsavedChanges,
   LifecycleFeedback,
@@ -372,16 +372,8 @@ export function ViewControls({ session }: Props) {
 }
 
 function Readout({ session }: Props) {
-  const tool = useStore(session.activeTool);
-  const color = useStore(session.color);
-  const focus = useStore(session.focus),
-    pointer = useStore(session.pointer);
-  const layer = useStore(session.activeLayer),
-    layers = useStore(session.layers);
+  const pointer = useStore(session.pointer);
   const bounds = useStore(session.bounds);
-  const rectangle = useStore(session.rectangle);
-  const view = useStore(session.viewport);
-  const scale = gridScale(view);
   const chunk = pointer ? visualChunkAt(pointer.x, pointer.y) : null;
   const inside =
     pointer &&
@@ -401,32 +393,6 @@ function Readout({ session }: Props) {
           ? `Chunk ${chunk.chunkX}, ${chunk.chunkY} · Local ${chunk.localX}, ${chunk.localY}`
           : "Chunk —, —"}
       </span>
-      <span data-testid="rectangle-readout">
-        {rectangle
-          ? `Rectangle ${rectangle.maxX - rectangle.minX} × ${rectangle.maxY - rectangle.minY} tiles`
-          : "Rectangle —"}
-      </span>
-      <span title={layers.find((item) => item.id === layer)?.name}>
-        Layer: {layers.find((item) => item.id === layer)?.name ?? "—"}
-      </span>
-      <span data-testid="tool-color-readout">
-        {session.action(tool).label} · {color.slice(0, 7).toUpperCase()}
-      </span>
-      <span data-testid="focus-readout">
-        {focus === "text"
-          ? "Text editing"
-          : focus === "canvas"
-            ? "Canvas keyboard"
-            : focus === "panel"
-              ? "Panel controls"
-              : "Workspace inactive"}
-      </span>
-      <span className="grid-scale" data-testid="grid-scale">
-        1 chunk = 64 × 64 tiles · {scale.tileAlpha > 0 ? "Tile grid · " : ""}
-        {scale.chunkStride === 1
-          ? "64-tile chunk lines"
-          : `Grid every ${scale.chunkStride} chunks (${64 * scale.chunkStride} tiles)`}
-      </span>
     </div>
   );
 }
@@ -440,6 +406,15 @@ function Feedback({ session }: Props) {
       aria-label="Action feedback"
     >
       {feedback.message}
+      {feedback.kind === "error" && (
+        <button
+          type="button"
+          aria-label="Dismiss notification"
+          onClick={() => session.report("")}
+        >
+          ×
+        </button>
+      )}
     </div>
   );
 }
@@ -458,7 +433,6 @@ export function Workspace({
   const { session, generation, savedPath, recovered } = useStore(
     workspace.state,
   );
-  const state = useStore(lifecycle.state);
   const newDialog = useStore(actions.newDialog);
   return (
     <>
@@ -466,14 +440,9 @@ export function Workspace({
         key={generation}
         session={session}
         lifecycle={lifecycle}
-        actions={actions}
         savedPath={savedPath}
         recovered={recovered}
         recoveryBrowser={recoveryBrowser}
-        lifecycleBusy={state.busy}
-        onCreateMap={(width, height) => {
-          void lifecycle.newMap(width, height);
-        }}
       />
       <UnsavedChanges lifecycle={lifecycle} />
       {newDialog && (
@@ -489,18 +458,12 @@ export function Workspace({
 
 export function App({
   session,
-  onCreateMap,
   lifecycle,
-  actions,
-  lifecycleBusy = false,
   savedPath,
   recovered,
   recoveryBrowser,
 }: Props & {
-  onCreateMap?: (width: number, height: number) => void;
   lifecycle?: DocumentLifecycle;
-  actions?: ApplicationActions;
-  lifecycleBusy?: boolean;
   savedPath?: string | null;
   recovered?: RecoveredProject | null;
   recoveryBrowser?: RecoveryBrowser;
@@ -556,15 +519,13 @@ export function App({
         }
       }}
     >
-      <header className="app-header">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            ▦
-          </span>
-          <h1>Tilewright</h1>
-        </div>
+      <header
+        className={`app-header${isTauri() && /Mac/.test(navigator.platform) ? " native-titlebar" : ""}`}
+        data-tauri-drag-region
+      >
         <div
           className="document-title"
+          data-tauri-drag-region
           title={
             savedPath ??
             (recovered
@@ -572,7 +533,7 @@ export function App({
               : undefined)
           }
         >
-          <span className="project-filename">
+          <span className="project-filename" data-tauri-drag-region>
             {savedPath?.split("/").pop() ??
               (recovered
                 ? `Recovered — ${recovered.displayName}`
@@ -580,33 +541,7 @@ export function App({
           </span>{" "}
           <DocumentStatus session={session} />
         </div>
-        <div className="history-controls">
-          {actions ? (
-            <button
-              type="button"
-              disabled={lifecycleBusy}
-              onClick={() => actions.perform("new")}
-            >
-              New map
-              <ShortcutHint action="new" />
-            </button>
-          ) : (
-            onCreateMap && (
-              <CanvasControls
-                session={session}
-                onCreateMap={onCreateMap}
-                disabled={lifecycleBusy}
-              />
-            )
-          )}
-          <ActionButton session={session} action="undo" />
-          <ActionButton session={session} action="redo" />
-          {actions ? (
-            <FileControls actions={actions} />
-          ) : (
-            <ActionButton session={session} action="save" />
-          )}
-        </div>
+        {recoveryBrowser && <RecoveryPanel browser={recoveryBrowser} />}
       </header>
       <div className="editor-body">
         <aside className="left-sidebar">
@@ -624,8 +559,10 @@ export function App({
         </aside>
       </div>
       <footer>
-        {recoveryBrowser && <RecoveryPanel browser={recoveryBrowser} />}
         <Readout session={session} />
+        {lifecycle && <SaveTimestamp files={lifecycle.files} />}
+      </footer>
+      <div className="notifications">
         <Feedback session={session} />
         {lifecycle && (
           <>
@@ -639,7 +576,7 @@ export function App({
             )}
           </>
         )}
-      </footer>
+      </div>
     </main>
   );
 }

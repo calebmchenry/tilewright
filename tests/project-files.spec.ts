@@ -261,9 +261,9 @@ async function request(page: Page, action: "new" | "open" | "close") {
   if (action === "close")
     await page.evaluate(() => window.fileProbe.requestClose());
   else if (action === "open")
-    await page.getByRole("button", { name: "Open…", exact: true }).click();
+    await page.locator(".canvas-host").press("Meta+o");
   else {
-    await page.getByRole("button", { name: "New map", exact: true }).click();
+    await page.locator(".canvas-host").press("Meta+n");
     const setup = page.getByRole("dialog", { name: "New map", exact: true });
     await setup.getByLabel("Width (tiles)").fill("101");
     await setup.getByLabel("Height (tiles)").fill("130");
@@ -313,9 +313,9 @@ for (const action of ["new", "open", "close"] as const) {
         })
         .click();
       await expect(dialog).toHaveCount(0);
-      await expect(
-        page.getByRole("button", { name: "Save", exact: true }),
-      ).toBeEnabled();
+      await expect
+        .poll(() => menuState(page, "save"))
+        .toMatchObject({ enabled: true });
       const success = choice === "save" || choice === "discard";
       if (!success) {
         await expect(name).toHaveValue("Keep unsaved work");
@@ -337,9 +337,9 @@ for (const action of ["new", "open", "close"] as const) {
         await expect
           .poll(() => page.evaluate(() => window.gpuProbe().contexts))
           .toBe(1);
-        await expect(
-          page.getByRole("button", { name: "Undo", exact: true }),
-        ).toBeDisabled();
+        await expect
+          .poll(() => menuState(page, "undo"))
+          .toMatchObject({ enabled: false });
         if (action === "open") {
           await expect(
             page.getByRole("checkbox", { name: "Show active layer" }),
@@ -372,7 +372,7 @@ test("save while editing updates only its checkpoint; undo is clean, redo dirty,
   await page.evaluate(() => {
     window.fileProbe.holdWrite = true;
   });
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+s");
   await expect
     .poll(() => page.evaluate(() => window.fileProbe.writes.length))
     .toBe(1);
@@ -385,17 +385,13 @@ test("save while editing updates only its checkpoint; undo is clean, redo dirty,
   await page.evaluate(() => {
     window.fileProbe.releaseWrite!();
   });
-  await expect(
-    page.getByRole("button", { name: "Save", exact: true }),
-  ).toBeEnabled();
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: true });
   await expect(page.locator(".document-title")).toContainText("Unsaved");
-  await page
-    .getByRole("button", { name: "Undo Rename layer", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
   await expect(page.locator(".document-title")).not.toContainText("Unsaved");
-  await page
-    .getByRole("button", { name: "Redo Rename layer", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+Shift+z");
   await expect(page.locator(".document-title")).toContainText("Unsaved");
   const dialog = await request(page, "close");
   await expect(dialog).toBeVisible();
@@ -478,10 +474,10 @@ test("native adapter controls, text-focused Cmd+S, Save As cancellation/failure 
   await page.evaluate(() => {
     window.fileProbe.cancel = true;
   });
-  await page.getByRole("button", { name: "Save As…", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Save As…", exact: true }),
-  ).toBeEnabled();
+  await page.locator(".canvas-host").press("Meta+Shift+s");
+  await expect
+    .poll(() => menuState(page, "save-as"))
+    .toMatchObject({ enabled: true });
   await expect(title).toContainText("café 地図 1.tilewright");
   await expect(title).toContainText("Unsaved");
   await page.evaluate(() => {
@@ -503,7 +499,7 @@ test("native adapter controls, text-focused Cmd+S, Save As cancellation/failure 
   expect(await page.evaluate(() => window.fileProbe.writes.at(-1)!.token)).toBe(
     "1",
   );
-  await page.getByRole("button", { name: "Save As…", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+Shift+s");
   await expect(title).toContainText("café 地図 3.tilewright");
   await name.press("Meta+o");
   await expect(title).toContainText("café 地図 4.tilewright");
@@ -519,22 +515,22 @@ test("native adapter controls, text-focused Cmd+S, Save As cancellation/failure 
 test("Open cancellation/read errors preserve map; dirty Open can be declined; controls fit narrow windows", async ({
   page,
 }) => {
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+s");
   const title = page.locator(".document-title");
   await expect(title).toContainText("café 地図 1.tilewright");
   await page.evaluate(() => {
     window.fileProbe.cancel = true;
   });
-  await page.getByRole("button", { name: "Open…", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Open…", exact: true }),
-  ).toBeEnabled();
+  await page.locator(".canvas-host").press("Meta+o");
+  await expect
+    .poll(() => menuState(page, "open"))
+    .toMatchObject({ enabled: true });
   await expect(title).toContainText("café 地図 1.tilewright");
   await page.evaluate(() => {
     window.fileProbe.cancel = false;
     window.fileProbe.fail = "read_project";
   });
-  await page.getByRole("button", { name: "Open…", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+o");
   await expect(
     page.getByRole("alert", { name: "Project file feedback" }),
   ).toContainText("read_project");
@@ -544,7 +540,7 @@ test("Open cancellation/read errors preserve map; dirty Open can be declined; co
   await expect(title).toContainText("café 地図 1.tilewright");
   await page.getByLabel("Layer name", { exact: true }).fill("Keep unsaved");
   await page.getByRole("button", { name: "Rename", exact: true }).click();
-  await page.getByRole("button", { name: "Open…", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+o");
   const confirmation = page.getByRole("dialog", {
     name: "Open another project",
   });
@@ -557,9 +553,9 @@ test("Open cancellation/read errors preserve map; dirty Open can be declined; co
   );
   expect(await page.evaluate(() => window.fileProbe.picks.length)).toBe(3);
   await page.setViewportSize({ width: 640, height: 480 });
-  await expect(
-    page.getByRole("button", { name: "Save As…", exact: true }),
-  ).toBeInViewport();
+  await expect
+    .poll(() => menuState(page, "save-as"))
+    .toMatchObject({ enabled: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     640,
   );
@@ -769,7 +765,7 @@ test("recovery checkpoints untitled and saved edits through binary IPC without w
   expect(first.project.document.layers[0].name).toBe("Untitled recovered");
   expect(await page.evaluate(() => window.fileProbe.writes.length)).toBe(0);
   await expect(page.locator(".document-title")).toContainText("Unsaved");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+s");
   await expect(page.locator(".document-title")).not.toContainText("Unsaved");
   const saved = await page.evaluate(() =>
     JSON.stringify(window.fileProbe.writes),
@@ -810,9 +806,9 @@ test("recovery failure remains visible with Retry while explicit Save stays avai
   await expect(
     page.getByRole("alert", { name: "Recovery feedback" }),
   ).toContainText("permission denied");
-  await expect(
-    page.getByRole("button", { name: "Save", exact: true }),
-  ).toBeEnabled();
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: true });
   expect(await page.evaluate(() => window.fileProbe.recoveries.length)).toBe(0);
   await page.evaluate(() => {
     window.fileProbe.fail = "";
@@ -930,6 +926,7 @@ test("startup recovery offers corrupt fallback, guards restore and saves exact c
   );
   await expect(page.locator(".document-title")).toContainText("Unsaved");
   expect(await page.evaluate(() => window.fileProbe.writes)).toEqual([]);
+  await page.getByRole("button", { name: "More options" }).click();
   await page.getByRole("button", { name: "Review recovery…" }).click();
   await expect(dialog).toContainText("Currently open");
   await expect(
@@ -939,7 +936,7 @@ test("startup recovery offers corrupt fallback, guards restore and saves exact c
     dialog.getByRole("button", { name: "Discard recovery…" }),
   ).toBeDisabled();
   await dialog.getByRole("button", { name: "Not now" }).click();
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+s");
   await expect(page.locator(".document-title")).not.toContainText("Unsaved");
   const written = await page.evaluate(() => ({
     project: window.fileProbe.writes[0].project,
@@ -958,10 +955,11 @@ test("stale recovery is reviewable without prompting and Escape keeps it at narr
   ]);
   const dialog = page.getByRole("dialog", { name: "Recover unsaved work" });
   await expect(
-    page.getByRole("button", { name: "Review recovery…" }),
+    page.getByRole("button", { name: "More options" }),
   ).toBeEnabled();
   await expect(dialog).toBeHidden();
   await page.setViewportSize({ width: 640, height: 480 });
+  await page.getByRole("button", { name: "More options" }).click();
   await page.getByRole("button", { name: "Review recovery…" }).click();
   await expect(dialog).toContainText("Already matches saved file");
   const size = await dialog.boundingBox();
@@ -1021,7 +1019,7 @@ test("multiple same-source maps remain distinct and corrupt recovery discard is 
 test("agent export includes unsaved edits and retains explicit save, path and recovery data", async ({
   page,
 }) => {
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.locator(".canvas-host").press("Meta+s");
   await expect(page.locator(".document-title")).toContainText("Saved");
   const name = page.getByLabel("Layer name", { exact: true });
   await name.fill("Unsaved export layer");
@@ -1038,9 +1036,7 @@ test("agent export includes unsaved edits and retains explicit save, path and re
       controls: window.fileProbe.recoveryControls,
     }),
   );
-  await page
-    .getByRole("button", { name: "Export for Agent…", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+Shift+e");
   await expect(
     page.getByRole("status", { name: "Agent export feedback" }),
   ).toContainText("Exported the whole map");
@@ -1067,9 +1063,9 @@ test("agent export includes unsaved edits and retains explicit save, path and re
     ),
   ).toBe(before);
   await page.setViewportSize({ width: 640, height: 480 });
-  await expect(
-    page.getByRole("button", { name: "Export for Agent…", exact: true }),
-  ).toBeInViewport();
+  await expect
+    .poll(() => menuState(page, "export-agent"))
+    .toMatchObject({ enabled: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     640,
   );
@@ -1087,9 +1083,9 @@ test("agent export progress stays interactive, gates file actions and cancels pr
   await expect(
     page.getByRole("progressbar", { name: "Agent export progress" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Save", exact: true }),
-  ).toBeDisabled();
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: false });
   const name = page.getByLabel("Layer name", { exact: true });
   await name.fill("Edited while exporting");
   await name.press("Enter");
@@ -1114,9 +1110,9 @@ test("agent export progress stays interactive, gates file actions and cancels pr
   expect(await page.evaluate(() => window.fileProbe.pendingExport)).toBeNull();
   expect(await page.evaluate(() => window.fileProbe.canceledExports)).toBe(1);
   await expect(name).toHaveValue("Edited while exporting");
-  await expect(
-    page.getByRole("button", { name: "Save", exact: true }),
-  ).toBeEnabled();
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: true });
 });
 
 test("agent export shortcut, canceled picker, failed write and retry give distinct feedback", async ({
@@ -1134,9 +1130,7 @@ test("agent export shortcut, canceled picker, failed write and retry give distin
     window.fileProbe.cancel = false;
     window.fileProbe.fail = "prepare_agent_export";
   });
-  await page
-    .getByRole("button", { name: "Export for Agent…", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+Shift+e");
   await expect(
     page.getByRole("alert", { name: "Agent export feedback" }),
   ).toContainText("permission denied");
@@ -1144,9 +1138,7 @@ test("agent export shortcut, canceled picker, failed write and retry give distin
   await page.evaluate(() => {
     window.fileProbe.fail = "";
   });
-  await page
-    .getByRole("button", { name: "Export for Agent…", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+Shift+e");
   await expect(
     page.getByRole("status", { name: "Agent export feedback" }),
   ).toContainText("Exported the whole map");
@@ -1202,10 +1194,13 @@ test("New and recovery dismissal restore their opener without background map edi
   await dialog.getByLabel("Width (tiles)").press("Escape");
   await expect(name).toBeFocused();
   const review = page.getByRole("button", { name: "Review recovery…" });
+  await page.getByRole("button", { name: "More options" }).click();
   await review.click();
   const recovery = page.getByRole("dialog", { name: "Recover unsaved work" });
   await recovery.press("Escape");
-  await expect(review).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "More options" }),
+  ).toBeFocused();
   for (const action of ["new", "open", "save", "save-as", "export-agent"]) {
     await expect
       .poll(() => menuState(page, action))
@@ -1220,7 +1215,7 @@ test("New and recovery dismissal restore their opener without background map edi
   ]) {
     await expect(
       page.getByRole("button", { name: title, exact: true }),
-    ).toBeInViewport();
+    ).toHaveCount(0);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     640,
@@ -1229,4 +1224,47 @@ test("New and recovery dismissal restore their opener without background map edi
     (await page.locator(".canvas-host").boundingBox())!.height,
   ).toBeGreaterThan(75);
   expect(await page.evaluate(() => window.fileProbe.writes)).toEqual([]);
+});
+
+test("compact chrome keeps one-line coordinates, save time and keyboard recovery access", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 640, height: 480 });
+  await expect(page.locator("header")).toHaveCSS("height", "36px");
+  await expect(page.locator("footer")).toHaveCSS("height", "28px");
+  await expect(page.locator("header").getByRole("button")).toHaveCount(1);
+  await expect(page.locator("footer")).not.toContainText(
+    /Recovery|chunk =|Undo|Rectangle/,
+  );
+  await expect(page.getByTestId("save-timestamp")).toBeEmpty();
+  await page.locator(".canvas-host").press("Meta+s");
+  await expect(page.getByTestId("save-timestamp")).toContainText("Saved");
+  const saved = await page.getByTestId("save-timestamp").textContent();
+  await page.evaluate(() => {
+    window.fileProbe.cancel = true;
+  });
+  await page.locator(".canvas-host").press("Meta+Shift+s");
+  await expect
+    .poll(() => menuState(page, "save"))
+    .toMatchObject({ enabled: true });
+  await expect(page.getByTestId("save-timestamp")).toHaveText(saved!);
+  const more = page.getByRole("button", { name: "More options" });
+  await more.focus();
+  await more.press("Enter");
+  await expect(more).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Tab");
+  const review = page.getByRole("button", { name: "Review recovery…" });
+  await expect(review).toBeFocused();
+  await review.press("Enter");
+  await page
+    .getByRole("dialog", { name: "Recover unsaved work" })
+    .press("Escape");
+  await expect(more).toBeFocused();
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await more.click();
+  await page.keyboard.press("Escape");
+  await expect(more).toBeFocused();
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await expect(review).toBeHidden();
+  await page.screenshot({ path: testInfo.outputPath("compact-chrome.png") });
 });

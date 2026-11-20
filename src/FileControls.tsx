@@ -7,7 +7,6 @@ import type {
 } from "./editor/document-lifecycle";
 import type { ProjectFiles } from "./editor/project-files";
 import { useStore } from "./editor/useStore";
-import type { ApplicationActions } from "./editor/application-actions";
 
 export function UnsavedChanges({
   lifecycle,
@@ -87,49 +86,6 @@ function UnsavedDialog({
   );
 }
 
-export function FileControls({ actions }: { actions: ApplicationActions }) {
-  useStore(actions.menu);
-  const files = actions.lifecycle.files;
-  const title = files.available
-    ? undefined
-    : "Local project files are available in the Tilewright desktop app.";
-  return (
-    <span className="file-controls" title={title}>
-      <button
-        type="button"
-        disabled={!actions.state("open").enabled}
-        onClick={() => actions.perform("open")}
-      >
-        Open…
-        <ShortcutHint action="open" />
-      </button>
-      <button
-        type="button"
-        disabled={!actions.state("save").enabled}
-        onClick={() => actions.perform("save")}
-      >
-        Save
-        <ShortcutHint action="save" />
-      </button>
-      <button
-        type="button"
-        disabled={!actions.state("save-as").enabled}
-        onClick={() => actions.perform("save-as")}
-      >
-        Save As…
-        <ShortcutHint action="save-as" />
-      </button>
-      <button
-        type="button"
-        disabled={!actions.state("export-agent").enabled}
-        onClick={() => actions.perform("export-agent")}
-      >
-        Export for Agent…
-        <ShortcutHint action="export-agent" />
-      </button>
-    </span>
-  );
-}
 export function LifecycleFeedback({
   lifecycle,
 }: {
@@ -149,7 +105,7 @@ export function LifecycleFeedback({
   if (busy && !prompt && action !== "export")
     return (
       <div
-        className="feedback info"
+        className="feedback info busy"
         role="status"
         aria-label="Document workflow feedback"
       >
@@ -183,8 +139,8 @@ export function RecoveryFeedback({
   if (!recovery.bridge.available) return null;
   return (
     <div
-      className={`feedback ${error ? "error" : "info"}`}
-      role={error ? "alert" : "status"}
+      className={`feedback ${error || warning ? "error" : "info"}`}
+      role={error || warning ? "alert" : "status"}
       aria-label="Recovery feedback"
     >
       {error ||
@@ -247,5 +203,24 @@ export function AgentExportFeedback({
         </button>
       )}
     </div>
+  );
+}
+
+export function SaveTimestamp({ files }: { files: ProjectFiles }) {
+  const saved = useStore(files.lastSave);
+  const { session } = useStore(files.workspace.state);
+  return (
+    <span className="save-timestamp" data-testid="save-timestamp">
+      {saved?.session === session ? (
+        <time
+          dateTime={new Date(saved.at).toISOString()}
+          title={new Date(saved.at).toLocaleString()}
+        >
+          Saved {new Date(saved.at).toLocaleTimeString()}
+        </time>
+      ) : (
+        ""
+      )}
+    </span>
   );
 }

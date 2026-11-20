@@ -1,5 +1,5 @@
 import { restoreFocus } from "./editor/focus";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   recoveryAge,
   type RecoveryBrowser,
@@ -12,35 +12,81 @@ const time = (value: number) => {
   return Number.isNaN(date.getTime()) ? "Unknown time" : date.toLocaleString();
 };
 export function RecoveryPanel({ browser }: { browser: RecoveryBrowser }) {
+  const menuId = useId();
+  const menu = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const reviewButton = useRef<HTMLButtonElement>(null);
   const state = useStore(browser.state);
   const lifecycle = useStore(browser.lifecycle.state);
   if (!browser.bridge.available) return null;
   return (
     <>
-      <div className="recovery-entrypoint">
-        <button
-          ref={reviewButton}
-          type="button"
-          disabled={lifecycle.busy || state.busy}
-          onClick={() => void browser.review()}
-        >
-          Review recovery…
-        </button>
-        {state.busy && !state.open && (
-          <span role="status">Checking recovery…</span>
-        )}
-        {!state.open && state.entries.length > 0 && (
-          <span>
-            {state.entries.length} recovery{" "}
-            {state.entries.length === 1 ? "map" : "maps"} available
-          </span>
-        )}
-        {!state.open && state.error && <span role="alert">{state.error}</span>}
-        {!state.open &&
-          state.warnings.map((warning, index) => (
-            <span key={index}>{warning}</span>
-          ))}
+      <button
+        ref={reviewButton}
+        type="button"
+        className="overflow-button"
+        aria-label="More options"
+        title="More options"
+        popoverTarget={menuId}
+        aria-expanded={menuOpen}
+        aria-controls={menuId}
+        onKeyDown={(event) => {
+          if (
+            event.key === "Escape" &&
+            menu.current?.matches(":popover-open")
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            menu.current.hidePopover();
+          }
+        }}
+      >
+        <span aria-hidden="true">⋯</span>
+      </button>
+      <div
+        id={menuId}
+        ref={menu}
+        popover="auto"
+        className="app-overflow"
+        onToggle={(event) => setMenuOpen(event.newState === "open")}
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === "Escape") {
+            event.preventDefault();
+            menu.current?.hidePopover();
+            reviewButton.current?.focus();
+          }
+        }}
+      >
+        <div className="recovery-entrypoint">
+          <button
+            type="button"
+            disabled={lifecycle.busy || state.busy}
+            onClick={() => {
+              menu.current?.hidePopover();
+              reviewButton.current?.focus();
+              void browser.review();
+            }}
+          >
+            Review recovery…
+          </button>
+          {state.busy && !state.open && (
+            <span role="status">Checking recovery…</span>
+          )}
+          {!state.open && state.entries.length > 0 && (
+            <span>
+              {state.entries.length} recovery{" "}
+              {state.entries.length === 1 ? "map" : "maps"} available
+            </span>
+          )}
+          {!state.open && state.error && (
+            <span role="alert">{state.error}</span>
+          )}
+          {!state.open &&
+            state.warnings.map((warning, index) => (
+              <span key={index}>{warning}</span>
+            ))}
+        </div>
       </div>
       {state.open && (
         <RecoveryDialog browser={browser} opener={reviewButton.current} />

@@ -254,10 +254,7 @@ test("panel and on-map selection remain synchronized through filtered rename, de
   await page.screenshot({
     path: info.outputPath("independent-selections.png"),
   });
-  await page
-    .locator("main")
-    .getByRole("button", { name: "Undo Edit area", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
   await expect(panel(page)).toContainText("No matching areas.");
   await expect(
     panel(page).getByRole("heading", {
@@ -265,10 +262,7 @@ test("panel and on-map selection remain synchronized through filtered rename, de
       exact: true,
     }),
   ).toBeVisible();
-  await page
-    .locator("main")
-    .getByRole("button", { name: "Redo Edit area", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+Shift+z");
   await expect(renamedRow()).toHaveAttribute("aria-pressed", "true");
   await action(page, "Delete area").click();
   await expect(action(page, "Focus area")).toHaveCount(0);
@@ -276,10 +270,7 @@ test("panel and on-map selection remain synchronized through filtered rename, de
   expect(
     await page.evaluate(() => window.editorProbe.session.areas.overlayArea()),
   ).toBeNull();
-  await page
-    .locator("main")
-    .getByRole("button", { name: "Undo Delete area", exact: true })
-    .click();
+  await page.locator(".canvas-host").press("Meta+z");
   await expect(renamedRow()).toHaveAttribute("aria-pressed", "false");
   await expect(action(page, "Focus area")).toHaveCount(0);
   await renamedRow().click();

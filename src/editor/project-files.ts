@@ -26,6 +26,9 @@ export interface ProjectFileState {
 }
 
 export class ProjectFiles {
+  readonly lastSave = new Store<{ session: EditorSession; at: number } | null>(
+    null,
+  );
   readonly state = new Store<ProjectFileState>({
     busy: false,
     error: false,
@@ -52,6 +55,11 @@ export class ProjectFiles {
     this.bridge = bridge;
     this.#encode = options.encode ?? encodeProjectSnapshot;
     this.#unsubscribe = workspace.state.subscribe(() => {
+      if (
+        this.lastSave.getSnapshot()?.session !==
+        workspace.state.getSnapshot().session
+      )
+        this.lastSave.set(null);
       if (this.#association?.session !== workspace.state.getSnapshot().session)
         this.#association = null;
     });
@@ -220,6 +228,11 @@ export class ProjectFiles {
         snapshot.checkpoint,
       );
       this.#association = { session, file };
+      try {
+        this.lastSave.set({ session, at: Date.now() });
+      } catch {
+        /* A view observer cannot invalidate the completed save. */
+      }
       await this.recovery?.saved(session, file.path, bytes, snapshot);
       return `Saved ${file.path}.${warning ? ` ${warning}` : ""}${errors.length ? " Some interface observers failed; the file was saved." : ""}`;
     });
