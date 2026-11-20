@@ -1,4 +1,5 @@
 import type { ActionId } from "./session.ts";
+import type { SelectionTransform } from "../domain/selection.ts";
 
 /** One vocabulary for dispatch and visible button hints. */
 export const toolShortcuts = {
@@ -14,6 +15,13 @@ export const toolShortcuts = {
   a: "area",
   f: "fit-map",
 } as const satisfies Record<string, ActionId>;
+
+export const transformShortcuts = {
+  z: "rotate-clockwise",
+  "shift+z": "rotate-counterclockwise",
+  x: "flip-horizontal",
+  y: "flip-vertical",
+} as const satisfies Record<string, SelectionTransform>;
 
 export const shortcutHints: Partial<
   Record<ActionId | "new" | "open" | "save-as" | "export-agent", string>

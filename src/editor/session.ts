@@ -33,7 +33,7 @@ import {
 } from "../domain/registry.ts";
 import { grownMapBounds, type GrowthCounts } from "../domain/canvas.ts";
 import { Store } from "./store.ts";
-import { toolShortcuts } from "./shortcuts.ts";
+import { toolShortcuts, transformShortcuts } from "./shortcuts.ts";
 import { FillController } from "./fill.ts";
 import { AnnotationController } from "./annotations.ts";
 import { SelectionController } from "./selection.ts";
@@ -840,6 +840,13 @@ export class EditorSession {
       const tool = toolShortcuts[key as keyof typeof toolShortcuts];
       if (tool) {
         this.perform(tool);
+        return true;
+      }
+      const transformKey = input.shiftKey && key === "z" ? "shift+z" : key;
+      const transform =
+        transformShortcuts[transformKey as keyof typeof transformShortcuts];
+      if (transform) {
+        this.perform(transform);
         return true;
       }
       // Arrows, Enter, brush sizing and zoom belong to the canvas. Buttons,

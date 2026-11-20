@@ -63,7 +63,7 @@ for (const multi of [false, true])
       if (multi)
         await panel(page)
           .getByRole("checkbox", {
-            name: "Include Furniture (furniture)",
+            name: "Include Furniture",
             exact: true,
           })
           .check();
@@ -112,27 +112,27 @@ for (const multi of [false, true])
       // Change scope between operations, leaving terrain excluded throughout.
       await panel(page)
         .getByRole("checkbox", {
-          name: "Include Furniture (furniture)",
+          name: "Include Furniture",
           exact: true,
         })
         .setChecked(!multi);
-      await action(page, "Cut").click();
+      await host(page).press("ControlOrMeta+x");
       await saveState();
-      await action(page, "Paste").click();
+      await host(page).press("ControlOrMeta+v");
       await move(page, 62, 62);
-      await action(page, "Rotate clockwise").click();
-      await action(page, "Flip horizontal").click();
-      await action(page, "Flip vertical").click();
+      await host(page).press("z");
+      await host(page).press("x");
+      await host(page).press("y");
       expect(await content(page)).toEqual(states.at(-1));
       await action(page, "Apply paste").click();
       await saveState();
-      await action(page, "Copy").click();
-      await action(page, "Paste").click();
+      await host(page).press("ControlOrMeta+c");
+      await host(page).press("ControlOrMeta+v");
       await move(page, 70, 70);
-      await action(page, "Rotate counterclockwise").click();
+      await host(page).press("Shift+z");
       await action(page, "Apply paste").click();
       await saveState();
-      await action(page, "Flip horizontal").click();
+      await host(page).press("x");
       await host(page).press("ArrowRight");
       await action(page, "Apply transform").click();
       await saveState();

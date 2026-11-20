@@ -28,14 +28,15 @@ Release captures occupied counts and exposes **Included layers** checkboxes.
 The counts include covered/offscreen tiles, not only visible composited pixels.
 
 Each rectangle starts with the active visible layer only. Add other visible
-layers explicitly; at least one must remain. Each row shows its name, stable ID,
-occupied count or excluded/hidden status. Active-layer changes, rename, reorder
-and new layers do not alter membership. Hiding/removing any included layer clears
+layers explicitly; at least one must remain. Each row shows its name and
+occupied count or excluded/hidden status; internal IDs are not displayed.
+Active-layer changes, rename, reorder and new layers do not alter membership.
+Hiding/removing any included layer clears
 the whole selection with feedback. Showing/restoring it does not resurrect the
 selection. Other document changes cancel pending creation and refresh an idle
 selection's payload/counts if its bounds and all included IDs remain valid.
 
-**Deselect** or idle canvas **Escape** clears only selection state. Escape during
+Idle canvas **Escape** clears only selection state. Escape during
 creation, capture loss, pointer cancel, missing primary button, window blur,
 context changes or teardown cancel the candidate and retain the prior selection.
 Pan, Inspect and the read-only Eyedropper retain the completed selection; painting
@@ -82,7 +83,7 @@ picker snaps movement to whole tiles. The preview shows exclusive destination
 bounds, delta and the actual layer composition, including exposed lower terrain
 at cleared sources. Release commits one **Move selection** history step. Returning
 to the original tile before release is a no-op. Outside drags still create a new
-rectangle; use **Deselect** first to create one inside the old selection.
+rectangle; press **Escape** first to create one inside the old selection.
 
 Canvas **arrows** nudge one tile, **Shift+arrow** ten. Each keydown/repeat is an
 independent **Nudge selection** step with fresh content; retained cells beneath
@@ -133,9 +134,9 @@ history/memory refinement remains TW-050 under the current delivery priority.
 
 ## Clipboard implementation (TW-026)
 
-The Tile selection panel provides **Copy**, **Cut**, and **Paste**, shared with
-canvas **Cmd/Ctrl+C/X/V**. Copy snapshots all included layers and changes no map
-content/history. Cut clears their occupied cells immediately in one **Cut** step,
+Canvas **Cmd/Ctrl+C/X/V** invokes Copy, Cut, and Paste; these actions do not
+add buttons to the Tile selection panel. Copy snapshots all included layers and
+changes no map content/history. Cut clears their occupied cells immediately in one **Cut** step,
 keeps the selection, and publishes the new clipboard only after success. Canceling
 a later paste does not undo Cut. Empty cuts and identical pastes add no history.
 
@@ -185,9 +186,13 @@ claimed; rendering refinement remains TW-049, large-edit/history/memory TW-050.
 
 ## Transform implementation (TW-027)
 
-The Tile selection panel now provides **Rotate clockwise**, **Rotate
-counterclockwise**, **Flip horizontal**, and **Flip vertical**. A live selection
-starts a transform preview at its current top-left. Each additional action
+Press **Z** to rotate clockwise, **Shift+Z** to rotate counterclockwise,
+**X** to flip horizontally, or **Y** to flip vertically. These shortcuts work
+from the canvas and non-text panel controls; text editing, IME, and modified
+clipboard/undo/redo shortcuts keep their existing behavior. The Tile selection
+panel shows dimensions, layer inclusion by name, and concise preview or validation
+status. Only pending placements show **Apply** and **Cancel** buttons. A live
+selection starts a transform preview at its current top-left. Each additional action
 composes on the staged payload and dimensions; the document is never recaptured
 between preview actions. The pointer does not move a live transform's anchor.
 Canvas arrows reposition it one tile, Shift+arrow ten. **Apply transform** or
@@ -201,7 +206,8 @@ change the session clipboard. Starting another Paste resets orientation from the
 stored copy. Copy/Cut are unavailable during any placement; Paste is unavailable
 during a live transform until Apply/Cancel. Tools, readiness/zoom, context/version
 changes, pointer cancellation/capture loss and window blur use the existing
-all-or-nothing cancellation rules. Text/panel/IME routing remains native.
+all-or-nothing cancellation rules. Text/IME routing and panel arrows/Enter remain
+native.
 
 Invalid full extents show the red outline, unchanged map and reason; Apply is
 disabled and Enter rejects without edits. The preview remains adjustable by

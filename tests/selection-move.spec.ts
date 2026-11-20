@@ -13,7 +13,7 @@ async function setup(page: Page) {
   await page.mouse.up();
   await page
     .getByRole("checkbox", {
-      name: "Include Furniture (furniture)",
+      name: "Include Furniture",
       exact: true,
     })
     .check();

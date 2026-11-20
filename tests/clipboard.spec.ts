@@ -26,7 +26,7 @@ async function setup(page: Page) {
   await page.mouse.up();
   await page
     .getByRole("checkbox", {
-      name: "Include Furniture (furniture)",
+      name: "Include Furniture",
       exact: true,
     })
     .check();
@@ -113,7 +113,7 @@ for (const dpr of [1, 2])
     });
     const original = await content(page),
       before = await persistent(page);
-    await button(page, "Copy").click();
+    await host(page).press("ControlOrMeta+c");
     expect(await persistent(page)).toEqual(before);
     await page
       .locator("main")
@@ -128,8 +128,11 @@ for (const dpr of [1, 2])
       maxY: 68,
     });
     expect(await persistent(page)).toEqual(before);
-    await expect(button(page, "Copy")).toBeDisabled();
-    await expect(button(page, "Cut")).toBeDisabled();
+    const pending = await preview(page);
+    await host(page).press("ControlOrMeta+c");
+    await host(page).press("ControlOrMeta+x");
+    expect(await preview(page)).toEqual(pending);
+    expect(await persistent(page)).toEqual(before);
     expect(
       await pixels(page, [
         [60, 60],
@@ -190,7 +193,7 @@ for (const dpr of [1, 2])
     await dialog
       .getByRole("button", { name: "Edit named color", exact: true })
       .click();
-    await button(page, "Paste").click(); // preview uses current entry; original anchor fallback
+    await host(page).press("ControlOrMeta+v"); // preview uses current entry; original anchor fallback
     await host(page).focus();
     await move(page, 70, 60);
     expect(
@@ -239,7 +242,7 @@ test("cut then cancel remains cut, invalid boundaries remain adjustable, pointer
   await page.keyboard.press("Escape");
   expect(await persistent(page)).toEqual(cut);
   await expect(page.getByTestId("selection-dimensions")).toContainText("8 × 8");
-  await button(page, "Paste").click();
+  await host(page).press("ControlOrMeta+v");
   await button(page, "Cancel paste").press("Enter");
   expect(await preview(page)).toBeNull();
   await host(page).press("Control+z");
@@ -277,7 +280,7 @@ test("paste cancellation preserves clipboard, stale layers reject and native tex
   context,
 }) => {
   await setup(page);
-  await button(page, "Copy").click();
+  await host(page).press("ControlOrMeta+c");
   const before = await persistent(page);
   for (const cause of [
     "blur",
@@ -287,7 +290,7 @@ test("paste cancellation preserves clipboard, stale layers reject and native tex
     "tool",
     "resize",
   ]) {
-    await button(page, "Paste").click();
+    await host(page).press("ControlOrMeta+v");
     expect(await preview(page)).not.toBeNull();
     if (cause === "blur")
       await page.evaluate(() => window.dispatchEvent(new Event("blur")));
@@ -312,10 +315,17 @@ test("paste cancellation preserves clipboard, stale layers reject and native tex
     const s = window.editorProbe.session;
     s.removeLayer(s.document.layers[2].id, true);
   });
-  await expect(button(page, "Paste")).toBeDisabled();
-  await expect(panel(page)).toContainText("missing");
+  const missingLayer = await persistent(page);
+  await host(page).press("ControlOrMeta+v");
+  expect(await preview(page)).toBeNull();
+  expect(await persistent(page)).toEqual(missingLayer);
+  await expect(
+    page.getByRole("status", { name: "Action feedback" }),
+  ).toContainText("missing");
   await host(page).press("Control+z");
-  await expect(button(page, "Paste")).toBeEnabled();
+  await host(page).press("ControlOrMeta+v");
+  expect(await preview(page)).not.toBeNull();
+  await host(page).press("Escape");
   const state = await persistent(page);
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.evaluate(() => navigator.clipboard.writeText("abcdef"));
@@ -347,7 +357,7 @@ test("paste cancellation preserves clipboard, stale layers reject and native tex
   await expect(editable).toHaveText("Native text");
   expect(await persistent(page)).toEqual(state);
   await page.setViewportSize({ width: 640, height: 452 });
-  await button(page, "Paste").click();
+  await host(page).press("ControlOrMeta+v");
   await button(page, "Cancel paste").click();
   expect(
     await page.evaluate(

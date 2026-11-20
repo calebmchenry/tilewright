@@ -6,7 +6,7 @@ const panel = (page: Page) =>
   page.getByRole("region", { name: "Tile selection", exact: true });
 const include = (page: Page, name: string) =>
   panel(page).getByRole("checkbox", {
-    name: `Include ${name} (${name.toLowerCase()})`,
+    name: `Include ${name}`,
     exact: true,
   });
 async function setup(page: Page) {
@@ -95,9 +95,14 @@ for (const dpr of [1, 2])
     await expect(include(page, "Walls")).toBeChecked();
     await expect(include(page, "Walls")).toBeDisabled();
     await expect(include(page, "Terrain")).not.toBeChecked();
-    await expect(panel(page)).toContainText("walls · 64 occupied");
+    await expect(panel(page).getByRole("button")).toHaveCount(0);
+    await expect(include(page, "Walls").locator("..")).toHaveText(
+      "Walls64 occupied",
+    );
     await include(page, "Furniture").check();
-    await expect(panel(page)).toContainText("furniture · 3 occupied");
+    await expect(include(page, "Furniture").locator("..")).toHaveText(
+      "Furniture3 occupied",
+    );
     await page
       .locator("main")
       .getByLabel("Layer name: Terrain", { exact: true })
@@ -161,7 +166,7 @@ for (const dpr of [1, 2])
     await page.screenshot({
       path: info.outputPath(`selection-controls-dpr${dpr}.png`),
     });
-    await action(page, "Deselect").click();
+    await host.press("Escape");
     expect(await selected(page)).toBeNull();
     // Restore keyboard focus-visible styling before comparing complete pixels.
     await host.press("v");
@@ -367,7 +372,7 @@ test("scope controls, text shortcuts, gates, painting and small-window layout re
   await page.setViewportSize({ width: 640, height: 452 });
   await include(page, "Walls").scrollIntoViewIfNeeded();
   await expect(include(page, "Walls")).toBeVisible();
-  await expect(action(page, "Deselect")).toBeVisible();
+  await expect(panel(page).getByRole("button")).toHaveCount(0);
   expect(
     await page.evaluate(
       () =>

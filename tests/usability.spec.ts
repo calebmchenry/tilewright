@@ -101,13 +101,13 @@ test("continuous keyboard/mouse tool session, panel shortcuts, preview cancel an
     "X [61, 64)",
   );
   await host(page).press("ControlOrMeta+c");
-  await button(page, "Paste").click();
+  await host(page).press("ControlOrMeta+v");
   const beforeCancel = await content(page);
-  await button(page, "Rotate clockwise").click();
+  await host(page).press("z");
   await button(page, "Apply color").press("Escape");
   await expect(button(page, "Apply paste")).toHaveCount(0);
   expect(await content(page)).toEqual(beforeCancel);
-  await button(page, "Flip horizontal").click();
+  await host(page).press("x");
   await button(page, "Cancel transform").click();
   await expect(host(page)).toBeFocused();
   await host(page).press("h");
@@ -290,7 +290,6 @@ test("populated long-name panels, error feedback and controls remain reachable a
       "Areas",
       "Register color",
       "Add layer",
-      "Paste",
       "New area",
       "Apply area",
       "Cancel area edit",

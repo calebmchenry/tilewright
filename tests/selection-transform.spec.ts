@@ -26,7 +26,7 @@ async function setup(page: Page) {
   await page.mouse.up();
   await page
     .getByRole("checkbox", {
-      name: "Include Furniture (furniture)",
+      name: "Include Furniture",
       exact: true,
     })
     .check();
@@ -95,7 +95,9 @@ for (const dpr of [1, 2])
     await setup(page);
     const original = await content(page),
       before = await persistent(page);
-    await button(page, "Rotate clockwise").click();
+    // Layer checkbox focus can start a transform, then returns to the canvas.
+    await page.keyboard.press("z");
+    await expect(host(page)).toBeFocused();
     await expect(panel(page).getByTestId("selection-dimensions")).toHaveText(
       "6 × 8 tiles · 48 positions",
     );
@@ -128,7 +130,7 @@ for (const dpr of [1, 2])
     expect((await preview(page))!.bounds.minX).toBe(60);
     await page.keyboard.press("Enter");
     expect((await persistent(page)).history.undoSteps).toBe(1);
-    await button(page, "Flip horizontal").click();
+    await host(page).press("x");
     expect(
       await pixels(page, [
         [61, 60],
@@ -146,7 +148,7 @@ for (const dpr of [1, 2])
       path: info.outputPath("house-horizontal.png"),
     });
     await button(page, "Apply transform").click();
-    await button(page, "Flip vertical").click();
+    await host(page).press("y");
     expect(
       await pixels(page, [
         [61, 67],
@@ -182,35 +184,35 @@ test("composed transforms are exact preview identities; transformed paste resets
   page,
 }) => {
   await setup(page);
-  await button(page, "Copy").click();
+  await host(page).press("ControlOrMeta+c");
   const before = await persistent(page),
     original = await content(page);
-  for (const [name, count] of [
-    ["Rotate clockwise", 4],
-    ["Rotate counterclockwise", 4],
-    ["Flip horizontal", 2],
-    ["Flip vertical", 2],
+  for (const [key, count] of [
+    ["z", 4],
+    ["Shift+z", 4],
+    ["x", 2],
+    ["y", 2],
   ] as const) {
-    for (let i = 0; i < count; i++) await button(page, name).click();
+    for (let i = 0; i < count; i++) await host(page).press(key);
     await expect(panel(page).getByTestId("selection-dimensions")).toHaveText(
       "8 × 6 tiles · 48 positions",
     );
     await button(page, "Apply transform").click();
     expect(await persistent(page)).toEqual(before);
   }
-  await button(page, "Paste").click();
+  await host(page).press("ControlOrMeta+v");
   await move(page, 70, 70);
-  await button(page, "Rotate clockwise").click();
+  await host(page).press("z");
   expect((await preview(page))!.bounds).toEqual({
     minX: 70,
     minY: 70,
     maxX: 76,
     maxY: 78,
   });
-  await button(page, "Flip vertical").click();
+  await host(page).press("y");
   await button(page, "Apply paste").click();
   expect((await persistent(page)).history.undoLabel).toBe("Paste");
-  await button(page, "Paste").click();
+  await host(page).press("ControlOrMeta+v");
   await expect(panel(page).getByTestId("selection-dimensions")).toHaveText(
     "8 × 6 tiles · 48 positions",
   );
@@ -235,7 +237,7 @@ test("invalid edge rotation can be corrected with arrows; cancellation, controls
     "space",
     "resize",
   ]) {
-    await button(page, "Rotate clockwise").click();
+    await host(page).press("z");
     if (cause === "escape")
       await button(page, "Apply transform").press("Escape");
     if (cause === "button")
@@ -259,7 +261,7 @@ test("invalid edge rotation can be corrected with arrows; cancellation, controls
     expect(await persistent(page)).toEqual(before);
   }
   // An empty edge-adjacent 3x2 still rejects its third row after rotation.
-  await button(page, "Deselect").click();
+  await host(page).press("Escape");
   await page.evaluate(() =>
     window.editorProbe.session.viewport.set({ x: 120, y: 120, zoom: 1 }),
   );
@@ -267,7 +269,7 @@ test("invalid edge rotation can be corrected with arrows; cancellation, controls
   await page.mouse.down();
   await move(page, 130, 132);
   await page.mouse.up();
-  await button(page, "Rotate clockwise").click();
+  await host(page).press("z");
   await expect(button(page, "Apply transform")).toBeDisabled();
   await expect(
     page.getByRole("status", { name: "Selection preview" }),
@@ -283,7 +285,7 @@ test("invalid edge rotation can be corrected with arrows; cancellation, controls
     "Y [130, 133)",
   );
   await page.setViewportSize({ width: 640, height: 452 });
-  await button(page, "Flip horizontal").click();
+  await host(page).press("x");
   await button(page, "Apply transform").scrollIntoViewIfNeeded();
   await expect(button(page, "Apply transform")).toBeInViewport();
   expect(

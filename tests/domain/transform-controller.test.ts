@@ -39,6 +39,58 @@ const persistent = (s: EditorSession) => ({
   history: s.history.state,
 });
 
+test("transform shortcuts respect focus, modifiers, readiness and selection gates", () => {
+  const s = setup();
+  const before = persistent(s);
+  for (const input of [
+    { key: "z" },
+    { key: "Z", shiftKey: true },
+    { key: "x" },
+    { key: "y" },
+  ]) {
+    for (const owner of ["text", "outside"] as const)
+      assert.equal(s.routeKey(input, owner), false);
+    for (const extra of [
+      { altKey: true },
+      { isComposing: true },
+      { defaultPrevented: true },
+    ])
+      for (const owner of ["canvas", "panel"] as const)
+        assert.equal(s.routeKey({ ...input, ...extra }, owner), false);
+    assert.equal(s.selection.preview.getSnapshot(), null);
+    for (const owner of ["canvas", "panel"] as const) {
+      assert.equal(s.routeKey(input, owner), true);
+      assert.ok(s.selection.preview.getSnapshot()?.transform);
+      assert.deepEqual(persistent(s), before);
+      s.routeKey({ key: "Escape" }, owner);
+    }
+    s.canvasState.set("loading");
+    assert.equal(s.routeKey(input, "canvas"), false);
+    assert.equal(s.selection.preview.getSnapshot(), null);
+    s.canvasState.set("ready");
+  }
+  s.selection.deselect();
+  s.routeKey({ key: "z" }, "canvas");
+  assert.equal(s.selection.preview.getSnapshot(), null);
+  assert.deepEqual(persistent(s), before);
+  s.dispose();
+  // Modified X is still Cut, and modified Z/Shift+Z still undo/redo it.
+  for (const modifier of [{ ctrlKey: true }, { metaKey: true }]) {
+    const editor = setup();
+    const original = content(editor);
+    editor.routeKey({ key: "x", ...modifier }, "canvas");
+    const cut = content(editor);
+    assert.equal(editor.history.state.undoLabel, "Cut");
+    assert.equal(editor.selection.preview.getSnapshot(), null);
+    editor.routeKey({ key: "z", ...modifier }, "canvas");
+    assert.deepEqual(content(editor), original);
+    editor.routeKey({ key: "Z", shiftKey: true, ...modifier }, "canvas");
+    assert.deepEqual(content(editor), cut);
+    assert.equal(editor.selection.preview.getSnapshot(), null);
+    editor.dispose();
+  }
+});
+
 test("composed previews retain source, pinned layers and top-left, reverse to no-op with redo/checkpoints, or apply one reversible edit", () => {
   const s = setup();
   s.execute("temporary", [

@@ -112,7 +112,7 @@ for (const multi of [false, true])
     if (multi)
       await main
         .getByRole("checkbox", {
-          name: "Include Furniture (furniture)",
+          name: "Include Furniture",
           exact: true,
         })
         .check();
@@ -129,18 +129,18 @@ for (const multi of [false, true])
     if (multi)
       await main
         .getByRole("checkbox", {
-          name: "Include Furniture (furniture)",
+          name: "Include Furniture",
           exact: true,
         })
         .check();
-    await button(page, "Copy").click();
-    await button(page, "Paste").click();
+    await host(page).press("ControlOrMeta+c");
+    await host(page).press("ControlOrMeta+v");
     await move(page, 80, 60);
-    await button(page, "Rotate clockwise").click();
-    await button(page, "Flip horizontal").click();
+    await host(page).press("z");
+    await host(page).press("x");
     await button(page, "Apply paste").click();
     await checkpoint();
-    await button(page, "Flip vertical").click();
+    await host(page).press("y");
     await button(page, "Apply transform").click();
     await checkpoint();
     for (const state of states) {
