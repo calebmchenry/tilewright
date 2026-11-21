@@ -1,6 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { focusOwner } from "../editor/focus";
+import type { FocusOwner } from "../editor/session";
 import {
   applicationActionIds,
   isEditAction,
@@ -10,31 +10,11 @@ import {
 } from "../editor/application-actions";
 
 /** One lifetime outside React. Always inspect current DOM focus at dispatch. */
-export function bindApplicationMenu(actions: ApplicationActions): () => void {
+export function bindNativeApplicationMenu(
+  actions: ApplicationActions,
+  context: () => FocusOwner,
+): () => void {
   let disposed = false;
-  const context = () => {
-    const owner = focusOwner(document.activeElement);
-    actions.setContext({
-      owner,
-      modal: !!document.querySelector("dialog[open]"),
-    });
-    return owner;
-  };
-  const keydown = (event: KeyboardEvent) => {
-    context();
-    if (actions.routeKey(event)) event.preventDefault();
-  };
-  window.addEventListener("keydown", keydown, true);
-  document.addEventListener("focusin", context);
-  document.addEventListener("focusout", context);
-  const observer = new MutationObserver(context);
-  observer.observe(document.documentElement, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ["open"],
-  });
-  context();
   let stop: (() => void) | undefined;
   let unsubscribe: (() => void) | undefined;
   const report = (error: unknown) => {
@@ -95,9 +75,5 @@ export function bindApplicationMenu(actions: ApplicationActions): () => void {
     disposed = true;
     stop?.();
     unsubscribe?.();
-    observer.disconnect();
-    window.removeEventListener("keydown", keydown, true);
-    document.removeEventListener("focusin", context);
-    document.removeEventListener("focusout", context);
   };
 }

@@ -10,6 +10,7 @@ import type { RevisionCheckpoint } from "../domain/history.ts";
 import { layerId } from "../domain/values.ts";
 import { EditorSession } from "./session.ts";
 import { Store } from "./store.ts";
+import { projectSource, type ProjectSource } from "./persistence.ts";
 
 /** Application lifetime owner. Replacement always gets fresh history and view state. */
 export class EditorWorkspace {
@@ -17,6 +18,8 @@ export class EditorWorkspace {
     Readonly<{
       session: EditorSession;
       generation: number;
+      source: ProjectSource | null;
+      /** Native-only compatibility projection; never populate from File.name. */
       savedPath: string | null;
       recovered: RecoveredProject | null;
     }>
@@ -30,6 +33,7 @@ export class EditorWorkspace {
       Object.freeze({
         session,
         generation: 0,
+        source: null,
         savedPath: null,
         recovered: null,
       }),
@@ -64,6 +68,7 @@ export class EditorWorkspace {
             Object.freeze({
               session,
               generation: previous.generation + 1,
+              source: null,
               savedPath: null,
               recovered: null,
             }),
@@ -84,14 +89,15 @@ export class EditorWorkspace {
     };
   }
 
-  /** Explicit-project load boundary for a future native read/Open coordinator.
-   * Prepare everything privately; publish session + path together exactly once.
+  /** Shared validated load boundary for native files and browser imports.
+   * Prepare everything privately; publish session + source together exactly once.
    * The caller owns unsaved-change confirmation before requesting replacement.
    */
   async openProject(
     bytes: Uint8Array,
     options: ProjectDecodeOptions & {
       readonly savedPath?: string | null;
+      readonly source?: ProjectSource;
       readonly recovered?: RecoveredProject;
       readonly beforeInstall?: () => Promise<() => void>;
     } = {},
@@ -99,12 +105,16 @@ export class EditorWorkspace {
     Readonly<{ session: EditorSession; observerErrors: readonly unknown[] }>
   > {
     this.#assertAvailable();
-    const savedPath = options.recovered ? null : (options.savedPath ?? null);
-    if (
-      savedPath !== null &&
-      (typeof savedPath !== "string" || !savedPath.trim())
-    )
-      throw new TypeError("Project path must be nonblank text or null.");
+    if (options.source && options.savedPath != null)
+      throw new TypeError("Provide a project source or native path, not both.");
+    const source = options.recovered
+      ? null
+      : options.source
+        ? projectSource(options.source)
+        : options.savedPath != null
+          ? projectSource({ kind: "native-file", path: options.savedPath })
+          : null;
+    const savedPath = source?.kind === "native-file" ? source.path : null;
     const request = ++this.#loadRequest;
     const previous = this.state.getSnapshot();
     const current = previous.session;
@@ -149,7 +159,8 @@ export class EditorWorkspace {
     let session: EditorSession | undefined;
     try {
       session = new EditorSession(decoded.document, {
-        initiallySaved: !options.recovered,
+        // Imported browser names never imply a confirmed native save receipt.
+        initiallySaved: !options.recovered && source?.kind !== "browser-file",
         fitOnFirstSize: true,
       });
       session.activeLayer.set(layerId(decoded.preferences.activeLayerId));
@@ -190,6 +201,7 @@ export class EditorWorkspace {
         Object.freeze({
           session,
           generation: previous.generation + 1,
+          source,
           savedPath,
           recovered: options.recovered ?? null,
         }),
@@ -230,7 +242,12 @@ export class EditorWorkspace {
       errors.push(...session.history.markSaved(checkpoint));
       try {
         this.state.set(
-          Object.freeze({ ...previous, savedPath: path, recovered: null }),
+          Object.freeze({
+            ...previous,
+            source: projectSource({ kind: "native-file", path }),
+            savedPath: path,
+            recovered: null,
+          }),
         );
       } catch (error) {
         errors.push(error);

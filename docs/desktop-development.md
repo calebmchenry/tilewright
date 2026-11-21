@@ -62,8 +62,12 @@ targeted panels, focus routing, and Retina surface. The [tile renderer](tile-ren
 A fresh document is empty; its canvas shows the map background, boundary and
 [tile/chunk grid](grid-and-scale.md).
 
-The frontend-only command and browser tests are development tooling, not a
-standalone browser distribution. [Testing and performance](performance.md)
+The frontend command also runs the browser editing preview without Tauri IPC.
+The [platform contract](platform-services.md) lists available services and the
+remaining browser file/recovery and GitHub Pages delivery work. Browser smoke
+tests use the shipping entry without native mocks; native-adapter UI tests
+substitute only OS IPC. Neither proves a packaged WKWebView session.
+[Testing and performance](performance.md)
 documents the TW-003 fixtures, baseline, and provisional budgets. The bootstrap
 preview does not validate target map scale.
 
@@ -108,6 +112,8 @@ for this baseline. Do not claim notarized distribution from this command.
   Mounted cleanup disconnects the ResizeObserver and destroys scene/GPU resources
   and Pixi listeners. React Strict Mode remains enabled. `main.tsx` unmounts the
   React root on `pagehide` and Vite module disposal.
+  TW-057 owns browser navigation warnings and back/forward cache restoration;
+  this teardown is not a guarantee that browser work survives navigation.
 - The native identifier is `app.tilewright.desktop`; the window label is `main`.
   `src-tauri/capabilities/main.json` applies only to the local macOS main window
   and grants `choose_project`, `read_project`, `write_project`, the two document

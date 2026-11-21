@@ -7,9 +7,10 @@ layout can be designed as a two-dimensional grid in which each square represents
 one game tile and is displayed as a solid color.
 
 Tilewright should make it easy to draw a map, inspect the scale of its regions,
-and rearrange areas without redrawing them. It will be a desktop app built with
-web technologies and packaged with Tauri for macOS. The app is single-user and
-local, with no cloud services or server requirement during normal use.
+and rearrange areas without redrawing them. One shared editor is delivered as a
+Tauri desktop app for macOS and a browser app hosted on GitHub Pages. Both are
+single-user and local: project content stays on the user's device, with no
+accounts, application backend or cloud file storage.
 
 The product name is **Tilewright**. The project directory is `tilewright`.
 
@@ -153,12 +154,19 @@ different serialization technologies. Exact schemas have not been chosen.
 
 The initial product serves one user on their own machine. It must not require
 cloud storage, accounts, collaboration services, or an application server.
-macOS is the only required target platform; Windows and Linux are not current
+The delivery targets are the macOS desktop app and desktop web browsers.
+Windows and Linux native packages and a mobile/touch redesign are not current
 requirements.
 
-Project saving and loading use local files with conventional Open, Save, and
+Desktop saving and loading use local files with conventional Open, Save, and
 Save As actions. Cmd+S saves the current project, requesting a file location
 when the project has not yet been saved. Explicit Save updates the project file.
+
+The browser target opens user-selected or dropped local files and downloads
+editable projects and agent exports. A browser filename grants no filesystem
+access; a download request is not confirmation that a file was saved to disk.
+Browser recovery uses separate local browser storage, never a downloaded file.
+Both targets share the same project format, map model, history and renderer.
 
 Automatic local recovery preserves unsaved work separately from the project
 file so it can be recovered after a crash. Recovery must not silently replace
@@ -177,8 +185,8 @@ server; it is not part of the normal user workflow.
   serialization logic.
 - React implements the editor interface: toolbars, layer controls, the color
   registry, annotation panels, and settings.
-- Vite provides frontend development tooling and builds the frontend assets
-  included in the desktop app.
+- Vite provides frontend development tooling and builds static frontend assets
+  for the desktop app and GitHub Pages.
 - PixiJS with its WebGL renderer draws the map canvas, grid, selection overlays,
   and on-map labels.
 - Rust supports the Tauri shell and native integration where needed. The editor
@@ -197,8 +205,10 @@ the later refinement tickets TW-049 and TW-050. The early spike is evidence for
 future work, not a prerequisite performance pass for further feature development.
 Correctness and data integrity remain required; the budgets remain future targets.
 
-Tauri is the chosen delivery mechanism. A standalone browser release is not a
-current delivery requirement.
+Delivery priority update — 2026-11-20: deliver the GitHub Pages browser version
+through tickets labeled `github-pages`, retaining the working desktop baseline.
+The [platform contract](docs/platform-services.md) records implemented services
+and the remaining browser file, lifecycle, export, recovery and deployment work.
 
 ## First-version success criteria
 
@@ -229,7 +239,7 @@ separate server process.
 
 ## Deferred scope
 
-- Windows, Linux, and a standalone browser release.
+- Windows and Linux native packages, and mobile/touch redesign.
 - Cloud storage, accounts, sharing, and collaboration.
 - Direct game integration or a 3D preview.
 - Exporting only a selected area.

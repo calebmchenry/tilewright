@@ -5,7 +5,9 @@ import {
 import type { EditorSession } from "./session.ts";
 import { Store } from "./store.ts";
 import type { EditorWorkspace } from "./workspace.ts";
+import { projectDisplayName } from "./persistence.ts";
 
+/** Native explicit-file receipt only. Browser filenames/downloads cannot fill it. */
 export interface SavedContext {
   readonly path: string;
   readonly savedAt: number;
@@ -322,7 +324,7 @@ export class RecoveryCoordinator {
         savedRevision: l.session.history.state.savedRevision,
         dirty: true,
         displayName:
-          this.workspace.state.getSnapshot().savedPath?.split("/").at(-1) ??
+          projectDisplayName(this.workspace.state.getSnapshot().source) ??
           this.workspace.state.getSnapshot().recovered?.displayName ??
           "Untitled",
         saved: l.saved,

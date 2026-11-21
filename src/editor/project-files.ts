@@ -3,11 +3,10 @@ import type { EditorSession } from "./session.ts";
 import type { RecoveryCoordinator } from "./recovery.ts";
 import { Store } from "./store.ts";
 import type { EditorWorkspace } from "./workspace.ts";
+import type { NativeFileHandle, NativeSaveCheckpoint } from "./persistence.ts";
 
-export interface ProjectFileHandle {
-  readonly token: string;
-  readonly path: string;
-}
+/** Native picker grant, not a browser File or display filename. */
+export type ProjectFileHandle = NativeFileHandle;
 /** Native code alone issues handles from the file picker. No arbitrary path I/O. */
 export interface ProjectFileBridge {
   readonly available: boolean;
@@ -26,9 +25,9 @@ export interface ProjectFileState {
 }
 
 export class ProjectFiles {
-  readonly lastSave = new Store<{ session: EditorSession; at: number } | null>(
-    null,
-  );
+  readonly lastSave = new Store<
+    (NativeSaveCheckpoint & { readonly session: EditorSession }) | null
+  >(null);
   readonly state = new Store<ProjectFileState>({
     busy: false,
     error: false,
@@ -149,7 +148,7 @@ export class ProjectFiles {
       check();
       const owner = this;
       const result = await this.workspace.openProject(bytes, {
-        savedPath: file.path,
+        source: { kind: "native-file", path: file.path },
         beforeInstall: this.recovery
           ? async () => {
               checkTransition();
@@ -229,7 +228,13 @@ export class ProjectFiles {
       );
       this.#association = { session, file };
       try {
-        this.lastSave.set({ session, at: Date.now() });
+        this.lastSave.set({
+          kind: "native-save",
+          session,
+          path: file.path,
+          checkpoint: snapshot.checkpoint,
+          at: Date.now(),
+        });
       } catch {
         /* A view observer cannot invalidate the completed save. */
       }

@@ -8,6 +8,19 @@ import type {
 import type { ProjectFiles } from "./editor/project-files";
 import { useStore } from "./editor/useStore";
 
+export function BrowserAvailability() {
+  return (
+    <div
+      className="feedback info platform-availability"
+      role="status"
+      aria-label="Browser availability"
+    >
+      Browser preview: project files, agent export and recovery are not
+      available yet. Work is kept only while this page stays open.
+    </div>
+  );
+}
+
 export function UnsavedChanges({
   lifecycle,
 }: {
@@ -211,7 +224,7 @@ export function SaveTimestamp({ files }: { files: ProjectFiles }) {
   const { session } = useStore(files.workspace.state);
   return (
     <span className="save-timestamp" data-testid="save-timestamp">
-      {saved?.session === session ? (
+      {saved?.kind === "native-save" && saved.session === session ? (
         <time
           dateTime={new Date(saved.at).toISOString()}
           title={new Date(saved.at).toLocaleString()}

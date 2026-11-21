@@ -1,0 +1,21 @@
+import type { AgentExportBridge } from "../editor/agent-export.ts";
+import type { ApplicationActions } from "../editor/application-actions.ts";
+import type { ProjectFileBridge } from "../editor/project-files.ts";
+import type { RecoveryBridge } from "../editor/recovery.ts";
+import type { RecoveryReviewBridge } from "../editor/recovery-discovery.ts";
+import type { FocusOwner } from "../editor/session.ts";
+
+/** Selected once at startup. Missing services are unavailable, never simulated. */
+export interface PlatformServices {
+  readonly kind: "browser" | "tauri";
+  readonly projectFiles: ProjectFileBridge;
+  readonly agentExport: AgentExportBridge;
+  readonly recovery?: {
+    readonly writer: RecoveryBridge;
+    readonly review: RecoveryReviewBridge;
+  };
+  readonly bindNative?: (
+    actions: ApplicationActions,
+    context: () => FocusOwner,
+  ) => () => void;
+}

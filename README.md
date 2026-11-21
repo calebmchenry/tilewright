@@ -2,6 +2,12 @@
 
 Project requirements are in [INTENT.md](INTENT.md). Tickets are managed with `wrk`.
 
+One shared editor targets macOS through Tauri and browsers through GitHub Pages.
+The [platform contract](docs/platform-services.md) describes the boundary and
+current browser preview: rendering/editing work without Tauri, while browser
+file import/download, agent export, recovery and Pages deployment remain later
+tickets. Browser work currently lasts only for the open page.
+
 For a clean macOS checkout, prerequisites, development commands, tests, and local
 packaged builds, see [desktop development](docs/desktop-development.md).
 
@@ -11,6 +17,9 @@ nvm use
 npm ci
 npm run dev
 ```
+
+For browser development, use `npm run dev:frontend` and open the printed local
+URL. `npm run build` type-checks and creates frontend assets without Rust.
 
 Implementation choices for coordinates, canvas growth, and component ownership
 are in [the foundation decisions](docs/foundation-decisions.md).

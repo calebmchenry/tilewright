@@ -117,7 +117,7 @@ notification/iterator counter and advances even for undo/redo.
 
 Dirty means `state.revision !== state.savedRevision`. New documents default to a
 null saved checkpoint. Use `{ initiallySaved: true }` only for a document loaded
-from a successfully read explicit project file. Checkpoints survive history
+from a successfully read native explicit project file. Checkpoints survive history
 pruning: reaching a saved state by undo still becomes clean; if that state is no
 longer reachable, dirty stays true until the next explicit successful save.
 
@@ -139,6 +139,10 @@ otherwise acknowledge their actual durable order; this layer does not order I/O.
 Recovery can capture its own token and call `markRecovery` on successful recovery
 write. This updates only `recoveryRevision`, never the explicit save checkpoint or
 dirty flag. These acknowledgements do not add undo steps or mutate the document.
+Browser imports remain unsaved in this native checkpoint model. A browser
+`browser-download-request` checkpoint tracks a handoff separately and never calls
+`markSaved` or `markRecovery`; it cannot authorize discarding the live document.
+See the [platform contract](platform-services.md) for subsequent browser work.
 No recovery scheduler, filesystem operation, or file format is implemented here.
 The [TW-039 recovery policy](recovery-policy.md) defines independent capture
 sequences and lifecycle epochs for scheduling/publication; history revision

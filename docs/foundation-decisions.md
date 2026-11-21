@@ -34,9 +34,11 @@ The following requirements are carried forward from the intent:
   purpose and schema, retaining layer order, underlying content, color meanings,
   and named areas with descriptions.
 
-All deferred scope in INTENT.md stays deferred:
+The 2026-11-20 delivery update adds a browser target on GitHub Pages, sharing the
+editor and format with Tauri. See the [platform contract](platform-services.md).
+The remaining deferred scope in INTENT.md stays deferred:
 
-- Windows, Linux, and a standalone browser release.
+- Windows and Linux native packages, and mobile/touch redesign.
 - Cloud storage, accounts, sharing, and collaboration.
 - Direct game integration (including a game importer) or a 3D preview.
 - Exporting only a selected area.

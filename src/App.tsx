@@ -1,4 +1,5 @@
-import { isTauri } from "@tauri-apps/api/core";
+import { projectDisplayName, type ProjectSource } from "./editor/persistence";
+import type { PlatformServices } from "./platform/services";
 import { RecoveryPanel } from "./RecoveryPanel";
 import type {
   RecoveryBrowser,
@@ -21,6 +22,7 @@ import { AnnotationPanel } from "./AnnotationPanel";
 export { AnnotationPanel } from "./AnnotationPanel";
 import {
   AgentExportFeedback,
+  BrowserAvailability,
   FileFeedback,
   SaveTimestamp,
   RecoveryFeedback,
@@ -326,17 +328,19 @@ function Feedback({ session }: Props) {
 }
 
 export function Workspace({
+  platform,
   workspace,
   lifecycle,
   actions,
   recoveryBrowser,
 }: {
   recoveryBrowser?: RecoveryBrowser;
+  platform?: PlatformServices;
   workspace: EditorWorkspace;
   lifecycle: DocumentLifecycle;
   actions: ApplicationActions;
 }) {
-  const { session, generation, savedPath, recovered } = useStore(
+  const { session, generation, source, savedPath, recovered } = useStore(
     workspace.state,
   );
   const newDialog = useStore(actions.newDialog);
@@ -344,8 +348,11 @@ export function Workspace({
     <>
       <App
         key={generation}
+        nativeWindow={platform?.kind === "tauri"}
+        browserPreview={platform?.kind === "browser"}
         session={session}
         lifecycle={lifecycle}
+        source={source}
         savedPath={savedPath}
         recovered={recovered}
         recoveryBrowser={recoveryBrowser}
@@ -363,13 +370,19 @@ export function Workspace({
 }
 
 export function App({
+  nativeWindow = false,
+  browserPreview = false,
   session,
   lifecycle,
+  source,
   savedPath,
   recovered,
   recoveryBrowser,
 }: Props & {
+  nativeWindow?: boolean;
+  browserPreview?: boolean;
   lifecycle?: DocumentLifecycle;
+  source?: ProjectSource | null;
   savedPath?: string | null;
   recovered?: RecoveredProject | null;
   recoveryBrowser?: RecoveryBrowser;
@@ -426,7 +439,7 @@ export function App({
       }}
     >
       <header
-        className={`app-header${isTauri() && /Mac/.test(navigator.platform) ? " native-titlebar" : ""}`}
+        className={`app-header${nativeWindow && /Mac/.test(navigator.platform) ? " native-titlebar" : ""}`}
         data-tauri-drag-region
       >
         <div
@@ -440,7 +453,8 @@ export function App({
           }
         >
           <span className="project-filename" data-tauri-drag-region>
-            {savedPath?.split("/").pop() ??
+            {projectDisplayName(source ?? null) ??
+              savedPath?.split("/").pop() ??
               (recovered
                 ? `Recovered — ${recovered.displayName}`
                 : "Untitled map")}
@@ -469,6 +483,7 @@ export function App({
         {lifecycle && <SaveTimestamp files={lifecycle.files} />}
       </footer>
       <div className="notifications">
+        {browserPreview && <BrowserAvailability />}
         <Feedback session={session} />
         {lifecycle && (
           <>

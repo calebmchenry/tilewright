@@ -7,6 +7,12 @@ a policy with [TW-040 writing and lifecycle integration](#writer-implementation-
 now implemented. [TW-041 implements discovery/restore/discard](#discovery-and-restoration-implementation-tw-041); TW-042 proves
 interruption behavior in the packaged app.
 
+This document's filesystem layout, locks and saved-source comparison describe
+the desktop adapter. The [TW-055 platform contract](platform-services.md) gates
+it off in browsers. TW-059 will provide IndexedDB recovery; browser display
+filenames and download requests must never populate the native `SavedContext`,
+trigger source-file rereads or resolve recovery as a confirmed explicit save.
+
 ## Safety boundary and ownership
 
 Explicit Save alone updates a user-selected `.tilewright` file. Recovery writes,

@@ -302,12 +302,19 @@ migration is in scope.
 ## Explicit save, recovery and agent export
 
 The payload contains neither `saved: true` nor revision/timestamp fields.
-Successful explicit file load creates fresh history with `initiallySaved: true`;
+Successful native explicit file load creates fresh history with `initiallySaved: true`;
 new maps are dirty. Successful explicit write calls `markSaved` only for the
 captured checkpoint after durable acknowledgement. Failure/cancellation never
 does. Serialize writes to a destination so acknowledgements reflect durable order.
 Native atomic replacement/dialogs remain save implementation work. See
 [history checkpoints](command-history.md#revisions-explicit-saves-and-recovery).
+
+Browser imports carry a display-only `browser-file` source and remain unsaved;
+they do not populate the native `savedPath` or grant a write handle. Native loads
+carry `native-file` sources. The codec and payload are identical. A browser
+download request and local recovery publication are distinct from a native save
+acknowledgement; see the [TW-055 platform contract](platform-services.md) for
+checkpoint semantics and subsequent lifecycle work.
 
 Recovery may reuse validated project snapshot bytes, at a **separate local
 destination** with its own versioned envelope/sidecar. Ownership/session identity,
@@ -703,8 +710,10 @@ operation gate ignores duplicate requests while a picker/write/load is pending.
 Cancellation retains the previous feedback/path/checkpoint; failures display the
 file error and leave unsaved work intact.
 
-`src/native/application-menu.ts` installs one native event and DOM keyboard
-binding outside React, disposed with the workspace. It checks actual focus and
+`src/editor/application-bindings.ts` installs the shared DOM keyboard/focus
+binding outside React. `src/native/application-menu.ts` installs native events
+only when the platform composition selects Tauri. Both are disposed with the
+workspace. They check actual focus and
 open dialogs at dispatch, and serializes/coalesces native menu-state updates.
 Session replacement rebinds history, clipboard and tool availability subscriptions.
 File actions are disabled during another operation or an editor modal. Edit

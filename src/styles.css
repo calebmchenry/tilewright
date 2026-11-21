@@ -473,7 +473,9 @@ footer {
   border-radius: 5px;
 }
 .notifications
-  .feedback:not(.error):not(.busy):not(:has(button)):not(:has(progress)) {
+  .feedback:not(.error):not(.busy):not(.platform-availability):not(
+    :has(button)
+  ):not(:has(progress)) {
   position: absolute;
   width: 1px;
   height: 1px;

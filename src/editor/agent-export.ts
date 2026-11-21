@@ -1,5 +1,5 @@
 import { encodeAgentExportSnapshot } from "../domain/agent-export.ts";
-import type { ProjectFileHandle } from "./project-files.ts";
+import { projectDisplayName, type NativeFileHandle } from "./persistence.ts";
 import { Store } from "./store.ts";
 import type { EditorWorkspace } from "./workspace.ts";
 
@@ -8,7 +8,7 @@ export interface AgentExportBridge {
   choose(
     protectedPath: string | null,
     suggestedName: string,
-  ): Promise<ProjectFileHandle | null>;
+  ): Promise<NativeFileHandle | null>;
   prepare(token: string, bytes: Uint8Array): Promise<void>;
   commit(token: string): Promise<string | null>;
   cancel(token: string): Promise<void>;
@@ -77,7 +77,7 @@ export class AgentExports {
     }
     this.#busy = true;
     this.#canceled = false;
-    let file: ProjectFileHandle | null = null;
+    let file: NativeFileHandle | null = null;
     let committed = false;
     let result = false;
     let message = "Export canceled. No output file was changed.";
@@ -101,7 +101,7 @@ export class AgentExports {
       // Capture once, before the picker/async work, including unsaved committed edits.
       const snapshot = before.session.captureAgentExportSnapshot();
       const name = (
-        before.savedPath?.split("/").pop() ??
+        projectDisplayName(before.source) ??
         before.recovered?.displayName ??
         "Untitled"
       ).replace(/\.tilewright$/i, "");

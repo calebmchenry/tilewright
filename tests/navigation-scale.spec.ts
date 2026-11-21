@@ -41,7 +41,7 @@ for (const [fixture, cells] of [
         .click();
       await expect(
         page.getByRole("status", { name: "Editing availability" }),
-      ).toContainText("Overview");
+      ).toHaveCount(0); // The working baseline allows editing at overview zoom.
       const fit = await page.evaluate(() => {
         const session = window.editorProbe.session,
           view = session.viewport.getSnapshot(),
@@ -65,7 +65,11 @@ for (const [fixture, cells] of [
       expect(fit.top).toBeGreaterThanOrEqual(23.999999);
       expect(fit.right).toBeLessThanOrEqual(fit.size.width - 23.999999);
       expect(fit.bottom).toBeLessThanOrEqual(fit.size.height - 23.999999);
-      expect(fit.editable).toBeNull();
+      expect(fit.editable).not.toBeNull();
+      expect(fit.editable!.x).toBeGreaterThanOrEqual(0);
+      expect(fit.editable!.x).toBeLessThan(6400);
+      expect(fit.editable!.y).toBeGreaterThanOrEqual(0);
+      expect(fit.editable!.y).toBeLessThan(6400);
       if (cycle === 0)
         await page.screenshot({
           path: testInfo.outputPath(`${fixture}-overview.png`),

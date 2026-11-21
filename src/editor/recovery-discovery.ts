@@ -46,6 +46,7 @@ export interface RecoveryReviewBridge {
     entries: readonly RecoveryEntry[];
     warnings: readonly string[];
   }>;
+  /** source=true requires a native SavedContext; a browser name grants no read. */
   read(selection: RecoverySelection, source?: boolean): Promise<Uint8Array>;
   claim(selection: RecoverySelection, writer: string): Promise<void>;
   release(documentId: string, writer: string): Promise<void>;
