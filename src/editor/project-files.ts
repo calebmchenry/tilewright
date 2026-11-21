@@ -1,5 +1,8 @@
 import { encodeProjectSnapshot } from "../domain/project.ts";
-import { PROJECT_LIMITS } from "../domain/project-format.ts";
+import {
+  PROJECT_LIMITS,
+  type ProjectPreferences,
+} from "../domain/project-format.ts";
 import type { EditorSession } from "./session.ts";
 import type { RecoveryCoordinator } from "./recovery.ts";
 import { Store } from "./store.ts";
@@ -55,13 +58,25 @@ export interface ProjectFileState {
   readonly message: string;
 }
 
+export interface BrowserProjectStatus {
+  /** null until a project snapshot has actually been handed to the browser. */
+  readonly changesSinceDownload: boolean | null;
+  /** A requested download is not evidence that this work exists on disk. */
+  readonly workAtRisk: boolean;
+}
+
 export class ProjectFiles {
   readonly lastDownload = new Store<
     | (Extract<PersistenceCheckpoint, { kind: "browser-download-request" }> & {
         readonly session: EditorSession;
+        readonly preferences: ProjectPreferences;
       })
     | null
   >(null);
+  readonly browserStatus = new Store<BrowserProjectStatus>({
+    changesSinceDownload: null,
+    workAtRisk: true,
+  });
   readonly lastSave = new Store<
     (NativeSaveCheckpoint & { readonly session: EditorSession }) | null
   >(null);
@@ -77,6 +92,8 @@ export class ProjectFiles {
   #encode: typeof encodeProjectSnapshot;
   #busy = false;
   #unsubscribe: () => void;
+  #sessionSubscriptions: (() => void)[] = [];
+  #statusSession: EditorSession | null = null;
   #association: { session: EditorSession; file: ProjectFileHandle } | null =
     null;
 
@@ -103,7 +120,58 @@ export class ProjectFiles {
         this.lastSave.set(null);
       if (this.#association?.session !== workspace.state.getSnapshot().session)
         this.#association = null;
+      this.#bindBrowserStatus();
     });
+    this.#bindBrowserStatus();
+  }
+  #bindBrowserStatus() {
+    if (!this.browser) return;
+    const { session, source } = this.workspace.state.getSnapshot();
+    if (session === this.#statusSession) return;
+    this.#sessionSubscriptions.forEach((stop) => stop());
+    this.#statusSession = session;
+    // Import is a known local source copy, not a native saved checkpoint. Keep
+    // only revision/preferences here, never another copy of the full map.
+    const importedRevision =
+      source?.kind === "browser-file" ? session.history.state.revision : null;
+    const importedPreferences: ProjectPreferences = {
+      activeLayerId: session.activeLayer.getSnapshot(),
+      hiddenLayerIds: [...session.hiddenLayers.getSnapshot()],
+    };
+    const matches = (
+      revision: number | null,
+      preferences: ProjectPreferences,
+    ) =>
+      session.historyState.getSnapshot().revision === revision &&
+      session.activeLayer.getSnapshot() === preferences.activeLayerId &&
+      session.hiddenLayers.getSnapshot().length ===
+        preferences.hiddenLayerIds.length &&
+      session.hiddenLayers
+        .getSnapshot()
+        .every((id) => preferences.hiddenLayerIds.includes(id));
+    const refresh = () => {
+      const download = this.lastDownload.getSnapshot();
+      const next: BrowserProjectStatus = {
+        changesSinceDownload:
+          download?.session === session
+            ? !matches(download.checkpoint.revision, download.preferences)
+            : null,
+        workAtRisk: !matches(importedRevision, importedPreferences),
+      };
+      const previous = this.browserStatus.getSnapshot();
+      if (
+        next.changesSinceDownload !== previous.changesSinceDownload ||
+        next.workAtRisk !== previous.workAtRisk
+      )
+        this.browserStatus.set(Object.freeze(next));
+    };
+    this.#sessionSubscriptions = [
+      session.historyState,
+      session.activeLayer,
+      session.hiddenLayers,
+      this.lastDownload,
+    ].map((store) => store.subscribe(refresh));
+    refresh();
   }
   get available() {
     return this.bridge.available && !this.#closed;
@@ -116,6 +184,7 @@ export class ProjectFiles {
     if (this.bridge.kind === "browser") this.bridge.cancelPick();
     this.#association = null;
     this.#unsubscribe();
+    this.#sessionSubscriptions.forEach((stop) => stop());
   }
   #publish(state: ProjectFileState) {
     // A failing view subscriber cannot turn a completed disk write into failure.
@@ -367,6 +436,7 @@ export class ProjectFiles {
           kind: "browser-download-request",
           filename,
           checkpoint: snapshot.checkpoint,
+          preferences: snapshot.project.editor,
           session,
           at: Date.now(),
         });

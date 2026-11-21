@@ -8,7 +8,9 @@ TW-006 implementation decisions, subordinate to [INTENT.md](../INTENT.md) and
 
 `src/main.tsx` constructs an `EditorWorkspace` outside React. Its current
 `EditorSession` is passed to `App`; New Map replaces it with a fresh session.
-The workspace disposes its session after root unmount on pagehide or HMR. Strict
+The workspace disposes its session after root unmount on non-cached pagehide or HMR.
+Cacheable pagehide preserves the live editor for pageshow; see the
+[browser lifecycle](browser-lifecycle.md). Strict
 Mode can replay canvas effects without creating duplicate document controllers.
 A replacement document must have a new session; never write around its history.
 See [map creation and growth](canvas-creation.md) for replacement, modal controls,
@@ -153,7 +155,7 @@ fixture/model/history baselines have not been regenerated.
 ## Document lifecycle integration (TW-037)
 
 `main.tsx` also owns `ProjectFiles`, `DocumentLifecycle`, and the native close-event
-subscription, disposing them on pagehide/HMR. `Workspace` routes New, Open and
+subscription, disposing them on non-cached pagehide/HMR. `Workspace` routes New, Open and
 explicit saves through the coordinator, with one Save/Discard/Cancel modal shared
 with native close/Quit. `ApplicationActions` and its native menu binding route New/Open/Save/Save As
 through that same coordinator even from text inputs; editor modals isolate

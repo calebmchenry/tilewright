@@ -105,7 +105,7 @@ async function choose(
   contents = JSON.stringify(exampleProject),
 ) {
   const picked = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Open file…", exact: true }).click();
+  await page.getByRole("button", { name: "Open…", exact: true }).click();
   const chooser = await picked;
   expect(chooser.isMultiple()).toBe(false);
   await chooser.setFiles({
@@ -115,7 +115,11 @@ async function choose(
   });
 }
 async function discard(page: Page) {
-  await prompt(page).getByRole("button", { name: "Discard changes" }).click();
+  await prompt(page)
+    .getByRole("button", {
+      name: /Discard changes|Continue without another download/,
+    })
+    .click();
   await expect(prompt(page)).not.toBeVisible();
   await expect(
     page.getByRole("button", { name: "Download project", exact: true }),
@@ -211,7 +215,9 @@ test("real chooser and repeated downloads preserve full desktop project semantic
     editor: { ...expected.editor, hiddenLayerIds: [] },
   });
   await expect(page.getByTestId("save-timestamp")).toBeEmpty();
-  await expect(page.locator(".document-status")).toContainText("Unsaved");
+  await expect(page.locator(".document-status")).toContainText(
+    "No changes since download request",
+  );
   await expect(
     page.getByRole("status", { name: "Project file feedback" }),
   ).toContainText("saving to disk is not confirmed");
@@ -229,9 +235,18 @@ test("real chooser and repeated downloads preserve full desktop project semantic
   expect(requests).toEqual([]);
   expect(errors).toEqual([]);
   await page.setViewportSize({ width: 640, height: 720 });
+  await expect(page.locator(".project-filename")).toBeInViewport();
   await expect(
-    page.getByRole("button", { name: "Open file…" }),
+    page.locator(".document-title .document-status"),
   ).toBeInViewport();
+  const title = (await page.locator(".document-title").boundingBox())!;
+  const controls = (await page
+    .getByRole("region", { name: "Project files" })
+    .boundingBox())!;
+  expect(
+    title.y + title.height <= controls.y || title.x + title.width <= controls.x,
+  ).toBe(true);
+  await expect(page.getByRole("button", { name: "Open…" })).toBeInViewport();
   await expect(page.getByText("Drop one .tilewright file here")).toBeVisible();
   await page.screenshot({ path: info.outputPath("browser-files-compact.png") });
 });
@@ -287,11 +302,11 @@ test("picker cancellation and download-before-replacement keep the current map; 
 }) => {
   const initial = (await download(page)).project;
   const canceled = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Open file…" }).click();
+  await page.getByRole("button", { name: "Open…" }).click();
   await canceled;
   // Playwright cannot dismiss the OS dialog; exercise its standard cancel event.
   await page.locator('input[type="file"]').dispatchEvent("cancel");
-  await expect(page.getByRole("button", { name: "Open file…" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Open…" })).toBeEnabled();
   expect((await download(page)).project).toEqual(initial);
   for (let i = 0; i < 2; i++) {
     await choose(page);
@@ -302,9 +317,7 @@ test("picker cancellation and download-before-replacement keep the current map; 
     expect((await downloaded(await event)).project).toEqual(initial);
     await expect(page.locator(".project-filename")).toHaveText("Untitled map");
     await expect(prompt(page)).not.toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Open file…" }),
-    ).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Open…" })).toBeEnabled();
   }
   await choose(page);
   await discard(page);
@@ -330,14 +343,19 @@ test("edits during real encoder yields survive the snapshot download and replace
     .poll(() => page.evaluate(() => window.browserFileProbe.encodingPaused))
     .toBe(true);
   await rename(page, "Made while encoding");
-  await expect(page.getByRole("button", { name: "Open file…" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Open…" })).toBeDisabled();
   await page.evaluate(() => window.browserFileProbe.resumeEncode());
   expect((await downloaded(await event)).project).toEqual(exampleProject);
+  await expect(page.locator(".document-title .document-status")).toHaveText(
+    "Changes since download request",
+  );
   const expected = structuredClone(exampleProject);
   (expected.document.layers[1] as { name: string }).name =
     "Made while encoding";
   expect((await download(page)).project).toEqual(expected);
-  await expect(page.locator(".document-status")).toContainText("Unsaved");
+  await expect(page.locator(".document-status")).toContainText(
+    "No changes since download request",
+  );
   await choose(page);
   await prompt(page)
     .getByRole("button", { name: "Cancel", exact: true })
@@ -356,7 +374,11 @@ test("edits while File bytes are pending supersede Open without changing source 
   await drop(page, [
     { name: "later.tilewright", contents: JSON.stringify(exampleProject) },
   ]);
-  await prompt(page).getByRole("button", { name: "Discard changes" }).click();
+  await prompt(page)
+    .getByRole("button", {
+      name: /Discard changes|Continue without another download/,
+    })
+    .click();
   await expect
     .poll(() => page.evaluate(() => window.browserFileProbe.readingPaused))
     .toBe(true);
@@ -372,4 +394,39 @@ test("edits while File bytes are pending supersede Open without changing source 
   (expected.document.layers[1] as { name: string }).name =
     "New work while reading";
   expect((await download(page)).project).toEqual(expected);
+});
+
+test("observable blocked handoffs keep the prior request timestamp and current document", async ({
+  page,
+}) => {
+  await download(page);
+  const timestamp = await page
+    .getByTestId("download-timestamp")
+    .locator("time")
+    .getAttribute("datetime");
+  await rename(page, "Keep after blocked download");
+  await page.evaluate(() => {
+    HTMLAnchorElement.prototype.click = function () {
+      throw new Error("Browser blocked the download");
+    };
+  });
+  await page
+    .getByRole("button", { name: "Download project", exact: true })
+    .click();
+  await expect(
+    page.getByRole("alert", { name: "Project file feedback" }),
+  ).toContainText("Browser blocked the download");
+  await expect(
+    page.getByTestId("download-timestamp").locator("time"),
+  ).toHaveAttribute("datetime", timestamp!);
+  await expect(page.locator(".document-title .document-status")).toHaveText(
+    "Changes since download request",
+  );
+  await expect(
+    page.getByRole("textbox", { name: "Layer name", exact: true }),
+  ).toHaveValue("Keep after blocked download");
+  await expect
+    .poll(() => page.evaluate(() => window.browserFileProbe.revoked.length))
+    .toBe(2);
+  expect(await page.locator("a[download]").count()).toBe(0);
 });

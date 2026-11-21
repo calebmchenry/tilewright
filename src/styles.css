@@ -115,6 +115,10 @@ h3 {
   padding-block: 6px;
   flex-wrap: wrap;
 }
+.browser-header .document-title {
+  flex: 1 1 320px;
+  height: auto;
+}
 .browser-file-controls {
   display: flex;
   align-items: center;

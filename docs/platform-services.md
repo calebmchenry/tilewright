@@ -4,7 +4,7 @@ The 2026-11-20 delivery decision adds a static GitHub Pages browser target while
 preserving the macOS Tauri app and the shared `.tilewright` format. Project bytes
 stay local; neither target requires accounts, an application backend or cloud
 file storage. TW-055 established the boundary; TW-056 adds browser project
-import/download. This is not a live deployment.
+import/download and TW-057 adds browser lifecycle protection. This is not a live deployment.
 
 ## Composition and current availability
 
@@ -36,10 +36,9 @@ from composition instead of detecting its own platform.
 Run `npm run dev:frontend` to use the browser editing preview. Open/Download
 buttons remain available without shortcuts. New/Open/drop ask before discarding
 unsaved work; Download project and stay keeps the outgoing map installed and
-requires a fresh action/discard decision to replace it. Until later lifecycle/recovery
-tickets land, download before leaving: navigation/close protection and crash recovery
-are not provided in the browser. The current pagehide teardown remains; TW-057
-must address back/forward cache restoration. GitHub Pages build/deployment and
+requires a fresh action/discard decision to replace it. The [browser lifecycle](browser-lifecycle.md) tracks changes since download requests,
+provides best-effort navigation warnings and preserves cached page lifetimes.
+Download and check the file before leaving; browser crash recovery remains TW-059. GitHub Pages build/deployment and
 cross-browser release qualification belong to TW-060 through TW-062.
 
 ## Identity is separate from authority
@@ -81,7 +80,8 @@ edits. TW-056 implements the browser-download variant in `ProjectFiles.lastDownl
 | `local-recovery`           | Complete separately stored snapshot successfully published                                              | `markRecovery` only; does not clear dirty state or imply an exported/downloaded copy                                                 |
 
 `ProjectFiles.lastSave` now carries only tagged native-save evidence.
-`SaveTimestamp` accepts that evidence only. Native Open establishes a clean
+`SaveTimestamp` accepts that evidence only. Browser `DownloadTimestamp` separately
+labels request time, without claiming a disk receipt. Native Open establishes a clean
 baseline but is not a write timestamp. Recovery's `SavedContext` remains a native
 explicit-file receipt with path and hashes; a browser filename or requested
 download must never fabricate it. Native source-file comparison in recovery
@@ -96,13 +96,12 @@ decode. It captures one committed snapshot for download, releases browser
 resources after handoff, preserves later edits, and never replaces a document
 just because download was requested. See [browser project files](project-format.md#browser-project-files-tw-056).
 
-TW-057 extends the current safe download-and-stay behavior with browser
-New/Open/drop continuation/discard/cancel UX and deliberate confirmation. It
-must track changes since the requested project snapshot separately from native
-saved state, and retain the current desktop Save/Discard/Cancel semantics. A
-best-effort `beforeunload` warning cannot await asynchronous saves or present the
-custom editor dialog; pagehide/pageshow and back/forward cache need their own
-lifetime handling. Buttons must remain usable when browser shortcuts are reserved.
+TW-057 implements download-relative content/preference status, request timestamps,
+and deliberate New/Open/drop continuation. The browser-only warning is attached
+while there is work without a known local source copy; a download request cannot
+remove that risk. Cacheable pagehide preserves the live application; pageshow
+refreshes its input/warning binding. Final pagehide/HMR disposes it once. See
+[browser lifecycle](browser-lifecycle.md) for policy, input, tests and restrictions.
 
 TW-059 must transactionally publish validated IndexedDB recovery and isolate
 writers/tabs. A download request cannot resolve/delete recovery as a confirmed

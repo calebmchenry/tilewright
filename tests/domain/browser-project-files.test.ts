@@ -10,6 +10,7 @@ import { EditorWorkspace } from "../../src/editor/workspace.ts";
 import { encodeProjectSnapshot } from "../../src/domain/project.ts";
 import { PROJECT_LIMITS } from "../../src/domain/project-format.ts";
 import { exampleProject } from "../fixtures/project.ts";
+import { AgentExports } from "../../src/editor/agent-export.ts";
 
 const file = () =>
   new File([JSON.stringify(exampleProject)], "café 地図.tilewright");
@@ -286,4 +287,194 @@ test("download filenames are editable, bounded, and preserve Unicode", () => {
     projectDownloadName("/evil\\name:?.json"),
     "_evil_name__.tilewright",
   );
+});
+
+test("browser status follows exact downloaded content/preferences across undo, branching and session replacement", async () => {
+  const h = harness();
+  try {
+    assert.deepEqual(h.files.browserStatus.getSnapshot(), {
+      changesSinceDownload: null,
+      workAtRisk: true,
+    });
+    const opening = h.lifecycle.open();
+    await accept(h);
+    await opening;
+    const s = h.workspace.state.getSnapshot().session;
+    assert.deepEqual(h.files.browserStatus.getSnapshot(), {
+      changesSinceDownload: null,
+      workAtRisk: false,
+    });
+    await h.files.download();
+    const downloaded = h.files.lastDownload.getSnapshot()!;
+    assert.deepEqual(downloaded.preferences, exampleProject.editor);
+    s.renameLayer(s.document.layers[0].id, "Later");
+    assert.deepEqual(h.files.browserStatus.getSnapshot(), {
+      changesSinceDownload: true,
+      workAtRisk: true,
+    });
+    s.history.undo();
+    assert.deepEqual(h.files.browserStatus.getSnapshot(), {
+      changesSinceDownload: false,
+      workAtRisk: false,
+    });
+    s.history.redo();
+    await h.files.download();
+    assert.deepEqual(h.files.browserStatus.getSnapshot(), {
+      changesSinceDownload: false,
+      workAtRisk: true,
+    });
+    s.history.undo();
+    s.renameLayer(s.document.layers[0].id, "Different branch");
+    assert.equal(
+      h.files.browserStatus.getSnapshot().changesSinceDownload,
+      true,
+    );
+    await h.files.download();
+    const active = s.activeLayer.getSnapshot();
+    s.activeLayer.set(
+      s.document.layers.find((layer) => layer.id !== active)!.id,
+    );
+    assert.equal(
+      h.files.browserStatus.getSnapshot().changesSinceDownload,
+      true,
+    );
+    s.activeLayer.set(active);
+    assert.equal(
+      h.files.browserStatus.getSnapshot().changesSinceDownload,
+      false,
+    );
+    s.setLayerVisible(s.document.layers[1].id, true);
+    assert.equal(
+      h.files.browserStatus.getSnapshot().changesSinceDownload,
+      true,
+    );
+    s.setLayerVisible(s.document.layers[1].id, false);
+    assert.equal(
+      h.files.browserStatus.getSnapshot().changesSinceDownload,
+      false,
+    );
+    const beforeFailure = h.files.lastDownload.getSnapshot();
+    h.bridge.download = () => {
+      throw new Error("Download blocked");
+    };
+    assert.equal(await h.files.download(), false);
+    assert.equal(h.files.lastDownload.getSnapshot(), beforeFailure);
+    assert.equal(s.history.state.savedRevision, null);
+    assert.equal(s.history.state.recoveryRevision, null);
+    h.workspace.createMap(2, 3);
+    assert.equal(h.files.lastDownload.getSnapshot(), null);
+    assert.deepEqual(h.files.browserStatus.getSnapshot(), {
+      changesSinceDownload: null,
+      workAtRisk: true,
+    });
+  } finally {
+    h.dispose();
+  }
+});
+
+test("preferences changed during download remain unexported; agent export cannot clear browser project state", async () => {
+  const pause = deferred<void>(),
+    started = deferred<void>();
+  const h = harness(async (snapshot, options) => {
+    started.resolve();
+    await pause.promise;
+    return encodeProjectSnapshot(snapshot, options);
+  });
+  const exports = new AgentExports(h.workspace, {
+    available: true,
+    async choose() {
+      return { token: "agent", path: "/agent.json" };
+    },
+    async prepare() {},
+    async commit() {
+      return null;
+    },
+    async cancel() {},
+  });
+  try {
+    const s = h.workspace.state.getSnapshot().session;
+    const downloading = h.files.download();
+    await started.promise;
+    s.setLayerVisible(s.document.layers[0].id, false);
+    pause.resolve();
+    assert.equal(await downloading, true);
+    assert.deepEqual(
+      h.files.lastDownload.getSnapshot()?.preferences.hiddenLayerIds,
+      [],
+    );
+    assert.equal(
+      h.files.browserStatus.getSnapshot().changesSinceDownload,
+      true,
+    );
+    const status = h.files.browserStatus.getSnapshot();
+    const checkpoint = h.files.lastDownload.getSnapshot();
+    const history = s.history.state;
+    assert.equal(await exports.export(), true);
+    assert.equal(h.files.browserStatus.getSnapshot(), status);
+    assert.equal(h.files.lastDownload.getSnapshot(), checkpoint);
+    assert.deepEqual(s.history.state, history);
+  } finally {
+    exports.dispose();
+    h.dispose();
+  }
+});
+
+for (const action of ["new", "open", "drop"] as const) {
+  test(`browser ${action} requires a separate decision after download, including cancellation/failure`, async () => {
+    for (const choice of [
+      "save",
+      "discard",
+      "cancel",
+      "failed-download",
+    ] as const) {
+      const h = harness();
+      try {
+        const before = h.workspace.state.getSnapshot();
+        before.session.renameLayer(
+          before.session.document.layers[0].id,
+          "Keep",
+        );
+        await h.files.download();
+        if (choice === "failed-download")
+          h.bridge.download = () => {
+            throw new Error("Blocked");
+          };
+        const pending =
+          action === "new"
+            ? h.lifecycle.newMap(8, 9)
+            : h.lifecycle.open(action === "drop" ? [file()] : undefined);
+        await Promise.resolve();
+        assert.equal(
+          h.lifecycle.state.getSnapshot().prompt,
+          action === "new" ? "new" : "open",
+        );
+        h.lifecycle.choose(choice === "failed-download" ? "save" : choice);
+        assert.equal(await pending, choice === "discard");
+        assert.equal(
+          h.workspace.state.getSnapshot() === before,
+          choice !== "discard",
+        );
+      } finally {
+        h.dispose();
+      }
+    }
+  });
+}
+
+test("New cannot discard persisted preferences changed while deciding", async () => {
+  const h = harness();
+  try {
+    const before = h.workspace.state.getSnapshot();
+    const pending = h.lifecycle.newMap(2, 3);
+    before.session.setLayerVisible(before.session.document.layers[0].id, false);
+    h.lifecycle.choose("discard");
+    assert.equal(await pending, false);
+    assert.equal(h.workspace.state.getSnapshot(), before);
+    assert.match(
+      h.lifecycle.state.getSnapshot().error,
+      /changed while deciding/,
+    );
+  } finally {
+    h.dispose();
+  }
 });

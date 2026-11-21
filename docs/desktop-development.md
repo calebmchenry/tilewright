@@ -111,9 +111,9 @@ for this baseline. Do not claim notarized distribution from this command.
   completes after disposal, it destroys the result before attaching a canvas.
   Mounted cleanup disconnects the ResizeObserver and destroys scene/GPU resources
   and Pixi listeners. React Strict Mode remains enabled. `main.tsx` unmounts the
-  React root on `pagehide` and Vite module disposal.
-  TW-057 owns browser navigation warnings and back/forward cache restoration;
-  this teardown is not a guarantee that browser work survives navigation.
+  React root on non-cached `pagehide` and Vite module disposal.
+  Cached pages retain their live editor; browser warnings and restoration limits
+  are documented in [browser lifecycle](browser-lifecycle.md).
 - The native identifier is `app.tilewright.desktop`; the window label is `main`.
   `src-tauri/capabilities/main.json` applies only to the local macOS main window
   and grants `choose_project`, `read_project`, `write_project`, the two document

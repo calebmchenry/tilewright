@@ -17,15 +17,18 @@ export function BrowserAvailability() {
     >
       Browser preview: open or drop a project, then download an editable copy.
       Agent export and recovery are not available yet. Download before leaving
-      this page.
+      this page and check your browser downloads. Navigation warnings are best
+      effort, not recovery.
     </div>
   );
 }
 
 export function BrowserFileControls({
   lifecycle,
+  onNewMap,
 }: {
   lifecycle: DocumentLifecycle;
+  onNewMap: () => void;
 }) {
   const state = useStore(lifecycle.state);
   const fileState = useStore(lifecycle.files.state);
@@ -64,7 +67,10 @@ export function BrowserFileControls({
       window.removeEventListener("drop", drop, true);
     };
   }, [lifecycle]);
-  const busy = state.busy || fileState.busy;
+  const exportState = useStore<{ readonly busy: boolean }>(
+    lifecycle.agentExport?.state ?? lifecycle.state,
+  );
+  const busy = state.busy || fileState.busy || exportState.busy;
   return (
     <div
       className="browser-file-controls"
@@ -72,6 +78,9 @@ export function BrowserFileControls({
       aria-label="Project files"
     >
       <span className="project-drop-hint">Drop one .tilewright file here</span>
+      <button type="button" disabled={busy} onClick={onNewMap}>
+        New map
+      </button>
       <button
         type="button"
         disabled={busy}
@@ -80,7 +89,7 @@ export function BrowserFileControls({
           void lifecycle.open();
         }}
       >
-        Open file…
+        Open…
       </button>
       <button
         type="button"
@@ -116,6 +125,7 @@ function UnsavedDialog({
   action: DocumentAction;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const browserStatus = useStore(lifecycle.files.browserStatus);
   useEffect(() => {
     const element = dialog.current!;
     const opener = document.activeElement;
@@ -147,10 +157,17 @@ function UnsavedDialog({
       <h2>{title}</h2>
       <p>
         {lifecycle.files.browser
-          ? "Download an editable copy before continuing? A download request does not confirm a file was saved. Downloading keeps this map open; retry the action when you are ready."
+          ? "A download request does not confirm a file was saved. Downloading keeps this map open. Check your browser downloads, then retry this action and deliberately continue or discard."
           : "Save changes to the current map before continuing?"}{" "}
-        Discarding loses unsaved changes and clears its undo history.
+        {lifecycle.files.browser
+          ? "Continuing discards this map and its undo history."
+          : "Discarding loses unsaved changes and clears its undo history."}
       </p>
+      {lifecycle.files.browser && (
+        <p>
+          <BrowserDocumentStatus files={lifecycle.files} />
+        </p>
+      )}
       <div className="dialog-actions">
         <button
           type="button"
@@ -160,7 +177,10 @@ function UnsavedDialog({
           Cancel
         </button>
         <button type="button" onClick={() => lifecycle.choose("discard")}>
-          Discard changes
+          {lifecycle.files.browser &&
+          browserStatus.changesSinceDownload === false
+            ? "Continue without another download"
+            : "Discard changes"}
         </button>
         <button
           type="button"
@@ -176,6 +196,40 @@ function UnsavedDialog({
         <p>Saving requires the Tilewright desktop app.</p>
       )}
     </dialog>
+  );
+}
+
+export function BrowserDocumentStatus({ files }: { files: ProjectFiles }) {
+  const { changesSinceDownload, workAtRisk } = useStore(files.browserStatus);
+  return (
+    <span
+      className="document-status"
+      title="Downloads are requests only; saving to disk is not confirmed."
+    >
+      {changesSinceDownload === null
+        ? workAtRisk
+          ? "Not downloaded"
+          : "Opened file · no changes"
+        : changesSinceDownload
+          ? "Changes since download request"
+          : "No changes since download request"}
+    </span>
+  );
+}
+
+export function DownloadTimestamp({ files }: { files: ProjectFiles }) {
+  const requested = useStore(files.lastDownload);
+  return (
+    <span className="save-timestamp" data-testid="download-timestamp">
+      {requested && (
+        <time
+          dateTime={new Date(requested.at).toISOString()}
+          title={`Download requested: ${requested.filename} · ${new Date(requested.at).toLocaleString()}. Check browser downloads; disk save is not confirmed.`}
+        >
+          Download requested {new Date(requested.at).toLocaleTimeString()}
+        </time>
+      )}
+    </span>
   );
 }
 

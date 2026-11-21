@@ -92,16 +92,22 @@ export class DocumentLifecycle {
     const before = this.files.workspace.state.getSnapshot();
     const session = before.session;
     const version = session.document.version;
+    const active = session.activeLayer.getSnapshot();
+    const hidden = session.hiddenLayers.getSnapshot();
     const current = () =>
       !this.#closed &&
       this.files.workspace.state.getSnapshot().session === session;
     const permission = () => {
       const approvedVersion = session.document.version;
       const savedRevision = session.history.state.savedRevision;
+      const approvedActive = session.activeLayer.getSnapshot();
+      const approvedHidden = session.hiddenLayers.getSnapshot();
       return () => {
         if (
           !current() ||
           session.document.version !== approvedVersion ||
+          session.activeLayer.getSnapshot() !== approvedActive ||
+          session.hiddenLayers.getSnapshot() !== approvedHidden ||
           session.history.state.savedRevision !== savedRevision
         )
           throw new Error(
@@ -115,7 +121,11 @@ export class DocumentLifecycle {
       this.#publish({ busy: true, action, prompt: action, error: "" });
     });
     if (choice === "cancel" || !current()) return null;
-    if (session.document.version !== version)
+    if (
+      session.document.version !== version ||
+      session.activeLayer.getSnapshot() !== active ||
+      session.hiddenLayers.getSnapshot() !== hidden
+    )
       throw new Error(
         "The map changed while deciding. Try the action again to review the latest changes.",
       );

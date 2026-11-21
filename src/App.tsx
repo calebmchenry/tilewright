@@ -26,6 +26,8 @@ import {
   BrowserFileControls,
   FileFeedback,
   SaveTimestamp,
+  DownloadTimestamp,
+  BrowserDocumentStatus,
   RecoveryFeedback,
   UnsavedChanges,
   LifecycleFeedback,
@@ -357,6 +359,7 @@ export function Workspace({
         savedPath={savedPath}
         recovered={recovered}
         recoveryBrowser={recoveryBrowser}
+        onNewMap={() => actions.perform("new")}
       />
       <UnsavedChanges lifecycle={lifecycle} />
       {newDialog && (
@@ -379,6 +382,7 @@ export function App({
   savedPath,
   recovered,
   recoveryBrowser,
+  onNewMap,
 }: Props & {
   nativeWindow?: boolean;
   browserPreview?: boolean;
@@ -387,6 +391,7 @@ export function App({
   savedPath?: string | null;
   recovered?: RecoveredProject | null;
   recoveryBrowser?: RecoveryBrowser;
+  onNewMap?: () => void;
 }) {
   useEffect(() => {
     const blur = () => session.focus.set("outside");
@@ -460,11 +465,15 @@ export function App({
                 ? `Recovered — ${recovered.displayName}`
                 : "Untitled map")}
           </span>{" "}
-          <DocumentStatus session={session} />
+          {browserPreview && lifecycle ? (
+            <BrowserDocumentStatus files={lifecycle.files} />
+          ) : (
+            <DocumentStatus session={session} />
+          )}
         </div>
         {recoveryBrowser && <RecoveryPanel browser={recoveryBrowser} />}
-        {browserPreview && lifecycle && (
-          <BrowserFileControls lifecycle={lifecycle} />
+        {browserPreview && lifecycle && onNewMap && (
+          <BrowserFileControls lifecycle={lifecycle} onNewMap={onNewMap} />
         )}
       </header>
       <div className="editor-body">
@@ -485,6 +494,9 @@ export function App({
       <footer>
         <Readout session={session} />
         {lifecycle && <SaveTimestamp files={lifecycle.files} />}
+        {browserPreview && lifecycle && (
+          <DownloadTimestamp files={lifecycle.files} />
+        )}
       </footer>
       <div className="notifications">
         {browserPreview && <BrowserAvailability />}

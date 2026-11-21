@@ -142,7 +142,9 @@ dirty flag. These acknowledgements do not add undo steps or mutate the document.
 Browser imports remain unsaved in this native checkpoint model. A browser
 `browser-download-request` checkpoint tracks a handoff separately and never calls
 `markSaved` or `markRecovery`; it cannot authorize discarding the live document.
-See the [platform contract](platform-services.md) for subsequent browser work.
+Browser status compares the requested revision and persisted layer preferences
+without altering these history checkpoints. See [browser lifecycle](browser-lifecycle.md)
+for download-relative feedback and navigation protection.
 No recovery scheduler, filesystem operation, or file format is implemented here.
 The [TW-039 recovery policy](recovery-policy.md) defines independent capture
 sequences and lifecycle epochs for scheduling/publication; history revision

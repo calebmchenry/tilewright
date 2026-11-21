@@ -98,7 +98,9 @@ test("shell displays state, downloads browser projects, and keeps native text un
     page.getByRole("status", { name: "Project file feedback" }),
   ).toContainText("Download requested");
   await expect(page.getByTestId("save-timestamp")).toBeEmpty();
-  await expect(page.locator(".document-status")).toContainText("Unsaved");
+  await expect(page.locator(".document-status")).toContainText(
+    "No changes since download request",
+  );
 });
 
 for (const dpr of [1, 2]) {

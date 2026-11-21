@@ -756,7 +756,7 @@ budget claim is introduced; TW-049/TW-050 retain the existing refinement scope.
 
 ## Browser project files (TW-056)
 
-The browser header has accessible **Open file…** and **Download project** buttons
+The browser header has accessible **Open…** and **Download project** buttons
 and a visible single-file drop affordance. File drops anywhere on the page are
 prevented from navigating, including during dialogs or another file operation.
 Busy/modal drops ask the user to retry; multiple files, folders and empty files
@@ -781,8 +781,8 @@ project and stay**. Download leaves the outgoing map installed and ends that
 replacement request, including when edits arrive during encoding. The user must
 retry Open/drop/New and deliberately discard to replace it. No picker needs to
 launch after awaiting a prompt or download. Native Save/Discard/Cancel is unchanged.
-TW-057 owns broader browser lifecycle UX, change tracking since downloads,
-navigation warnings and back/forward cache handling.
+TW-057 adds [browser lifecycle status and navigation protection](browser-lifecycle.md),
+including explicit continuation when the current map matches the download request.
 
 Download (also the shared Save/Save As shortcuts where the browser permits them)
 captures one committed snapshot before the first await and uses the same v1
