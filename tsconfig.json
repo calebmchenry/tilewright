@@ -18,7 +18,9 @@
   "include": [
     "src",
     "vite.config.ts",
+    "vite.web.config.ts",
     "playwright.config.ts",
+    "playwright.web.config.ts",
     "tests",
     "scripts/*.ts"
   ]

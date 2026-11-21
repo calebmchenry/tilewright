@@ -1,0 +1,108 @@
+name: Browser Pages
+
+# Keep manual-only until TW-061 acceptance and TW-062 target setup.
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Asset base: /repository-name/ for a project site, / for a root/custom domain"
+        required: true
+        type: string
+      deploy:
+        description: "Publish after TW-061/TW-062 (requires PAGES_DEPLOY_ENABLED=true)"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TILEWRIGHT_WEB_BASE: ${{ inputs.base }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pinned Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Validate explicit asset base
+        run: node --input-type=module -e 'import { webBase } from "./scripts/web-base.ts"; console.log(webBase());'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check browser formatting
+        run: npm run format:check:web
+      - name: Check shared desktop frontend build
+        run: npm run build
+      - name: Run domain and development UI regressions
+        run: npm test
+      - name: Build and smoke a repository subpath
+        env:
+          TILEWRIGHT_WEB_BASE: /pages-smoke/
+        run: npm run test:web
+      - name: Build and smoke the selected deployment base
+        run: npm run test:web
+      - name: Upload validated Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist-web
+      - name: Retain failed smoke traces and test results
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: browser-test-failure
+          path: |
+            test-results
+            playwright-report
+          retention-days: 7
+
+  deploy:
+    if: ${{ inputs.deploy }}
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Require release readiness
+        env:
+          PAGES_DEPLOY_ENABLED: ${{ vars.PAGES_DEPLOY_ENABLED }}
+        run: |
+          if [ "$PAGES_DEPLOY_ENABLED" != "true" ]; then
+            echo 'Complete TW-061 acceptance and TW-062 target setup, then set PAGES_DEPLOY_ENABLED=true.' >&2
+            exit 1
+          fi
+      - name: Read existing Pages configuration
+        id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        with:
+          enablement: false
+      - name: Verify artifact base matches the configured site
+        env:
+          TILEWRIGHT_WEB_BASE: ${{ inputs.base }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          if [ "${PAGES_BASE_PATH%/}/" != "$TILEWRIGHT_WEB_BASE" ]; then
+            echo 'The selected asset base does not match Pages settings. Rebuild with the configured site base.' >&2
+            exit 1
+          fi
+      - name: Deploy validated artifact
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

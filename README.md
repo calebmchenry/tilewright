@@ -8,7 +8,9 @@ current browser preview: rendering/editing, local project Open/drop, and editabl
 project downloads work without Tauri. The [browser lifecycle](docs/browser-lifecycle.md) provides download-relative status,
 deliberate document replacement and best-effort navigation warnings. Whole-map
 [agent export downloads](docs/agent-export-format.md#browser-export-workflow-tw-058)
-are available, along with [local browser recovery](docs/recovery-policy.md#browser-indexeddb-recovery-tw-059). Pages deployment remains a later ticket. Download a project and check
+are available, along with [local browser recovery](docs/recovery-policy.md#browser-indexeddb-recovery-tw-059).
+[Browser production builds and manual Pages CI](docs/github-pages.md) are ready
+for validation; live publication remains TW-062. Download a project and check
 the file before leaving the page; a request does not confirm a disk write.
 
 For a clean macOS checkout, prerequisites, development commands, tests, and local
@@ -23,6 +25,10 @@ npm run dev
 
 For browser development, use `npm run dev:frontend` and open the printed local
 URL. `npm run build` type-checks and creates frontend assets without Rust.
+For a production browser artifact, set `TILEWRIGHT_WEB_BASE=/repository-name/`
+and run `npm run build:web`, then `npm run preview:web` with the same base.
+The [Pages guide](docs/github-pages.md) covers root/custom-domain bases,
+production smoke tests and deliberate deployment setup.
 
 Implementation choices for coordinates, canvas growth, and component ownership
 are in [the foundation decisions](docs/foundation-decisions.md).
