@@ -1,11 +1,12 @@
 # Tilewright in a desktop browser
 
-Tilewright edits maps locally in your browser. The site supplies the application
+[Open Tilewright](https://calebmchenry.github.io/tilewright/) to edit maps locally
+in your browser. The site supplies the application
 assets; it has no project backend, accounts or cloud file storage. Use a desktop
 mouse/trackpad and keyboard. Mobile/touch layout and interaction are outside this
 release. For local development and Pages publication, see the
-[build and deployment guide](github-pages.md). A local release candidate is not a
-live Pages deployment; publication and its URL are recorded separately in TW-062.
+[build and deployment guide](github-pages.md). The
+[acceptance record](browser-validation.md) describes the verified release scope.
 
 ## Start, import and keep an editable copy
 
@@ -14,6 +15,11 @@ explicitly, and **Fit map** or the Zoom selector to move between overview and ti
 detail. Tools, layers, named colors, tile selections and named areas share the
 same model as the desktop app. The [complete-session guide](complete-session.md)
 describes the drawing/rearrangement workflow and annotation independence.
+
+The published baseline allows Pencil and Eraser at every zoom. Precise tools
+such as Line, Rectangle, Fill, Eyedropper and Select require at least 8 CSS pixels
+per tile; zoom in when the overview notice appears. Drawing area bounds has the
+same threshold, while numeric area bounds remain available.
 
 Choose **Open…** and select one local `.tilewright` file, or drop one file onto
 the page. Opening reads that file locally; it never uploads map content or grants

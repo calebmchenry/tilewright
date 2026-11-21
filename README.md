@@ -3,7 +3,8 @@
 Project requirements are in [INTENT.md](INTENT.md). Tickets are managed with `wrk`.
 
 One shared editor targets macOS through Tauri and desktop browsers through GitHub
-Pages. The [browser user guide](docs/browser-guide.md) covers local Open/drop,
+Pages. [Open the browser editor](https://calebmchenry.github.io/tilewright/).
+The [browser user guide](docs/browser-guide.md) covers local Open/drop,
 editable project downloads, separate agent exports, unsaved-work protection and
 local recovery. Download projects regularly and check the actual files; a request
 does not confirm a disk save. Project content stays local, with no accounts,
@@ -11,8 +12,8 @@ application backend or cloud file storage.
 
 The [production browser acceptance record](docs/browser-validation.md) describes
 Chromium, Firefox and WebKit verification and the separate real Safari smoke.
-[Browser production builds and gated manual Pages CI](docs/github-pages.md) provide
-the release candidate; live publication remains TW-062.
+[Browser production builds and gated manual Pages CI](docs/github-pages.md) cover
+the published release, redeployment and rollback.
 
 For a clean macOS checkout, prerequisites, development commands, tests, and local
 packaged builds, see [desktop development](docs/desktop-development.md).

@@ -9,7 +9,11 @@ See the [platform contract](platform-services.md),
 
 The [browser acceptance record](browser-validation.md) supplies local production
 qualification and the [user guide](browser-guide.md) explains files and recovery.
-TW-062 records hosted publication separately from that local qualification.
+The published editor is [Tilewright on GitHub Pages](https://calebmchenry.github.io/tilewright/).
+Revision `f4e41317a777ae19e7f415110a0ab4df179754f9` was deployed on 2026-11-21
+by [successful workflow run 44874479836](https://github.com/calebmchenry/tilewright/actions/runs/44874479836).
+TW-062 records hosted publication and live verification separately from the
+earlier local qualification.
 Performance refinement remains deferred to TW-049/TW-050 under the working baseline.
 
 ## Reproduce a browser artifact

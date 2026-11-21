@@ -1,7 +1,7 @@
-# Production browser release acceptance (TW-061)
+# Production browser release acceptance
 
-This record qualifies local production assets, not a live GitHub Pages site or a
-hosted Actions run. TW-062 records the selected target and publication. The
+The TW-061 record below qualifies local production assets. The TW-062 section
+records the subsequent hosted release and live-site verification. The
 [browser guide](browser-guide.md) explains the user workflow; the
 [Pages guide](github-pages.md) explains repeatable builds and the deployment gate.
 
@@ -168,3 +168,82 @@ summary and per-test engine/network/fixture evidence; the HTML report is
 close zoom and the locality label/recolored map at overview. Subsequent runs
 replace these directories. The WRK ticket retains exact commands, counts,
 fixture hashes, native checks, corrections and qualification boundaries.
+
+## Hosted release (TW-062, 2026-11-21)
+
+The public editor is [Tilewright on GitHub Pages](https://calebmchenry.github.io/tilewright/),
+deployed from `f4e41317a777ae19e7f415110a0ab4df179754f9` on `main` by
+[workflow run 44874479836](https://github.com/calebmchenry/tilewright/actions/runs/44874479836).
+The Pages source is GitHub Actions, base `/tilewright/`, HTTPS enforced, with no
+custom domain. The deployment environment allows only the exact branch `main`.
+
+The clean Ubuntu release gate passed all of the following, with no test skips
+or retries:
+
+- Formatting, typechecking and the shared desktop frontend build.
+- 523 domain tests and 197 development UI tests (20.8 minutes for UI).
+- The two early Firefox graphics/file smoke cases (10.6 seconds).
+- All 39 production cases at `/pages-smoke/` (9.8 minutes).
+- All 39 production cases at `/tilewright/` (9.6 minutes).
+- Artifact upload, configured-base verification and Pages deployment.
+
+Firefox runs headed under Xvfb on hosted Linux because its headless mode could
+not initialize the editor's WebGL canvas. Chromium and WebKit remain headless.
+All three projects exercise the complete functional suite. The final artifact
+contains only `index.html` and six hashed assets; no test fixtures or project
+content are published. An independent HTTPS request returned 200 with the
+expected `/tilewright/assets/` entry references.
+
+The hosted candidate also fixes recovery ownership release to await the actual
+Web Lock callback's settlement, with a deterministic two-tab regression. Longer
+completion deadlines allow the complete rendering-heavy audits on hosted
+software rendering; every content, pixel, history and resource assertion remains.
+These runtimes do not certify the deferred performance budgets.
+
+The published baseline retains the 8 CSS px/tile threshold for precise tools;
+Pencil and Eraser work at every zoom. Pre-existing uncommitted overview-tool
+work remains local and was excluded from the release. This also explains the
+different clean-release and earlier working-tree test counts. The original
+deferred tickets and unrelated editor changes remain unchanged.
+
+See the [Pages guide](github-pages.md#logs-rebuilds-and-redeploys) for manual
+redeployment and rollback to the recorded successful revision.
+
+### Live HTTPS verification
+
+Live tests used a clean reference checkout of the deployed revision, Node 24.22.3
+and Playwright 1.64.1 on the macOS host above, with no local web server:
+
+```sh
+TILEWRIGHT_WEB_BASE=/tilewright/ \
+TILEWRIGHT_LIVE_URL=https://calebmchenry.github.io/tilewright/ \
+npm run test:web:live
+```
+
+The full live run passed all 36 editor/workflow cases in 9.2 minutes, including
+both complete populated fixtures in Chromium 156.0.8078.4, Firefox 157.0 and
+WebKit 27.2. The three asset-serving cases initially failed because GitHub's
+edge returned intermittent 503 responses for deliberately nonexistent paths
+that must return 404. Every actual deployed asset already matched the reference
+bytes and MIME type. A first focused recheck also encountered those 503s.
+
+After the missing paths returned 404, the unchanged asset test passed 3/3 in
+7.2 seconds across all three engines. It verified all seven published files,
+every non-entry dynamic chunk, WebGL startup and the absent source/harness URLs.
+No assertion was weakened and no application or test code changed for these
+rechecks. This records 36 passing workflow cases plus three passing asset
+rechecks, rather than claiming an uninterrupted 39-case green live run.
+
+Live checks exercised picker and File/DataTransfer import, full editing and
+undo/redo, project download/reopen, independent complete agent consumption,
+unsaved navigation, reload/recovery, two-tab ownership and storage/corruption
+failure handling. All 33 application network/runtime audits have zero errors:
+only same-site GET asset requests, no project upload, off-site request or native
+startup. The actual Safari smoke above remains local; live WebKit automation
+is not an additional real-Safari or native WKWebView certification.
+
+The original live JSON report, screenshots, downloads and failed-response traces
+remain in the reference checkout's `test-results-live/` and
+`playwright-report-live/`. The successful focused run uses a separate
+`live-assets-final/` output and `live-assets-final.log` so the original evidence
+is preserved. TW-062 records the local evidence directory and final queue audit.
