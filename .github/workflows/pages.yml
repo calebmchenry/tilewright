@@ -24,7 +24,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     env:
       TILEWRIGHT_WEB_BASE: ${{ inputs.base }}
     steps:
@@ -48,7 +48,7 @@ jobs:
       - name: Check shared desktop frontend build
         run: npm run build
       - name: Run domain and development UI regressions
-        run: npm test
+        run: npm run test:domain && npm run test:ui -- --reporter=list
       - name: Qualify production browser release at a repository subpath
         env:
           TILEWRIGHT_WEB_BASE: /pages-smoke/

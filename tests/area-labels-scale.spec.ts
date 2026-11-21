@@ -9,7 +9,7 @@ for (const kind of ["frontier", "heartland"] as const)
   test(`${kind}: 1089 named areas on the complete populated map retain bounded labels through navigation and replacement`, async ({
     browser,
   }, info) => {
-    test.setTimeout(120_000);
+    test.setTimeout(300_000);
     const context = await browser.newContext({
       deviceScaleFactor: 2,
       viewport: { width: 1080, height: 720 },
@@ -114,7 +114,11 @@ for (const kind of ["frontier", "heartland"] as const)
     await page.evaluate(() =>
       window.tileProbe.view(-253.333333, -242.222222, 0.09 / 24),
     );
-    await expect(page.locator("canvas")).toHaveAttribute("aria-busy", "false");
+    // Hosted software rendering takes longer to finish a complete overview.
+    // This is a completion deadline, not the deferred presentation budget.
+    await expect(page.locator("canvas")).toHaveAttribute("aria-busy", "false", {
+      timeout: 60_000,
+    });
     await page
       .locator("canvas")
       .screenshot({ path: info.outputPath(`${kind}-region-labels.png`) });

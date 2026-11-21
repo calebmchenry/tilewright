@@ -14,6 +14,9 @@ declare global {
       bytes: Uint8Array;
       ticket?: RecoveryTicket;
       selection?: RecoverySelection;
+      releasePaused?: boolean;
+      releaseComplete?: boolean;
+      resumeRelease?: () => void;
     };
   }
 }
@@ -246,6 +249,15 @@ test("live tabs cannot claim, discard or overwrite another writer; released work
   expect(failures.entries.every((e) => e.current)).toBe(true);
   expect((await records(page)).lineages).toHaveLength(2);
   await page.close();
+  // Closing a page and the browser releasing its Web Locks are separate tasks.
+  await expect
+    .poll(() =>
+      second.evaluate(async (id) => {
+        const entries = (await window.recoveryTest.adapter.discover()).entries;
+        return entries.find((entry) => entry.documentId === id)?.current;
+      }, selection.documentId),
+    )
+    .toBe(false);
   await second.evaluate(async (selection) => {
     const t = window.recoveryTest;
     const writer = crypto.randomUUID();
@@ -253,6 +265,78 @@ test("live tabs cannot claim, discard or overwrite another writer; released work
     await t.adapter.release(selection.documentId, writer);
     await t.adapter.discard(selection.documentId);
   }, selection);
+  expect((await records(second)).lineages).toHaveLength(1);
+});
+
+test("release waits for the real ownership lock before another writer can claim", async ({
+  page,
+  context,
+}) => {
+  await harness(page);
+  await page.evaluate(() => {
+    const request = navigator.locks.request.bind(navigator.locks);
+    Object.defineProperty(navigator.locks, "request", {
+      value: (
+        name: string,
+        options: LockOptions,
+        callback: LockGrantedCallback<unknown>,
+      ) =>
+        request(name, options, async (lock) => {
+          const result = await callback(lock);
+          if (lock && name.startsWith("tilewright-recovery:")) {
+            window.recoveryTest.releasePaused = true;
+            await new Promise<void>((resolve) => {
+              window.recoveryTest.resumeRelease = resolve;
+            });
+          }
+          return result;
+        }),
+    });
+  });
+  const metadata = await publish(page);
+  const selection = {
+    documentId: metadata.documentId,
+    sequence: metadata.sequence,
+    sha256: metadata.sha256,
+  };
+  const second = await context.newPage();
+  await harness(second);
+  await page.evaluate(() => {
+    const t = window.recoveryTest;
+    t.releaseComplete = false;
+    void t.adapter
+      .release(t.capture.documentId, t.capture.writerId)
+      .then(() => {
+        t.releaseComplete = true;
+      });
+  });
+  await expect
+    .poll(() => page.evaluate(() => window.recoveryTest.releasePaused))
+    .toBe(true);
+  expect(await page.evaluate(() => window.recoveryTest.releaseComplete)).toBe(
+    false,
+  );
+  const blocked = await second.evaluate(async (selection) => {
+    try {
+      await window.recoveryTest.adapter.claim(selection, crypto.randomUUID());
+      return "unexpected success";
+    } catch (error) {
+      return String(error);
+    }
+  }, selection);
+  expect(blocked).toContain("another tab");
+  await page.evaluate(() => window.recoveryTest.resumeRelease!());
+  await expect
+    .poll(() => page.evaluate(() => window.recoveryTest.releaseComplete))
+    .toBe(true);
+  const restored = await second.evaluate(async (selection) => {
+    const t = window.recoveryTest;
+    await t.adapter.claim(selection, t.capture.writerId);
+    return JSON.parse(
+      new TextDecoder().decode(await t.adapter.read(selection)),
+    );
+  }, selection);
+  expect(restored).toEqual(exampleProject);
   expect((await records(second)).lineages).toHaveLength(1);
 });
 

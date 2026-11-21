@@ -117,7 +117,10 @@ export class BrowserRecovery implements RecoveryBridge, RecoveryReviewBridge {
   #blockedOpen: Error | null = null;
   #closed = false;
   #transactions = new Set<IDBTransaction>();
-  #owners = new Map<string, { writer: string; release: () => void }>();
+  #owners = new Map<
+    string,
+    { writer: string; release: () => void; finished: Promise<void> }
+  >();
   #controls = new Map<string, RecoveryControl>();
   #pending: {
     ticket: RecoveryTicket;
@@ -263,8 +266,8 @@ export class BrowserRecovery implements RecoveryBridge, RecoveryReviewBridge {
     }
     await this.#database();
     await new Promise<void>((resolve, reject) => {
-      void navigator.locks
-        .request(
+      const finished: Promise<void> = Promise.resolve(
+        navigator.locks.request(
           `tilewright-recovery:${id}`,
           { ifAvailable: true },
           async (lock) => {
@@ -281,17 +284,23 @@ export class BrowserRecovery implements RecoveryBridge, RecoveryReviewBridge {
               return;
             }
             await new Promise<void>((release) => {
-              this.#owners.set(id, { writer, release });
+              this.#owners.set(id, { writer, release, finished });
               resolve();
             });
           },
-        )
-        .catch(reject);
+        ),
+      );
+      void finished.catch(reject);
     });
   }
   #unlock(id: string) {
-    this.#owners.get(id)?.release();
+    const owner = this.#owners.get(id);
+    owner?.release();
     this.#owners.delete(id);
+    // The request promise settles only after the browser releases the lock.
+    // Resolving its callback alone does not establish that another writer can
+    // immediately acquire it, especially across renderer processes.
+    return owner?.finished;
   }
   #assertOwner(id: string, writer: string) {
     if (this.#closed || this.#owners.get(id)?.writer !== writer)
@@ -601,7 +610,7 @@ export class BrowserRecovery implements RecoveryBridge, RecoveryReviewBridge {
         };
       });
     } catch (error) {
-      this.#unlock(selection.documentId);
+      await this.#unlock(selection.documentId);
       throw error;
     }
   }
@@ -609,7 +618,7 @@ export class BrowserRecovery implements RecoveryBridge, RecoveryReviewBridge {
     if (this.#owners.get(documentId)?.writer !== writer) return;
     this.#controls.delete(documentId);
     if (this.#pending?.ticket.documentId === documentId) this.#pending = null;
-    this.#unlock(documentId);
+    await this.#unlock(documentId);
   }
   async #remove(id: string, writer: string) {
     await this.#transaction<void>("readwrite", (tx, done) => {
@@ -641,7 +650,7 @@ export class BrowserRecovery implements RecoveryBridge, RecoveryReviewBridge {
       await this.#remove(id, writer);
       return null;
     } finally {
-      this.#unlock(id);
+      await this.#unlock(id);
     }
   }
   dispose() {
