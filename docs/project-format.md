@@ -544,8 +544,8 @@ performance measurements/refinements remain TW-050/TW-049 under AGENTS.md.
 The toolbar exposes **Open…**, **Save**, and **Save As…**. Cmd+O, Cmd+S and
 Cmd+Shift+S work throughout the workspace, including text fields and after a
 native dialog returns focus to the webview root. Editor modal dialogs keep their
-existing shortcut isolation. Frontend-only development reports that local files
-require the desktop app. The packaged app uses embedded assets and native IPC;
+existing shortcut isolation. The browser offers the separate Open/drop/download
+workflow described below. The packaged app uses embedded assets and native IPC;
 no account, network request or runtime server participates in a file operation.
 
 [`project-files.ts`](../src/editor/project-files.ts) coordinates one file operation
@@ -753,3 +753,60 @@ isolation and clipboard placement), and the packaged macOS checks recorded in
 TW-038. Browser IPC tests do not stand in for native panels or WKWebView editing.
 No recovery, cross-document clipboard, new persistence format or performance
 budget claim is introduced; TW-049/TW-050 retain the existing refinement scope.
+
+## Browser project files (TW-056)
+
+The browser header has accessible **Open file…** and **Download project** buttons
+and a visible single-file drop affordance. File drops anywhere on the page are
+prevented from navigating, including during dialogs or another file operation.
+Busy/modal drops ask the user to retry; multiple files, folders and empty files
+are rejected. The picker suggests `.tilewright`/JSON files, but the shared decoder
+identifies projects by their envelope, not extension or MIME type. Agent exports,
+unsupported versions and malformed content never replace the current map.
+
+`src/platform/browser-project-files.ts` supplies a distinct browser transport;
+it never creates native handles. The picker launches synchronously on the Open
+click/shortcut, before any asynchronous work or unsaved prompt. Each invocation
+uses a fresh single-file input, removed on selection, cancellation or disposal.
+Selecting a file only grants a local read, not permission to replace a document.
+Picker and drop converge in `DocumentLifecycle.open`, which checks file count and
+the shared 256 MiB byte limit, obtains unsaved-work approval, then calls
+`ProjectFiles.importBrowserFile` and `EditorWorkspace.openProject`. Guards reject
+intervening session, document, preference or checkpoint changes throughout the
+picker, approval, read and decode. Cancellation and errors retain the outgoing
+map, history and source identity.
+
+Browser unsaved prompts offer **Cancel**, **Discard changes**, and **Download
+project and stay**. Download leaves the outgoing map installed and ends that
+replacement request, including when edits arrive during encoding. The user must
+retry Open/drop/New and deliberately discard to replace it. No picker needs to
+launch after awaiting a prompt or download. Native Save/Discard/Cancel is unchanged.
+TW-057 owns broader browser lifecycle UX, change tracking since downloads,
+navigation warnings and back/forward cache handling.
+
+Download (also the shared Save/Save As shortcuts where the browser permits them)
+captures one committed snapshot before the first await and uses the same v1
+encoder as desktop. All layers, hidden content, paint identities, bounds, named
+areas and active/hidden preferences are included. Defaults are `Untitled.tilewright`
+or a sanitized imported basename with a `.tilewright` suffix. A temporary Blob
+URL and download link hand off the bytes; the link is removed immediately, and
+the URL is revoked after a one-second handoff grace period (immediately if the
+click fails). No file bytes are transmitted to a server.
+
+Only `lastDownload` records a `browser-download-request` checkpoint for the exact
+captured revision. It never calls `markSaved`/`markRecovery`, changes `savedPath`,
+shows a Saved timestamp, overwrites the original file, or approves replacement.
+Later edits survive; repeated requests produce complete independent files. The
+UI says **Download requested**, asks the user to check browser downloads, and
+does not claim a confirmed disk write. No browser schema or desktop codec change
+was needed.
+
+Validation: `tests/browser-project-files.spec.ts` exercises real chooser uploads,
+synthetic File drops, browser download events, full decoded content and canonical
+bytes, repeated operations, cancel/invalid files, activation, cleanup, and edits
+during actual encoding/read pauses. Native OS chooser cancellation cannot be
+automated by Playwright; the browser input's standard cancel event is dispatched
+for that case. `tests/domain/browser-project-files.test.ts` covers the guard and
+checkpoint matrix, size limits and failures, alongside existing shared codec and
+native file/lifecycle regressions. Actual command results and platform limitations
+are recorded in the WRK ticket. Performance refinement remains TW-049/TW-050.

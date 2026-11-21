@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { browserServices } from "../../src/platform/browser.ts";
 import { createEditorApplication } from "../../src/platform/application.ts";
 import { EditorWorkspace } from "../../src/editor/workspace.ts";
 import { ProjectFiles } from "../../src/editor/project-files.ts";
@@ -10,14 +9,21 @@ import { exampleProject } from "../fixtures/project.ts";
 
 const bytes = new TextEncoder().encode(JSON.stringify(exampleProject));
 
-test("browser composition has no native bindings/recovery and unavailable actions preserve the workspace", async () => {
+test("platform composition supports unavailable services without native bindings/recovery", async () => {
   let calls = 0;
   const unexpected = async (): Promise<never> => {
     calls++;
     throw new Error("Unavailable service called");
   };
   const app = createEditorApplication({
-    ...browserServices,
+    kind: "browser",
+    agentExport: {
+      available: false,
+      choose: unexpected,
+      prepare: unexpected,
+      commit: unexpected,
+      cancel: unexpected,
+    },
     projectFiles: {
       available: false,
       choose: unexpected,

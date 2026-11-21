@@ -7,7 +7,7 @@ import {
 import type { SavedContext } from "./recovery.ts";
 import { newMapBounds } from "../domain/canvas.ts";
 import type { AgentExports } from "./agent-export.ts";
-import type { ProjectFiles } from "./project-files.ts";
+import type { BrowserProjectFile, ProjectFiles } from "./project-files.ts";
 import { Store } from "./store.ts";
 
 export type DocumentAction = "new" | "open" | "close" | "restore";
@@ -121,6 +121,9 @@ export class DocumentLifecycle {
       );
     if (choice === "discard") return permission();
     if (!(await this.files.save()) || !current()) return null;
+    // A download is only a request. Never treat it as saved or as permission
+    // to discard, even if no edits arrived while encoding.
+    if (this.files.browser) return null;
     if (session.history.state.dirty)
       throw new Error(
         "New edits were made while saving. They are still unsaved; try the action again to keep them.",
@@ -159,8 +162,24 @@ export class DocumentLifecycle {
     });
   }
 
-  open(): Promise<boolean> {
+  open(dropped?: readonly BrowserProjectFile[]): Promise<boolean> {
     return this.#run("open", async () => {
+      const bridge = this.files.bridge;
+      if (bridge.kind === "browser") {
+        const check = this.files.guardOpen();
+        // The picker launches before the first await, on the original user
+        // gesture. Selecting a file does not authorize replacing this document.
+        const selected = dropped ?? (await bridge.choose());
+        if (!selected) return false;
+        check();
+        const file = this.files.browserFile(selected);
+        const proceed = await this.#protect("open");
+        if (!proceed) return false;
+        return this.files.importBrowserFile(file, () => {
+          check();
+          proceed();
+        });
+      }
       if (!this.files.available) return this.files.open();
       const proceed = await this.#protect("open");
       if (!proceed) return false;

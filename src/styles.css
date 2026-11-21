@@ -109,6 +109,30 @@ h3 {
 .app-header.native-titlebar {
   padding-left: 88px;
 }
+.app-header.browser-header {
+  height: auto;
+  min-height: 44px;
+  padding-block: 6px;
+  flex-wrap: wrap;
+}
+.browser-file-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.project-drop-hint {
+  border: 1px dashed #7eac93;
+  border-radius: 5px;
+  padding: 7px;
+  color: #acbacb;
+  font-size: 12px;
+}
+.browser-file-controls [role="alert"] {
+  flex-basis: 100%;
+  color: #ffb2a9;
+}
 .document-title {
   display: flex;
   min-width: 0;

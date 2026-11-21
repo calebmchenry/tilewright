@@ -1,14 +1,21 @@
 import { encodeProjectSnapshot } from "../domain/project.ts";
+import { PROJECT_LIMITS } from "../domain/project-format.ts";
 import type { EditorSession } from "./session.ts";
 import type { RecoveryCoordinator } from "./recovery.ts";
 import { Store } from "./store.ts";
 import type { EditorWorkspace } from "./workspace.ts";
-import type { NativeFileHandle, NativeSaveCheckpoint } from "./persistence.ts";
+import {
+  projectDisplayName,
+  type NativeFileHandle,
+  type NativeSaveCheckpoint,
+  type PersistenceCheckpoint,
+} from "./persistence.ts";
 
 /** Native picker grant, not a browser File or display filename. */
 export type ProjectFileHandle = NativeFileHandle;
 /** Native code alone issues handles from the file picker. No arbitrary path I/O. */
 export interface ProjectFileBridge {
+  readonly kind?: "native";
   readonly available: boolean;
   choose(
     save: boolean,
@@ -18,6 +25,30 @@ export interface ProjectFileBridge {
   read(token: string): Promise<Uint8Array>;
   write(token: string, bytes: Uint8Array): Promise<string | null>;
 }
+/** Structural File contract keeps DOM dependencies out of the shared controller. */
+export interface BrowserProjectFile {
+  readonly name: string;
+  readonly size: number;
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+export interface BrowserProjectFileBridge {
+  readonly kind: "browser";
+  readonly available: boolean;
+  /** Must launch synchronously on invocation, before any await. */
+  choose(): Promise<readonly BrowserProjectFile[] | null>;
+  cancelPick(): void;
+  download(filename: string, bytes: Uint8Array): void;
+}
+export type ProjectFileTransport = ProjectFileBridge | BrowserProjectFileBridge;
+
+export function projectDownloadName(name: string | null): string {
+  const stem = (name ?? "Untitled")
+    .replace(/\.(tilewright|json)$/i, "")
+    .replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, "_")
+    .trim()
+    .replace(/[. ]+$/g, "");
+  return `${Array.from(stem).slice(0, 180).join("") || "Untitled"}.tilewright`;
+}
 export interface ProjectFileState {
   readonly busy: boolean;
   readonly error: boolean;
@@ -25,6 +56,12 @@ export interface ProjectFileState {
 }
 
 export class ProjectFiles {
+  readonly lastDownload = new Store<
+    | (Extract<PersistenceCheckpoint, { kind: "browser-download-request" }> & {
+        readonly session: EditorSession;
+      })
+    | null
+  >(null);
   readonly lastSave = new Store<
     (NativeSaveCheckpoint & { readonly session: EditorSession }) | null
   >(null);
@@ -34,7 +71,7 @@ export class ProjectFiles {
     message: "",
   });
   readonly workspace: EditorWorkspace;
-  readonly bridge: ProjectFileBridge;
+  readonly bridge: ProjectFileTransport;
   readonly recovery?: RecoveryCoordinator;
   #closed = false;
   #encode: typeof encodeProjectSnapshot;
@@ -45,7 +82,7 @@ export class ProjectFiles {
 
   constructor(
     workspace: EditorWorkspace,
-    bridge: ProjectFileBridge,
+    bridge: ProjectFileTransport,
     recovery?: RecoveryCoordinator,
     options: { encode?: typeof encodeProjectSnapshot } = {},
   ) {
@@ -54,6 +91,11 @@ export class ProjectFiles {
     this.bridge = bridge;
     this.#encode = options.encode ?? encodeProjectSnapshot;
     this.#unsubscribe = workspace.state.subscribe(() => {
+      if (
+        this.lastDownload.getSnapshot()?.session !==
+        workspace.state.getSnapshot().session
+      )
+        this.lastDownload.set(null);
       if (
         this.lastSave.getSnapshot()?.session !==
         workspace.state.getSnapshot().session
@@ -66,8 +108,12 @@ export class ProjectFiles {
   get available() {
     return this.bridge.available && !this.#closed;
   }
+  get browser() {
+    return this.bridge.kind === "browser";
+  }
   dispose() {
     this.#closed = true;
+    if (this.bridge.kind === "browser") this.bridge.cancelPick();
     this.#association = null;
     this.#unsubscribe();
   }
@@ -118,34 +164,81 @@ export class ProjectFiles {
       resume?.();
     }
   }
-  /** Caller confirms discarding unsaved work before invoking Open. */
+  /** Covers picker/read time; EditorWorkspace repeats these guards during decode. */
+  guardOpen(): () => void {
+    const before = this.workspace.state.getSnapshot();
+    const session = before.session;
+    const version = session.document.version;
+    const active = session.activeLayer.getSnapshot();
+    const hidden = session.hiddenLayers.getSnapshot();
+    const history = session.history.state;
+    return () => {
+      if (
+        this.#closed ||
+        this.workspace.state.getSnapshot() !== before ||
+        session.document.version !== version ||
+        session.activeLayer.getSnapshot() !== active ||
+        session.hiddenLayers.getSnapshot() !== hidden ||
+        session.history.state.savedRevision !== history.savedRevision ||
+        session.history.state.recoveryRevision !== history.recoveryRevision
+      )
+        throw new Error(
+          "The workspace changed while opening. Open the project again to replace the current map.",
+        );
+    };
+  }
+  /** Picker and drop converge here, before unsaved-work approval or reading. */
+  browserFile(files: readonly BrowserProjectFile[]): BrowserProjectFile {
+    if (files.length !== 1)
+      throw new Error(
+        "Open one .tilewright project at a time. Folders and multiple files are not supported.",
+      );
+    const file = files[0];
+    if (!file.name.trim() || !Number.isSafeInteger(file.size) || file.size < 1)
+      throw new Error(
+        "Choose a nonempty .tilewright project file. Folders and empty files are not supported.",
+      );
+    if (file.size > PROJECT_LIMITS.maxBytes)
+      throw new Error("Project files must be no larger than 256 MiB.");
+    return file;
+  }
+  importBrowserFile(
+    file: BrowserProjectFile,
+    checkTransition: () => void,
+  ): Promise<boolean> {
+    return this.#run(async () => {
+      if (!this.browser) throw new Error("Browser import is unavailable.");
+      this.browserFile([file]);
+      checkTransition();
+      const name = file.name;
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      checkTransition();
+      const owner = this;
+      const result = await this.workspace.openProject(bytes, {
+        source: { kind: "browser-file", name },
+        signal: {
+          get aborted() {
+            return owner.#closed;
+          },
+        },
+      });
+      return `Opened ${name}.${result.observerErrors.length ? " Some interface observers failed; reload the project if the view is stale." : ""}`;
+    });
+  }
+  /** Caller confirms discarding unsaved work before invoking native Open. */
   open(checkTransition: () => void = () => {}): Promise<boolean> {
     return this.#run(async () => {
-      const before = this.workspace.state.getSnapshot();
-      const session = before.session;
-      const version = session.document.version;
-      const active = session.activeLayer.getSnapshot();
-      const hidden = session.hiddenLayers.getSnapshot();
-      const history = session.history.state;
-      const check = () => {
-        if (
-          this.#closed ||
-          this.workspace.state.getSnapshot() !== before ||
-          session.document.version !== version ||
-          session.activeLayer.getSnapshot() !== active ||
-          session.hiddenLayers.getSnapshot() !== hidden ||
-          session.history.state.savedRevision !== history.savedRevision ||
-          session.history.state.recoveryRevision !== history.recoveryRevision
-        )
-          throw new Error(
-            "The workspace changed while opening. Open the project again to replace the current map.",
-          );
-      };
-      const file = await this.bridge.choose(false);
+      const bridge = this.bridge;
+      if (bridge.kind === "browser")
+        throw new Error("Use the guarded browser Open action.");
+      const session = this.workspace.state.getSnapshot().session;
+      const check = this.guardOpen();
+      const file = await bridge.choose(false);
       if (!file) return null;
       check();
-      const bytes = await this.bridge.read(file.token);
+      const bytes = await bridge.read(file.token);
       check();
+      checkTransition();
       const owner = this;
       const result = await this.workspace.openProject(bytes, {
         source: { kind: "native-file", path: file.path },
@@ -181,7 +274,10 @@ export class ProjectFiles {
     });
   }
   save(as = false): Promise<boolean> {
+    if (this.browser) return this.download();
     return this.#run(async () => {
+      const bridge = this.bridge;
+      if (bridge.kind === "browser") return null;
       const before = this.workspace.state.getSnapshot();
       const session = before.session;
       // Capture before the first await, even the native picker. Edits made during
@@ -195,7 +291,7 @@ export class ProjectFiles {
       const file =
         !as && existing
           ? existing
-          : await this.bridge.choose(
+          : await bridge.choose(
               true,
               existing?.token,
               before.recovered
@@ -215,7 +311,7 @@ export class ProjectFiles {
       if (signal.aborted)
         throw new Error("The workspace changed. Save the current map again.");
       const bytes = await this.#encode(snapshot, { signal });
-      const warning = await this.bridge.write(file.token, bytes);
+      const warning = await bridge.write(file.token, bytes);
       if (
         this.#closed ||
         this.workspace.state.getSnapshot().session !== session
@@ -240,6 +336,44 @@ export class ProjectFiles {
       }
       await this.recovery?.saved(session, file.path, bytes, snapshot);
       return `Saved ${file.path}.${warning ? ` ${warning}` : ""}${errors.length ? " Some interface observers failed; the file was saved." : ""}`;
+    });
+  }
+  download(): Promise<boolean> {
+    return this.#run(async () => {
+      const bridge = this.bridge;
+      if (bridge.kind !== "browser")
+        throw new Error("Browser download is unavailable.");
+      const before = this.workspace.state.getSnapshot();
+      const session = before.session;
+      const snapshot = session.captureProjectSnapshot();
+      const filename = projectDownloadName(projectDisplayName(before.source));
+      const owner = this;
+      const signal = {
+        get aborted() {
+          return (
+            owner.#closed ||
+            owner.workspace.state.getSnapshot().session !== session
+          );
+        },
+      };
+      const bytes = await this.#encode(snapshot, { signal });
+      if (signal.aborted)
+        throw new Error(
+          "The workspace changed. Download the current map again.",
+        );
+      bridge.download(filename, bytes);
+      try {
+        this.lastDownload.set({
+          kind: "browser-download-request",
+          filename,
+          checkpoint: snapshot.checkpoint,
+          session,
+          at: Date.now(),
+        });
+      } catch {
+        /* An observer cannot undo a browser handoff. */
+      }
+      return `Download requested: ${filename}. Check your browser downloads; saving to disk is not confirmed. The current map stays open.`;
     });
   }
 }

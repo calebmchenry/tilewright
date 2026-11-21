@@ -4,9 +4,10 @@ Project requirements are in [INTENT.md](INTENT.md). Tickets are managed with `wr
 
 One shared editor targets macOS through Tauri and browsers through GitHub Pages.
 The [platform contract](docs/platform-services.md) describes the boundary and
-current browser preview: rendering/editing work without Tauri, while browser
-file import/download, agent export, recovery and Pages deployment remain later
-tickets. Browser work currently lasts only for the open page.
+current browser preview: rendering/editing, local project Open/drop, and editable
+project downloads work without Tauri. Agent export, recovery and Pages deployment
+remain later tickets. Download a project before leaving the page; a download
+request does not confirm a disk write.
 
 For a clean macOS checkout, prerequisites, development commands, tests, and local
 packaged builds, see [desktop development](docs/desktop-development.md).

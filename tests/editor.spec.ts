@@ -15,7 +15,7 @@ declare global {
   }
 }
 
-test("shell displays state, explains unavailable actions, and keeps native text undo separate", async ({
+test("shell displays state, downloads browser projects, and keeps native text undo separate", async ({
   page,
 }) => {
   await page.goto("/");
@@ -89,10 +89,16 @@ test("shell displays state, explains unavailable actions, and keeps native text 
     "#ab1020",
   );
   await canvas.click();
+  const download = page.waitForEvent("download");
   await canvas.press("ControlOrMeta+s");
+  const requested = await download;
+  expect(requested.suggestedFilename()).toBe("Untitled.tilewright");
+  expect(await requested.failure()).toBeNull();
   await expect(
-    page.getByRole("alert", { name: "Project file feedback" }),
-  ).toContainText("Tilewright desktop app");
+    page.getByRole("status", { name: "Project file feedback" }),
+  ).toContainText("Download requested");
+  await expect(page.getByTestId("save-timestamp")).toBeEmpty();
+  await expect(page.locator(".document-status")).toContainText("Unsaved");
 });
 
 for (const dpr of [1, 2]) {

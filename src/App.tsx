@@ -23,6 +23,7 @@ export { AnnotationPanel } from "./AnnotationPanel";
 import {
   AgentExportFeedback,
   BrowserAvailability,
+  BrowserFileControls,
   FileFeedback,
   SaveTimestamp,
   RecoveryFeedback,
@@ -439,7 +440,7 @@ export function App({
       }}
     >
       <header
-        className={`app-header${nativeWindow && /Mac/.test(navigator.platform) ? " native-titlebar" : ""}`}
+        className={`app-header${browserPreview ? " browser-header" : ""}${nativeWindow && /Mac/.test(navigator.platform) ? " native-titlebar" : ""}`}
         data-tauri-drag-region
       >
         <div
@@ -462,6 +463,9 @@ export function App({
           <DocumentStatus session={session} />
         </div>
         {recoveryBrowser && <RecoveryPanel browser={recoveryBrowser} />}
+        {browserPreview && lifecycle && (
+          <BrowserFileControls lifecycle={lifecycle} />
+        )}
       </header>
       <div className="editor-body">
         <aside className="left-sidebar">

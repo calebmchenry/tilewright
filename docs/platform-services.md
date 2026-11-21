@@ -3,8 +3,8 @@
 The 2026-11-20 delivery decision adds a static GitHub Pages browser target while
 preserving the macOS Tauri app and the shared `.tilewright` format. Project bytes
 stay local; neither target requires accounts, an application backend or cloud
-file storage. This ticket establishes the boundary, not the complete browser
-file workflow or a live deployment.
+file storage. TW-055 established the boundary; TW-056 adds browser project
+import/download. This is not a live deployment.
 
 ## Composition and current availability
 
@@ -16,27 +16,28 @@ lifecycle and action router. Map/history/rendering/codec code remains shared.
 There is no Rust port or second editor.
 
 `PlatformServices` exposes service availability and optional recovery and native
-bindings. The browser service set explicitly disables unimplemented file/export
-operations; calling a disabled adapter rejects rather than simulating success.
+bindings. Browser project files use File/Blob transport; unimplemented agent
+export remains explicitly disabled rather than simulating success.
 Without recovery services there is no coordinator, timer, startup discovery or
 recovery panel. Native menu/close listeners are installed only by the Tauri
 composition. The shared DOM keyboard/focus/modal binding lives separately in
 `src/editor/application-bindings.ts`; the UI receives the native titlebar choice
 from composition instead of detecting its own platform.
 
-| Capability                                              | Tauri                                  | Browser after TW-055                           |
-| ------------------------------------------------------- | -------------------------------------- | ---------------------------------------------- |
-| Render, draw, layers, selections, areas, undo/redo, New | Shared editor                          | Shared editor                                  |
-| Project Open / Save / Save As                           | Native picker grants and atomic writes | Unavailable; TW-056                            |
-| Agent export                                            | Native staged write / atomic commit    | Unavailable; TW-058                            |
-| Local recovery / startup review                         | Existing native store and ownership    | Unavailable; TW-059                            |
-| Native File/Edit and guarded close/Quit                 | Existing native bindings               | No bindings or IPC                             |
-| DOM shortcuts and focus routing                         | Shared binding                         | Shared binding; browser reservations may apply |
+| Capability                                              | Tauri                                  | Browser after TW-056                             |
+| ------------------------------------------------------- | -------------------------------------- | ------------------------------------------------ |
+| Render, draw, layers, selections, areas, undo/redo, New | Shared editor                          | Shared editor                                    |
+| Project Open / Save / Save As                           | Native picker grants and atomic writes | Local picker/drop and editable project downloads |
+| Agent export                                            | Native staged write / atomic commit    | Unavailable; TW-058                              |
+| Local recovery / startup review                         | Existing native store and ownership    | Unavailable; TW-059                              |
+| Native File/Edit and guarded close/Quit                 | Existing native bindings               | No bindings or IPC                               |
+| DOM shortcuts and focus routing                         | Shared binding                         | Shared binding; browser reservations may apply   |
 
-Run `npm run dev:frontend` to use the browser editing preview. File shortcuts
-explain that these operations currently require the desktop app. New still asks
-before discarding unsaved work, with Save disabled. Until later lifecycle/recovery
-tickets land, keep the page open: navigation/close protection and crash recovery
+Run `npm run dev:frontend` to use the browser editing preview. Open/Download
+buttons remain available without shortcuts. New/Open/drop ask before discarding
+unsaved work; Download project and stay keeps the outgoing map installed and
+requires a fresh action/discard decision to replace it. Until later lifecycle/recovery
+tickets land, download before leaving: navigation/close protection and crash recovery
 are not provided in the browser. The current pagehide teardown remains; TW-057
 must address back/forward cache restoration. GitHub Pages build/deployment and
 cross-browser release qualification belong to TW-060 through TW-062.
@@ -61,18 +62,17 @@ saved/recovery checkpoints. Pathless legacy decode callers retain their existing
 behavior; browser callers must supply `source: { kind: "browser-file", name }`.
 Neither source kind nor handle is serialized into the project payload.
 
-`ProjectFileBridge` and `AgentExportBridge` currently describe **native** picker
-and atomic-write operations. The browser's unavailable placeholders are not
-implementations of that native contract. TW-056/TW-058 must add browser
-import/download transport at the platform seam, sharing snapshot/codec/workspace
-logic without emulating atomic writes or issuing fake native handles.
+`ProjectFileBridge` and `AgentExportBridge` describe **native** picker and
+atomic-write operations. `BrowserProjectFileBridge` is a separate variant of
+`ProjectFileTransport`, carrying local File reads and download requests without
+emulating atomic writes or issuing fake native handles. `ProjectFiles` shares
+snapshot/codec/workspace logic. TW-058 still owns browser agent export.
 
 ## Three checkpoint meanings
 
 `PersistenceCheckpoint` is a discriminated session-local evidence contract;
 its controller-bound token refers to the exact committed snapshot, not later
-edits. The browser-download variant is a contract for subsequent tickets, not an
-implemented download operation.
+edits. TW-056 implements the browser-download variant in `ProjectFiles.lastDownload`.
 
 | Evidence                   | Acknowledgement                                                                                         | What it can establish                                                                                                                |
 | -------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -90,13 +90,14 @@ these project checkpoints or associations.
 
 ## Subsequent transition protection
 
-TW-056 must use one validated, guarded import path for picker/drop and preserve
-session/version checks during read/decode. It must capture one committed snapshot
-for download, release browser resources after handoff, preserve later edits, and
-never replace a document just because download was requested.
+TW-056 uses one validated, guarded import path for picker/drop and preserves
+session/version/preference/checkpoint checks through picker, approval, read and
+decode. It captures one committed snapshot for download, releases browser
+resources after handoff, preserves later edits, and never replaces a document
+just because download was requested. See [browser project files](project-format.md#browser-project-files-tw-056).
 
-TW-057 must give browser New/Open/drop an explicit continuation/discard/cancel
-choice and a download-first path that returns to deliberate confirmation. It
+TW-057 extends the current safe download-and-stay behavior with browser
+New/Open/drop continuation/discard/cancel UX and deliberate confirmation. It
 must track changes since the requested project snapshot separately from native
 saved state, and retain the current desktop Save/Discard/Cancel semantics. A
 best-effort `beforeunload` warning cannot await asynchronous saves or present the
@@ -112,12 +113,16 @@ project. These are later ticket requirements, not claims about this preview.
 
 ## Verification
 
-`tests/domain/platform-services.test.ts` checks disabled browser services,
+`tests/domain/platform-services.test.ts` checks disabled service handling,
 guarded New choices, display-only imported identity, complete shared-format
 loading, failure preservation, and native handle/receipt semantics.
 `tests/browser-platform.spec.ts` uses the shipping entry with no Tauri mocks,
-checks WebGL drawing/undo and unavailable actions, and rejects native-module/IPC
-requests. Existing project/lifecycle/menu/recovery UI tests exercise the Tauri
+checks WebGL drawing/undo and local downloads, and rejects native-module/IPC
+requests. `tests/browser-project-files.spec.ts` exercises actual chooser uploads,
+File drops, download events, decoded content/canonical bytes, read/encode races,
+activation and resource cleanup. `tests/domain/browser-project-files.test.ts`
+covers browser guards, cancellation/failures and request-only checkpoints.
+Existing project/lifecycle/menu/recovery UI tests exercise the Tauri
 branch with substituted OS IPC; Rust tests exercise actual local persistence.
 Browser tests do not establish native dialog/WKWebView behavior or live Pages
 availability. Actual run results and native limitations belong in the WRK record.

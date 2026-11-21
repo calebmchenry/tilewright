@@ -1,5 +1,5 @@
 import { restoreFocus } from "./editor/focus";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ShortcutHint } from "./ShortcutHint";
 import type {
   DocumentAction,
@@ -15,8 +15,84 @@ export function BrowserAvailability() {
       role="status"
       aria-label="Browser availability"
     >
-      Browser preview: project files, agent export and recovery are not
-      available yet. Work is kept only while this page stays open.
+      Browser preview: open or drop a project, then download an editable copy.
+      Agent export and recovery are not available yet. Download before leaving
+      this page.
+    </div>
+  );
+}
+
+export function BrowserFileControls({
+  lifecycle,
+}: {
+  lifecycle: DocumentLifecycle;
+}) {
+  const state = useStore(lifecycle.state);
+  const fileState = useStore(lifecycle.files.state);
+  const [dropMessage, setDropMessage] = useState("");
+  useEffect(() => {
+    const isFile = (event: DragEvent) =>
+      event.dataTransfer?.types.includes("Files");
+    const dragover = (event: DragEvent) => {
+      if (!isFile(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    };
+    const drop = (event: DragEvent) => {
+      if (!isFile(event)) return;
+      // Guard the whole page, including dialogs and panels, against navigation.
+      event.preventDefault();
+      event.stopPropagation();
+      if (
+        document.querySelector("dialog[open]") ||
+        lifecycle.state.getSnapshot().busy ||
+        lifecycle.files.state.getSnapshot().busy ||
+        lifecycle.agentExport?.state.getSnapshot().busy
+      ) {
+        setDropMessage(
+          "Finish the current action or dialog, then drop one project again.",
+        );
+        return;
+      }
+      setDropMessage("");
+      void lifecycle.open(Array.from(event.dataTransfer?.files ?? []));
+    };
+    window.addEventListener("dragover", dragover, true);
+    window.addEventListener("drop", drop, true);
+    return () => {
+      window.removeEventListener("dragover", dragover, true);
+      window.removeEventListener("drop", drop, true);
+    };
+  }, [lifecycle]);
+  const busy = state.busy || fileState.busy;
+  return (
+    <div
+      className="browser-file-controls"
+      role="region"
+      aria-label="Project files"
+    >
+      <span className="project-drop-hint">Drop one .tilewright file here</span>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          setDropMessage("");
+          void lifecycle.open();
+        }}
+      >
+        Open file…
+      </button>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => {
+          setDropMessage("");
+          void lifecycle.save();
+        }}
+      >
+        Download project
+      </button>
+      {dropMessage && <span role="alert">{dropMessage}</span>}
     </div>
   );
 }
@@ -70,8 +146,10 @@ function UnsavedDialog({
     >
       <h2>{title}</h2>
       <p>
-        Save changes to the current map before continuing? Discarding loses
-        unsaved changes and clears its undo history.
+        {lifecycle.files.browser
+          ? "Download an editable copy before continuing? A download request does not confirm a file was saved. Downloading keeps this map open; retry the action when you are ready."
+          : "Save changes to the current map before continuing?"}{" "}
+        Discarding loses unsaved changes and clears its undo history.
       </p>
       <div className="dialog-actions">
         <button
@@ -89,7 +167,9 @@ function UnsavedDialog({
           disabled={!lifecycle.files.available}
           onClick={() => lifecycle.choose("save")}
         >
-          Save and continue
+          {lifecycle.files.browser
+            ? "Download project and stay"
+            : "Save and continue"}
         </button>
       </div>
       {!lifecycle.files.available && (
@@ -139,6 +219,17 @@ export function FileFeedback({ files }: { files: ProjectFiles }) {
       aria-label="Project file feedback"
     >
       {message}
+      {files.browser && (
+        <button
+          type="button"
+          aria-label="Dismiss project file notification"
+          onClick={() =>
+            files.state.set({ ...files.state.getSnapshot(), message: "" })
+          }
+        >
+          ×
+        </button>
+      )}
     </div>
   ) : null;
 }

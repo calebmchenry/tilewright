@@ -43,17 +43,19 @@ test("browser startup and editing never load native services", async ({
   await expect
     .poll(async () => (await canvas.screenshot()).equals(pixels))
     .toBe(true);
+  const download = page.waitForEvent("download");
   await host.press("Control+s");
+  expect((await download).suggestedFilename()).toBe("Untitled.tilewright");
   await expect(
-    page.getByRole("alert", { name: "Project file feedback" }),
-  ).toContainText("desktop app");
+    page.getByRole("status", { name: "Project file feedback" }),
+  ).toContainText("Download requested");
   await expect(page.getByTestId("save-timestamp")).toBeEmpty();
   await host.press("Control+n");
   await page.getByRole("button", { name: "Create map", exact: true }).click();
   const prompt = page.getByRole("dialog", { name: "Create another map" });
   await expect(
-    prompt.getByRole("button", { name: "Save and continue" }),
-  ).toBeDisabled();
+    prompt.getByRole("button", { name: "Download project and stay" }),
+  ).toBeEnabled();
   await prompt.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(canvas).toBeVisible();
   expect(

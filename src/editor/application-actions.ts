@@ -109,7 +109,10 @@ export class ApplicationActions {
     if (!isEditAction(id))
       return {
         id,
-        label: fileLabels[id],
+        label:
+          this.lifecycle.files.browser && (id === "save" || id === "save-as")
+            ? "Download project"
+            : fileLabels[id],
         enabled:
           !this.#fileBlocked() &&
           (id === "new" ||
@@ -135,8 +138,7 @@ export class ApplicationActions {
     };
   }
   perform(id: ApplicationAction): boolean {
-    // File buttons stay disabled in browser development, but a shortcut should
-    // still reach the file coordinator's actionable "desktop required" feedback.
+    // Unavailable service shortcuts still reach the coordinator's feedback.
     if (isEditAction(id) ? !this.state(id).enabled : this.#fileBlocked())
       return false;
     if (id === "new") this.newDialog.set(true);
