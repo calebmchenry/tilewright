@@ -41,7 +41,7 @@ for (const [fixture, cells] of [
         .click();
       await expect(
         page.getByRole("status", { name: "Editing availability" }),
-      ).toHaveCount(0); // The working baseline allows editing at overview zoom.
+      ).toContainText("Overview");
       const fit = await page.evaluate(() => {
         const session = window.editorProbe.session,
           view = session.viewport.getSnapshot(),
@@ -65,11 +65,9 @@ for (const [fixture, cells] of [
       expect(fit.top).toBeGreaterThanOrEqual(23.999999);
       expect(fit.right).toBeLessThanOrEqual(fit.size.width - 23.999999);
       expect(fit.bottom).toBeLessThanOrEqual(fit.size.height - 23.999999);
-      expect(fit.editable).not.toBeNull();
-      expect(fit.editable!.x).toBeGreaterThanOrEqual(0);
-      expect(fit.editable!.x).toBeLessThan(6400);
-      expect(fit.editable!.y).toBeGreaterThanOrEqual(0);
-      expect(fit.editable!.y).toBeLessThan(6400);
+      // Precise picking retains the release baseline's 8px/tile threshold.
+      // Pencil and Eraser have their own any-zoom path and separate coverage.
+      expect(fit.editable).toBeNull();
       if (cycle === 0)
         await page.screenshot({
           path: testInfo.outputPath(`${fixture}-overview.png`),

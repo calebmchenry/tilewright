@@ -8,5 +8,7 @@ test-results/
 playwright-report/
 test-results-web/
 playwright-report-web/
+test-results-live/
+playwright-report-live/
 .DS_Store
 artifacts/performance/

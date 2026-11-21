@@ -39,7 +39,12 @@ test("only production assets are served, including every lazy/worker environment
   ]) {
     expect((await request.get(`${base}${path}`)).status(), path).toBe(404);
   }
-  if (base !== "/") {
+  // A live Pages origin may host other sites at its root. The strict local
+  // preview alone promises to serve nothing outside this application's mount.
+  if (
+    base !== "/" &&
+    new URL(String(info.project.use.baseURL)).hostname === "127.0.0.1"
+  ) {
     expect((await request.get("/index.html")).status()).toBe(404);
     expect(
       (
@@ -150,7 +155,7 @@ test("production editor opens, edits, undoes, downloads, exports and reloads at 
     false,
   );
   expect(
-    requests.every((url) => url.startsWith(`http://127.0.0.1:4173${base}`)),
+    requests.every((url) => url.startsWith(String(info.project.use.baseURL))),
   ).toBe(true);
   expect(requests.some((url) => /\/assets\/tauri-/.test(url))).toBe(false);
   expect(requests.some((url) => /\/assets\/browserAll-/.test(url))).toBe(true);

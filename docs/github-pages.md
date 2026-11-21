@@ -9,9 +9,8 @@ See the [platform contract](platform-services.md),
 
 The [browser acceptance record](browser-validation.md) supplies local production
 qualification and the [user guide](browser-guide.md) explains files and recovery.
-This does **not** establish a live Pages site: TW-062 owns repository/Pages/domain
-setup and live publication. Performance
-refinement remains deferred to TW-049/TW-050 under the working baseline.
+TW-062 records hosted publication separately from that local qualification.
+Performance refinement remains deferred to TW-049/TW-050 under the working baseline.
 
 ## Reproduce a browser artifact
 
@@ -140,7 +139,7 @@ The build job has only `contents: read`. The dependent deployment job alone has
 reports the URL returned by deployment. One `github-pages` concurrency group
 serializes runs; a new run does not cancel an in-progress deployment.
 
-After TW-061 acceptance, TW-062 must deliberately:
+For a new hosting target, deliberately:
 
 1. Select the actual repository, intended URL/domain and deployment branch.
 2. In **Settings → Pages → Build and deployment → Source**, select **GitHub
@@ -159,9 +158,46 @@ After TW-061 acceptance, TW-062 must deliberately:
    the deployment job compares the artifact's chosen base with the configured
    Pages `base_path`; mismatches fail with instructions to rebuild.
 
-Do not enable automatic publication as part of preparing this ticket. No live
-workflow dispatch, repository setting change, DNS change or publication is
-performed by the local build commands.
+The configured target is the existing public repository
+[`calebmchenry/tilewright`](https://github.com/calebmchenry/tilewright), branch
+`main`, base `/tilewright/`, with no custom domain. Its Pages source is GitHub
+Actions (`build_type=workflow`), with HTTPS enforcement. The `github-pages`
+environment permits only the exact **branch** `main`, with no tag policy.
+Repository visibility and the read-only default token permissions are unchanged.
+Publication remains manual: dispatching another ref can validate it, but the
+environment will reject its deployment. Every functional gate above remains
+required; do not disable tests or expand the branch policy to publish a failed build.
+
+No workflow dispatch, repository setting change, DNS change or publication is
+performed by the local build/test commands.
+
+## Verify the live site
+
+The live qualification uses the same complete three-engine production suite with
+fresh browser contexts and **no local server**. Use a clean checkout whose
+application/build inputs match the deployed revision; unrelated working-tree
+changes would correctly fail the byte-for-byte hosted asset comparison.
+
+```sh
+export TILEWRIGHT_WEB_BASE=/tilewright/
+export TILEWRIGHT_LIVE_URL=https://calebmchenry.github.io/tilewright/
+npm run test:web:live
+```
+
+`playwright.live.config.ts` requires an HTTPS URL whose path exactly matches the
+build base and rejects credentials, query strings and fragments. The command
+builds local reference bytes, then tests only the remote site. All production
+tests still run: create/edit/download/reopen, picker and File/DataTransfer drop,
+whole-map independent agent consumption, recovery and its failure cases, every
+asset/dynamic chunk, and refresh at the repository subpath. Missing paths within
+the application's mount must return 404. The live test does not require the
+owner's root URL to be empty, since other Pages sites may share that origin.
+
+Reports, screenshots, synthetic project downloads and network audits stay local
+in ignored `test-results-live/` and `playwright-report-live/`. Test fixtures are
+never included in the deployment artifact. No personal map is needed. The
+network audit records actual request URLs and fails on non-GET, off-site,
+out-of-mount or native-startup requests and script/console/network errors.
 
 ## Logs, rebuilds and redeploys
 
@@ -177,10 +213,17 @@ To reproduce locally, check out the recorded commit, use `.nvmrc`, run `npm ci`
 and repeat `test:web` with the run's exact base. To redeploy, manually dispatch
 the same ref and base with `deploy` true (or re-run its workflow while its
 referenced actions/ref remain available). Rebuilding creates a fresh artifact
-when the previous one has expired. For a correction or rollback, select the
-intended corrected/known-good ref and repeat the same validation/deployment
-sequence, respecting environment rules. Changing URL layout or domain also
-requires selecting the matching base and rebuilding.
+when the previous one has expired. For a correction, commit the reviewed fix to
+`main`, push it and dispatch the same gated workflow with base `/tilewright/`.
+For rollback, re-run the recorded successful **deployment** run (not its
+validation-only run) while GitHub permits reruns. This rebuilds and revalidates
+its original revision ([GitHub rerun behavior](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs)).
+Alternatively, revert the release changes on `main` in a
+new commit and dispatch it; preserve history, the workflow gates and the main-only
+environment policy. Never relax the policy to deploy an arbitrary branch/tag.
+After rollback, repeat the live qualification and reconcile `main` before the
+next release. Changing URL layout or domain also requires the matching base
+and a rebuild.
 
 Record the commit, workflow run, selected base, returned live URL and live reload
 smoke in TW-062. Keep browser project downloads before changing origin/domain:

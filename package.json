@@ -14,6 +14,7 @@
     "build:web": "npm run typecheck && vite build --config vite.web.config.ts",
     "preview:web": "node scripts/preview-web.ts",
     "test:web": "npm run build:web && playwright test --config playwright.web.config.ts",
+    "test:web:live": "npm run build:web && playwright test --config playwright.live.config.ts",
     "build:desktop": "tauri build --bundles app -- --locked",
     "test": "npm run test:domain && npm run test:ui",
     "test:domain": "node --test tests/domain/*.test.ts",

@@ -21,6 +21,7 @@
     "vite.web.config.ts",
     "playwright.config.ts",
     "playwright.web.config.ts",
+    "playwright.live.config.ts",
     "tests",
     "scripts/*.ts"
   ]

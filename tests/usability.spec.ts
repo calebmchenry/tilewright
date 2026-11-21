@@ -125,10 +125,10 @@ test("continuous keyboard/mouse tool session, panel shortcuts, preview cancel an
   await host(page).press("f");
   await expect(
     page.getByRole("status", { name: "Editing availability" }),
-  ).toHaveCount(0);
+  ).toContainText("Overview");
   await expect(button(page, "Pencil")).toBeEnabled();
   await expect(button(page, "Eraser")).toBeEnabled();
-  await expect(button(page, "Line")).toBeEnabled();
+  await expect(button(page, "Line")).toBeDisabled();
   await host(page).press("0");
   await expect(button(page, "Pencil")).toBeEnabled();
   // A fill on the known small occupied region completes as one atomic edit.
