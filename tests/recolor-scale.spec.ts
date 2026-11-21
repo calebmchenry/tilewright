@@ -103,7 +103,9 @@ for (const kind of ["frontier", "heartland"] as const) {
   test(`${kind}: feature recolor command and cache-refresh latency on the complete populated target map`, async ({
     browser,
   }, info) => {
-    test.setTimeout(180000);
+    // Keep the complete populated-map audits and every recolor/undo/redo sample
+    // even on slower hosted software rendering. Latencies are reported below.
+    test.setTimeout(600000);
     const context = await browser.newContext({
       deviceScaleFactor: 2,
       viewport: { width: 1200, height: 800 },

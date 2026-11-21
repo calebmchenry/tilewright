@@ -187,6 +187,9 @@ for (const dpr of [1, 2])
   test(`authored session labels and hidden/offscreen overview recoloring at DPR ${dpr}`, async ({
     browser,
   }, info) => {
+    // Hosted software rendering must finish every cache/pixel assertion;
+    // the aggregate runtime is not the deferred rendering performance budget.
+    test.setTimeout(120000);
     const context = await browser.newContext({
       deviceScaleFactor: dpr,
       viewport: { width: 1100, height: 760 },
