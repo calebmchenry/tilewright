@@ -6,8 +6,9 @@ One shared editor targets macOS through Tauri and browsers through GitHub Pages.
 The [platform contract](docs/platform-services.md) describes the boundary and
 current browser preview: rendering/editing, local project Open/drop, and editable
 project downloads work without Tauri. The [browser lifecycle](docs/browser-lifecycle.md) provides download-relative status,
-deliberate document replacement and best-effort navigation warnings. Agent export,
-recovery and Pages deployment remain later tickets. Download a project and check
+deliberate document replacement and best-effort navigation warnings. Whole-map
+[agent export downloads](docs/agent-export-format.md#browser-export-workflow-tw-058)
+are available; recovery and Pages deployment remain later tickets. Download a project and check
 the file before leaving the page; a request does not confirm a disk write.
 
 For a clean macOS checkout, prerequisites, development commands, tests, and local
@@ -129,6 +130,9 @@ now capture every committed layer and area and emit deterministic UTF-8 bytes,
 independently of viewport, selection and visibility. [Export for Agent](docs/agent-export-format.md#native-export-workflow-tw-045)
 now provides a native JSON destination, progress, cancellation and atomic output
 replacement while preserving unsaved project and recovery state.
+The browser uses the same encoder with a suggested `.agent-map.json` download,
+cancelable encoding and explicit browser-handoff feedback. Agent export never
+changes the editable project's filename, download checkpoint or unsaved status.
 The [independent Python consumer](docs/agent-export-format.md#independent-consumer-verification-tw-046)
 validates exports and reads every layer without the editor, with a golden semantic
 example and complete populated-map comparisons.

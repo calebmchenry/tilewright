@@ -15,10 +15,9 @@ export function BrowserAvailability() {
       role="status"
       aria-label="Browser availability"
     >
-      Browser preview: open or drop a project, then download an editable copy.
-      Agent export and recovery are not available yet. Download before leaving
-      this page and check your browser downloads. Navigation warnings are best
-      effort, not recovery.
+      Browser preview: open local projects; download projects or whole-map agent
+      JSON. Recovery is not available yet. Download your project before leaving
+      and check browser downloads. Navigation warnings are best effort.
     </div>
   );
 }
@@ -100,6 +99,14 @@ export function BrowserFileControls({
         }}
       >
         Download project
+      </button>
+      <button
+        type="button"
+        disabled={busy || !lifecycle.agentExport?.available}
+        onClick={() => void lifecycle.exportForAgent()}
+      >
+        Export for Agent
+        <ShortcutHint action="export-agent" />
       </button>
       {dropMessage && <span role="alert">{dropMessage}</span>}
     </div>
@@ -358,6 +365,18 @@ export function AgentExportFeedback({
         >
           Cancel export
           <ShortcutHint action="cancel" />
+        </button>
+      )}
+      {!busy && exports.bridge.kind === "browser" && (
+        <button
+          type="button"
+          aria-label="Dismiss agent export notification"
+          onClick={() => {
+            exports.state.set({ ...exports.state.getSnapshot(), message: "" });
+            restoreFocus();
+          }}
+        >
+          ×
         </button>
       )}
     </div>

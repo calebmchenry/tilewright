@@ -4,7 +4,8 @@ The 2026-11-20 delivery decision adds a static GitHub Pages browser target while
 preserving the macOS Tauri app and the shared `.tilewright` format. Project bytes
 stay local; neither target requires accounts, an application backend or cloud
 file storage. TW-055 established the boundary; TW-056 adds browser project
-import/download and TW-057 adds browser lifecycle protection. This is not a live deployment.
+import/download, TW-057 adds browser lifecycle protection, and TW-058 adds agent
+export downloads. This is not a live deployment.
 
 ## Composition and current availability
 
@@ -16,19 +17,19 @@ lifecycle and action router. Map/history/rendering/codec code remains shared.
 There is no Rust port or second editor.
 
 `PlatformServices` exposes service availability and optional recovery and native
-bindings. Browser project files use File/Blob transport; unimplemented agent
-export remains explicitly disabled rather than simulating success.
+bindings. Browser project files use File/Blob transport; agent export uses the
+same local Blob download helper with the shared whole-map encoder.
 Without recovery services there is no coordinator, timer, startup discovery or
 recovery panel. Native menu/close listeners are installed only by the Tauri
 composition. The shared DOM keyboard/focus/modal binding lives separately in
 `src/editor/application-bindings.ts`; the UI receives the native titlebar choice
 from composition instead of detecting its own platform.
 
-| Capability                                              | Tauri                                  | Browser after TW-056                             |
+| Capability                                              | Tauri                                  | Browser after TW-058                             |
 | ------------------------------------------------------- | -------------------------------------- | ------------------------------------------------ |
 | Render, draw, layers, selections, areas, undo/redo, New | Shared editor                          | Shared editor                                    |
 | Project Open / Save / Save As                           | Native picker grants and atomic writes | Local picker/drop and editable project downloads |
-| Agent export                                            | Native staged write / atomic commit    | Unavailable; TW-058                              |
+| Agent export                                            | Native staged write / atomic commit    | Whole-map JSON download; cancelable encoding     |
 | Local recovery / startup review                         | Existing native store and ownership    | Unavailable; TW-059                              |
 | Native File/Edit and guarded close/Quit                 | Existing native bindings               | No bindings or IPC                               |
 | DOM shortcuts and focus routing                         | Shared binding                         | Shared binding; browser reservations may apply   |
@@ -65,7 +66,13 @@ Neither source kind nor handle is serialized into the project payload.
 atomic-write operations. `BrowserProjectFileBridge` is a separate variant of
 `ProjectFileTransport`, carrying local File reads and download requests without
 emulating atomic writes or issuing fake native handles. `ProjectFiles` shares
-snapshot/codec/workspace logic. TW-058 still owns browser agent export.
+snapshot/codec/workspace logic. `AgentExportTransport` similarly separates the
+native `AgentExportBridge` from `BrowserAgentExportBridge`. The latter exposes
+only a synchronous download handoff. `AgentExports` shares capture/encoding and
+cancellation but reports a browser request, never native write completion.
+Both browser file types use `src/platform/browser-download.ts`; temporary links
+are removed immediately and object URLs revoked after the bounded handoff delay,
+including after application disposal. See [browser agent export](agent-export-format.md#browser-export-workflow-tw-058).
 
 ## Three checkpoint meanings
 
@@ -121,6 +128,11 @@ requests. `tests/browser-project-files.spec.ts` exercises actual chooser uploads
 File drops, download events, decoded content/canonical bytes, read/encode races,
 activation and resource cleanup. `tests/domain/browser-project-files.test.ts`
 covers browser guards, cancellation/failures and request-only checkpoints.
+`tests/browser-agent-export.spec.ts` captures real downloads from the shipping
+entry, runs their bytes through the independent Python consumer and full semantic
+fixtures, and checks editing races, cancellation, observable failures and cleanup.
+`tests/domain/browser-agent-export.test.ts` verifies project/history/recovery
+isolation and the exact cancellation boundary.
 Existing project/lifecycle/menu/recovery UI tests exercise the Tauri
 branch with substituted OS IPC; Rust tests exercise actual local persistence.
 Browser tests do not establish native dialog/WKWebView behavior or live Pages

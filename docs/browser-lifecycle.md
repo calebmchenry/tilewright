@@ -1,7 +1,8 @@
 # Browser document status and navigation (TW-057)
 
 The browser opens local `.tilewright` files and requests downloads of editable
-copies. The header exposes **New map**, **Open…**, and **Download project** so
+copies. The header exposes **New map**, **Open…**, **Download project**, and
+**Export for Agent** so
 browser-reserved shortcuts do not make an action inaccessible. No map bytes are
 sent to a server. Desktop File/Edit menus, Save/Save As, and native guarded
 Close/Quit retain their existing behavior.
@@ -24,7 +25,10 @@ explains that saving to disk is unconfirmed. Native **Saved** status and timesta
 are not used for browser requests. Download failures before handoff retain the
 previous request evidence. A browser may cancel or block a download after handoff
 without notifying the page. Check the browser's downloads and the actual file.
-Agent exports never acknowledge project content, preferences, or recovery.
+Agent exports never acknowledge project content, preferences, or recovery. The
+[browser export workflow](agent-export-format.md#browser-export-workflow-tw-058)
+downloads the same whole-map JSON as desktop; it does not update the project
+download timestamp or remove navigation warnings.
 
 New/Open/drop retain a deliberate replacement prompt, including after a download.
 **Cancel** (also Escape) keeps the map. **Download project and stay** requests the
@@ -67,7 +71,9 @@ and [`pageshow`](https://developer.mozilla.org/en-US/docs/Web/API/Window/pagesho
 ## Input and validation
 
 Where delivered to the page, Cmd/Ctrl+N opens New, Cmd/Ctrl+O opens the picker,
-and Cmd/Ctrl+S or Cmd/Ctrl+Shift+S requests a project download. Browsers may reserve
+and Cmd/Ctrl+S or Cmd/Ctrl+Shift+S requests a project download. Cmd/Ctrl+Shift+E
+requests an agent export; Cancel export or Escape outside text fields cancels
+encoding before download handoff. Browsers may reserve
 these combinations (especially New window/Open/Save); the buttons are the reliable
 fallback. Map undo/redo and tile clipboard use the shared application router;
 focused text fields retain native text undo/redo and system clipboard. Modal,

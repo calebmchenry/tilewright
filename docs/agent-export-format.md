@@ -413,6 +413,67 @@ cancellation tests do not establish latency percentiles or peak-memory budgets.
 Per AGENTS.md, those performance-only refinements remain TW-049/TW-050, with
 end-to-end export profiling in TW-051.
 
+## Browser export workflow (TW-058)
+
+**Export for Agent** in the browser header, or Cmd/Ctrl+Shift+E where the browser
+delivers it, requests a local JSON download. The suggested name is
+`<project-name>.agent-map.json`, or `Untitled.agent-map.json` for a new map. Names
+use the project-download sanitization policy, retain Unicode, and replace a
+`.tilewright` or `.json` extension. The browser controls the actual destination
+and may change the filename. This action requires no backend, native IPC or
+network transfer of project content.
+
+The shared [`AgentExports`](../src/editor/agent-export.ts) coordinator captures
+one committed snapshot before any asynchronous work. The unchanged domain
+encoder emits exactly the desktop format, including all hidden, covered and
+offscreen layers, empty layers, registered meanings, raw colors and every named
+area. Selection, camera and zoom cannot narrow it. Edits during encoding remain
+in the editor and appear in the next export; drafts and previews remain excluded.
+
+Encoding shows indeterminate progress and actual KiB produced. **Cancel export**
+or Escape outside text fields stops encoding before download handoff; disposal or
+document replacement also prevents handoff. Cancellation requests no download
+and leaves no Blob URL. Capture and final byte assembly still have synchronous
+portions, so cancellation is serviced at the encoder's existing yield points.
+
+Once the complete bytes are handed to the browser, the editor's Cancel control
+is disabled. Feedback says **Agent map download requested**, explicitly states
+that disk persistence is unconfirmed, and directs the user to manage or cancel
+the download in the browser. These messages remain visible until dismissed.
+The page cannot observe a later blocked/canceled download or guarantee a disk
+write. Observable handoff errors are reported separately and permit retry.
+
+[`browser-download.ts`](../src/platform/browser-download.ts) is the same
+`application/json` Blob/anchor helper used by editable-project downloads. It
+removes the anchor immediately, revokes the object URL after the existing
+one-second handoff delay (immediately on observable failure), and completes that
+cleanup even if the editor is disposed. Repeated exports retain no handles or
+download URLs after cleanup.
+
+Agent export never changes the project filename/source, project download request
+or timestamp, native save checkpoint, unsaved status, undo/redo, recovery revision
+or lineage. The shared document-action gate prevents overlapping file operations,
+while editing and independent recovery scheduling continue. Native picker,
+temporary-write, atomic commit, cleanup and durability-warning behavior remain
+unchanged.
+
+Validation in `tests/browser-agent-export.spec.ts` uses the shipping entry with
+real chooser imports and browser download events. Downloaded bytes pass through
+the standalone Python consumer and source-derived semantic oracle, including the
+golden raw/registered-color map and both full populated fixtures below. Tests also
+exercise selection/zoom independence, edits during real encoder yields, button
+and Escape cancellation, blocked handoffs, repeated resource cleanup, application
+disposal and visible compact-window feedback. `tests/domain/browser-agent-export.test.ts`
+covers project/download/history/recovery isolation, replacement/disposal races,
+final-progress cancellation, filename policy and retries. Browser/platform and
+native export regressions remain required. Actual run counts and qualification
+limits are recorded in TW-058's WRK ticket.
+
+Target-scale correctness does not establish peak memory or latency budgets.
+Snapshot, encoded chunks, final bytes and Blob storage may coexist. The existing
+TW-049/TW-050 performance deferrals remain unchanged; no dependency is added to
+the deferred release backlog.
+
 ## Independent consumer verification (TW-046)
 
 [`consume-agent-map.py`](../scripts/consume-agent-map.py) is a standalone Python
