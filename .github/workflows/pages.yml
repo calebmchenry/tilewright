@@ -47,14 +47,16 @@ jobs:
         run: npm run format:check:web
       - name: Check shared desktop frontend build
         run: npm run build
+      - name: Check Firefox graphics and file workflow
+        run: xvfb-run -a npm run test:web -- --project=firefox tests/web/production.spec.ts
       - name: Run domain and development UI regressions
         run: npm run test:domain && npm run test:ui -- --reporter=list
       - name: Qualify production browser release at a repository subpath
         env:
           TILEWRIGHT_WEB_BASE: /pages-smoke/
-        run: npm run test:web
+        run: xvfb-run -a npm run test:web
       - name: Qualify production browser release at the deployment base
-        run: npm run test:web
+        run: xvfb-run -a npm run test:web
       - name: Upload validated Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

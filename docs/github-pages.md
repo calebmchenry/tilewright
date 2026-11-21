@@ -78,6 +78,10 @@ TILEWRIGHT_WEB_BASE=/ npm run test:web
 Install Python 3.9+ as well as the pinned Node/npm dependencies; the independent
 agent consumer uses only Python's standard library. On Linux, use
 `npx playwright install --with-deps chromium firefox webkit` for engine libraries.
+Linux headless Firefox cannot initialize this WebGL editor. Hosted Linux CI runs
+Firefox headed under Xvfb while Chromium and WebKit retain headless execution.
+For local Linux qualification, run `xvfb-run -a npm run test:web -- --headed`
+(with the base variable set) or use an existing graphical display.
 
 `test:web` type-checks and rebuilds, then runs Chromium, Firefox and WebKit against the strict static
 preview with the same base. Stop any interactive preview before testing: the
@@ -129,7 +133,8 @@ The workflow accepts a required `base` path and a `deploy` boolean that defaults
 to **false**. A validation-only run does not query or change Pages configuration.
 On Ubuntu it selects `.nvmrc`, runs `npm ci`, installs all three browser engines and their system
 dependencies, checks formatting, builds the shared desktop frontend without
-Rust, runs the complete domain/development UI suites, and runs the entire production functional suite at both a
+Rust, checks Firefox graphics and the real file workflow under Xvfb before the
+longer checks, runs the complete domain/development UI suites, and runs the entire production functional suite at both a
 non-root path and the selected final base. Only then does it upload `dist-web/`
 as the `github-pages` artifact. It uploads neither the repository nor `dist/`.
 The second qualification rebuilds so the uploaded artifact is the exact tested final base.
@@ -151,10 +156,12 @@ For a new hosting target, deliberately:
 4. After those requirements are satisfied, set the repository Actions variable
    `PAGES_DEPLOY_ENABLED` to the exact value `true`. It is an explicit release
    readiness switch, not a secret. A requested deployment fails closed without it.
-5. In **Actions → Browser Pages → Run workflow**, select the intended ref, enter
-   the correct `base`, and leave `deploy` false for the first hosted validation.
-6. Inspect the successful build, tests and artifact. Then dispatch with the same
-   ref/base and `deploy` true to rebuild, validate and publish. Before publication,
+5. In **Actions → Browser Pages → Run workflow**, select `main` and enter the
+   correct `base`. Leave `deploy` false for validation only, or select true when
+   the reviewed candidate is ready for gated publication.
+6. A deploy-enabled run builds and passes every required test before publishing;
+   a separate validation-only pass is optional, not a second mandatory repetition.
+   Inspect the successful build, tests, artifact and deployment. Before publication,
    the deployment job compares the artifact's chosen base with the configured
    Pages `base_path`; mismatches fail with instructions to rebuild.
 

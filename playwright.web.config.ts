@@ -9,7 +9,16 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   projects: [
     { name: "chromium", use: { browserName: "chromium" } },
-    { name: "firefox", use: { browserName: "firefox" } },
+    {
+      name: "firefox",
+      use: {
+        browserName: "firefox",
+        // Linux headless Firefox cannot initialize the editor's WebGL canvas.
+        // CI supplies an Xvfb display; other engines retain their proven mode.
+        headless:
+          process.env.CI && process.platform === "linux" ? false : undefined,
+      },
+    },
     { name: "webkit", use: { browserName: "webkit" } },
   ],
   outputDir: "test-results-web",
