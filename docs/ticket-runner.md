@@ -1,7 +1,7 @@
 # Ticket runner
 
-The [ticket script](../scripts/run-tickets.sh) processes ready WRK tickets one at
-a time using the `sprint-execute` skill in Codex.
+The [ticket script](../scripts/run-tickets.sh) processes ready WRK tickets labeled
+`github-pages` one at a time using the `sprint-execute` skill in Codex.
 
 ## Requirements
 
@@ -18,16 +18,40 @@ From the repository root:
 ./scripts/run-tickets.sh
 ```
 
-The script uses `wrk run` to pick one ready ticket at a time, respecting
-dependencies. Each ticket gets a fresh Codex session with sandboxing and approval
-prompts disabled and your configured model. Codex runs the skill, validates the
+The script uses `wrk run --ready --label github-pages` to pick one ready ticket
+at a time, respecting dependencies. Each ticket gets a fresh Codex session with
+sandboxing and approval prompts disabled and your configured model. Codex runs the skill, validates the
 work, records evidence in the ticket, and marks it done through `wrk`. It then
 commits the ticket's implementation and WRK updates with the ticket ID in the
 commit message, preserving unrelated staged and unstaged work.
 
 The loop stops on a failed Codex call or a ticket that was not marked done. It
-also exits with an error if no tickets are ready but unfinished tickets remain.
-Canceled tickets are treated as closed. Done tickets are skipped.
+also exits with an error if no tickets are ready but unfinished tickets with the
+selected label remain. Unlabeled work and tickets with other labels are excluded
+from both execution and this completion check. Canceled tickets are treated as
+closed. Done tickets are skipped.
+
+Preview the default queue without starting Codex:
+
+```sh
+wrk list --label github-pages
+wrk list --ready --label github-pages
+```
+
+The default label keeps the existing deferred release tickets (TW-049 through
+TW-054) out of the run without changing their status, labels, or dependencies.
+New Pages tickets must carry `github-pages`; adding a ticket to this queue is
+explicit, not inherited from a dependency or parent. A dependency outside the
+selected label still blocks readiness; the runner never executes it implicitly.
+
+To deliberately select another labeled queue:
+
+```sh
+WRK_LABEL=another-label ./scripts/run-tickets.sh
+```
+
+An empty or whitespace-only `WRK_LABEL` is rejected. There is no unfiltered
+fallback. The selected label is printed in the monitor log.
 
 The current delivery priority in `AGENTS.md` accepts TW-011's working baseline
 and defers performance refinement to TW-049/TW-050. Feature tickets still require
@@ -74,4 +98,15 @@ wrk update <id> --status todo
 ```
 
 Replace `<id>` with the ticket's WRK ID. Its dependencies must be done before it
-becomes ready. Tickets already marked done will not run again.
+becomes ready, and it must carry the selected label. Tickets already marked done
+will not run again.
+
+## Validate runner changes
+
+```sh
+bash -n scripts/run-tickets.sh
+python3 tests/ticket-runner.test.py
+```
+
+The integration tests use real WRK queues in temporary directories and a fake
+Codex command. They do not execute project tickets or launch Codex sessions.

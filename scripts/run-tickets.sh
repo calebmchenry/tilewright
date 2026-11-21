@@ -4,6 +4,14 @@ set -euo pipefail
 # Always work in this repository, even when launched from another directory.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# Never fall back to the full backlog: deferred release work stays out of this
+# queue. An explicit override selects a different label, not an unfiltered run.
+ticket_label="${WRK_LABEL-github-pages}"
+if [[ ! "$ticket_label" =~ [^[:space:]] ]]; then
+  echo "WRK_LABEL must be nonblank; refusing to run an unfiltered queue." >&2
+  exit 1
+fi
+
 # Append across restarts so monitors can keep following the same file. WRK's
 # detailed, timestamped run logs and per-ticket output stay alongside this log.
 mkdir -p .wrk-runs
@@ -11,6 +19,7 @@ touch .wrk-runs/monitor.log
 exec > >(tee -ai .wrk-runs/monitor.log) 2>&1
 trap 'status=$?; printf "[%s] Runner stopped (exit %s).\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$status"' EXIT
 printf '\n[%s] Runner started (pid %s).\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$"
+printf 'Ticket label: %s\n' "$ticket_label"
 
 for tool in wrk codex python3; do
   command -v "$tool" >/dev/null || { echo "Missing command: $tool" >&2; exit 1; }
@@ -53,20 +62,23 @@ EOF
 
 # WRK re-queries ready tickets after each success, so completing a dependency
 # unlocks its successor. A failed command or a ticket left unfinished stops it.
-wrk run --ready --expect-status done \
+wrk run --ready --label "$ticket_label" --expect-status done \
   --heartbeat-interval "${WRK_HEARTBEAT_INTERVAL:-30s}" -- \
   codex exec --dangerously-bypass-approvals-and-sandbox "$prompt"
 
-# No ready tickets can also mean that unfinished work is blocked or in progress.
-wrk list --json | python3 -c '
+# Check the same queue: unrelated unfinished tickets do not block completion.
+# Dependencies outside the label still block readiness and appear as unfinished
+# work here; the runner never selects those dependencies implicitly.
+wrk list --label "$ticket_label" --json | python3 -c '
 import json
 import sys
 
+label = sys.argv[1]
 remaining = json.load(sys.stdin)["result"]["tickets"]
 if remaining:
-    print("Stopped: no ready tickets remain, but unfinished work exists:", file=sys.stderr)
+    print(f"Stopped: no ready tickets remain for label {label!r}, but unfinished work exists:", file=sys.stderr)
     for ticket in remaining:
         print("  {id} [{status}] {title}".format(**ticket), file=sys.stderr)
     sys.exit(1)
-print("No unfinished tickets remain.")
-'
+print(f"No unfinished tickets remain for label {label!r}.")
+' "$ticket_label"
