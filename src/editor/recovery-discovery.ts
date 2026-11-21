@@ -42,6 +42,7 @@ export interface RecoveryEntry {
 }
 export interface RecoveryReviewBridge {
   readonly available: boolean;
+  readonly kind?: "browser";
   discover(): Promise<{
     entries: readonly RecoveryEntry[];
     warnings: readonly string[];
@@ -174,9 +175,12 @@ export class RecoveryBrowser {
               const recoveryCanonical = await canonicalHash(bytes); // full decode before offering Restore
               if (!entry.saved) {
                 relationship = meta.saved ? "unknown" : "untitled";
-                context = meta.saved
-                  ? "Saved file unavailable / relationship unknown: save receipt missing"
-                  : "Untitled unsaved work";
+                context =
+                  this.bridge.kind === "browser"
+                    ? "Local browser checkpoint — downloaded files are separate"
+                    : meta.saved
+                      ? "Saved file unavailable / relationship unknown: save receipt missing"
+                      : "Untitled unsaved work";
               } else {
                 if (!source && !sourceError) {
                   try {

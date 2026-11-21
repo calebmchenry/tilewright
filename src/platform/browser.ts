@@ -1,14 +1,19 @@
+import { BrowserRecovery } from "./browser-recovery.ts";
 import type { PlatformServices } from "./services.ts";
 import { createBrowserProjectFiles } from "./browser-project-files.ts";
 import { downloadBrowserJson } from "./browser-download.ts";
 
-/** Local file/download services. TW-059 owns browser recovery. No native adapters. */
-export const browserServices: PlatformServices = {
-  kind: "browser",
-  projectFiles: createBrowserProjectFiles(),
-  agentExport: {
+/** Local file/download and origin-local recovery services. No native adapters. */
+export function createBrowserServices(): PlatformServices {
+  const recovery = new BrowserRecovery();
+  return {
     kind: "browser",
-    available: true,
-    download: downloadBrowserJson,
-  },
-};
+    recovery: { writer: recovery, review: recovery },
+    projectFiles: createBrowserProjectFiles(),
+    agentExport: {
+      kind: "browser",
+      available: true,
+      download: downloadBrowserJson,
+    },
+  };
+}

@@ -17,11 +17,11 @@ test("browser startup and editing never load native services", async ({
   );
   await expect(page.locator(".app-header")).not.toHaveClass(/native-titlebar/);
   await expect(page.getByRole("button", { name: "More options" })).toHaveCount(
-    0,
+    1,
   );
   await expect(
     page.getByRole("status", { name: "Browser availability" }),
-  ).toContainText("not available yet");
+  ).toContainText("Recovery stays in this browser");
   await expect(
     page.getByRole("status", { name: "Browser availability" }),
   ).toHaveCSS("clip", "auto");

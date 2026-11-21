@@ -5,7 +5,7 @@ preserving the macOS Tauri app and the shared `.tilewright` format. Project byte
 stay local; neither target requires accounts, an application backend or cloud
 file storage. TW-055 established the boundary; TW-056 adds browser project
 import/download, TW-057 adds browser lifecycle protection, and TW-058 adds agent
-export downloads. This is not a live deployment.
+export downloads. TW-059 adds IndexedDB recovery and startup review. This is not a live deployment.
 
 ## Composition and current availability
 
@@ -25,12 +25,12 @@ composition. The shared DOM keyboard/focus/modal binding lives separately in
 `src/editor/application-bindings.ts`; the UI receives the native titlebar choice
 from composition instead of detecting its own platform.
 
-| Capability                                              | Tauri                                  | Browser after TW-058                             |
+| Capability                                              | Tauri                                  | Browser after TW-059                             |
 | ------------------------------------------------------- | -------------------------------------- | ------------------------------------------------ |
 | Render, draw, layers, selections, areas, undo/redo, New | Shared editor                          | Shared editor                                    |
 | Project Open / Save / Save As                           | Native picker grants and atomic writes | Local picker/drop and editable project downloads |
 | Agent export                                            | Native staged write / atomic commit    | Whole-map JSON download; cancelable encoding     |
-| Local recovery / startup review                         | Existing native store and ownership    | Unavailable; TW-059                              |
+| Local recovery / startup review                         | Existing native store and ownership    | IndexedDB checkpoints and review                 |
 | Native File/Edit and guarded close/Quit                 | Existing native bindings               | No bindings or IPC                               |
 | DOM shortcuts and focus routing                         | Shared binding                         | Shared binding; browser reservations may apply   |
 
@@ -39,7 +39,7 @@ buttons remain available without shortcuts. New/Open/drop ask before discarding
 unsaved work; Download project and stay keeps the outgoing map installed and
 requires a fresh action/discard decision to replace it. The [browser lifecycle](browser-lifecycle.md) tracks changes since download requests,
 provides best-effort navigation warnings and preserves cached page lifetimes.
-Download and check the file before leaving; browser crash recovery remains TW-059. GitHub Pages build/deployment and
+Download and check the file regularly; browser recovery can be cleared or evicted. GitHub Pages build/deployment and
 cross-browser release qualification belong to TW-060 through TW-062.
 
 ## Identity is separate from authority
@@ -110,12 +110,12 @@ remove that risk. Cacheable pagehide preserves the live application; pageshow
 refreshes its input/warning binding. Final pagehide/HMR disposes it once. See
 [browser lifecycle](browser-lifecycle.md) for policy, input, tests and restrictions.
 
-TW-059 must transactionally publish validated IndexedDB recovery and isolate
-writers/tabs. A download request cannot resolve/delete recovery as a confirmed
-native save. New/Open/discard/restore need explicit retention rules, and shutdown
-must not be the only checkpoint opportunity. Origin storage may be cleared,
-evicted, unavailable or private; local recovery is not a user-owned downloaded
-project. These are later ticket requirements, not claims about this preview.
+TW-059 transactionally publishes validated IndexedDB checkpoints with per-lineage
+Web Locks for tab isolation. Downloads retain recovery; deliberate New/Open/restore
+resolve only the validated outgoing transition. Timed checkpoints run during
+editing, independently of shutdown. See [browser recovery](recovery-policy.md#browser-indexeddb-recovery-tw-059)
+for origin/profile ownership, retention, review, failure handling and storage limits.
+Browser storage is not a user-owned downloaded project and may be cleared or evicted.
 
 ## Verification
 

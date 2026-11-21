@@ -8,7 +8,7 @@ current browser preview: rendering/editing, local project Open/drop, and editabl
 project downloads work without Tauri. The [browser lifecycle](docs/browser-lifecycle.md) provides download-relative status,
 deliberate document replacement and best-effort navigation warnings. Whole-map
 [agent export downloads](docs/agent-export-format.md#browser-export-workflow-tw-058)
-are available; recovery and Pages deployment remain later tickets. Download a project and check
+are available, along with [local browser recovery](docs/recovery-policy.md#browser-indexeddb-recovery-tw-059). Pages deployment remains a later ticket. Download a project and check
 the file before leaving the page; a request does not confirm a disk write.
 
 For a clean macOS checkout, prerequisites, development commands, tests, and local

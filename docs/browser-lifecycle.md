@@ -55,7 +55,7 @@ The handler synchronously calls `preventDefault` and supplies the legacy
 replacement dialog. The browser chooses the generic warning text and may suppress
 it without prior user interaction. Navigation warnings are best effort, **not
 recovery**; crashes, process termination and some mobile/tab-close paths may not
-fire them. Browser recovery remains TW-059. See the platform documentation for
+fire them. [Browser recovery](recovery-policy.md#browser-indexeddb-recovery-tw-059) separately checkpoints committed work on a timer and offers startup review. See the platform documentation for
 [`beforeunload`](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event).
 
 `pagehide` with `persisted: true` leaves the application, history, subscriptions
@@ -64,7 +64,7 @@ context and warning registration without constructing another editor. A
 non-persisted pagehide or Vite disposal releases the root, listeners and application
 once, including startup that is still awaiting platform selection. Non-cached
 navigation creates a fresh editor on return; there is no automatic restoration
-without recovery. Cache admission/eviction is controlled by the browser. See
+without deliberate recovery review. Cache admission/eviction is controlled by the browser. See
 [`pagehide`](https://developer.mozilla.org/en-US/docs/Web/API/Window/pagehide_event)
 and [`pageshow`](https://developer.mozilla.org/en-US/docs/Web/API/Window/pageshow_event).
 
@@ -86,3 +86,14 @@ download events, navigation warnings, teardown and cache lifetime. Actual result
 cache observations and browser qualification limits are recorded in WRK. Browser
 automation does not establish native AppKit/WKWebView close guarantees. Large-map
 memory, download latency and presentation budgets remain TW-049/TW-050 deferrals.
+
+## Recovery retention
+
+Project downloads and agent exports retain browser recovery. After approved
+New/Open/restore, the incoming candidate validates completely before a transaction
+removes only the departing lineage and installs the new session. Failed/canceled
+actions keep its checkpoint. A failed resolution keeps the live document so it can
+be downloaded or the action retried. Reload/close keeps completed checkpoints;
+startup offers review and restores only by explicit choice into an unsaved copy.
+Origin-specific IndexedDB storage can be cleared or evicted and private-mode
+cleanup can remove it. Downloaded project files remain the durable user-owned copies.

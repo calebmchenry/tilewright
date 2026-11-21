@@ -16,8 +16,8 @@ export function BrowserAvailability() {
       aria-label="Browser availability"
     >
       Browser preview: open local projects; download projects or whole-map agent
-      JSON. Recovery is not available yet. Download your project before leaving
-      and check browser downloads. Navigation warnings are best effort.
+      JSON. Recovery stays in this browser. Download and check project files
+      regularly; browser storage can be cleared or evicted.
     </div>
   );
 }

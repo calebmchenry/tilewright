@@ -285,6 +285,20 @@ export class ProjectFiles {
       const owner = this;
       const result = await this.workspace.openProject(bytes, {
         source: { kind: "browser-file", name },
+        beforeInstall: this.recovery
+          ? async () => {
+              checkTransition();
+              const session = this.workspace.state.getSnapshot().session;
+              const release = session.document.holdEdits();
+              try {
+                await this.recovery!.resolve(session.history.state.dirty);
+                return release;
+              } catch (error) {
+                release();
+                throw error;
+              }
+            }
+          : undefined,
         signal: {
           get aborted() {
             return owner.#closed;

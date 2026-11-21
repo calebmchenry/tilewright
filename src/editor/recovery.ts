@@ -37,6 +37,8 @@ export interface RecoveryTicket {
 }
 export interface RecoveryBridge {
   readonly available: boolean;
+  release?(documentId: string, writer: string): Promise<void>;
+  dispose?(): void;
   initialize(): Promise<void>;
   control(control: RecoveryControl): Promise<string | null>;
   prepare(capture: RecoveryCapture, bytes: Uint8Array): Promise<RecoveryTicket>;
@@ -131,7 +133,13 @@ export class RecoveryCoordinator {
   }
   #bind() {
     this.#history();
-    if (this.#lineage) this.#lineage.epoch++;
+    if (this.#lineage) {
+      const previous = this.#lineage;
+      previous.epoch++;
+      void this.#enqueue(async () =>
+        this.bridge.release?.(previous.documentId, previous.writerId),
+      );
+    }
     const { session, recovered } = this.workspace.state.getSnapshot();
     const state = session.history.state;
     const now = this.#clock.now();
@@ -477,6 +485,7 @@ export class RecoveryCoordinator {
   }
   dispose(): void {
     this.#closed = true;
+    this.bridge.dispose?.();
     this.#lineage.epoch++;
     this.#history();
     this.#unsubscribe();

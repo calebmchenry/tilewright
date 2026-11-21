@@ -9,7 +9,7 @@ interruption behavior in the packaged app.
 
 This document's filesystem layout, locks and saved-source comparison describe
 the desktop adapter. The [TW-055 platform contract](platform-services.md) gates
-it off in browsers. TW-059 will provide IndexedDB recovery; browser display
+it off in browsers. [TW-059 provides IndexedDB recovery](#browser-indexeddb-recovery-tw-059); browser display
 filenames and download requests must never populate the native `SavedContext`,
 trigger source-file rereads or resolve recovery as a confirmed explicit save.
 
@@ -577,3 +577,102 @@ in [TW-042](../.wrk/wrk-9b478f1c.md). These are process-interruption and local-I
 checks, not physical power-loss or performance guarantees. Abrupt exit can lose
 edits after the last complete capture. TW-049/TW-050/TW-051 retain the existing
 performance refinement and profiling scope.
+
+## Browser IndexedDB recovery (TW-059)
+
+`src/platform/browser-recovery.ts` implements the existing writer/review bridges.
+The browser uses the same coordinator cadence, detached committed snapshot,
+`.tilewright` codec, checksum verification, complete validation and unsaved-copy
+restoration as desktop. The native adapters, filesystem layout, saved receipts
+and source-file comparisons above remain unchanged. Browser captures always have
+null `saved` and `savedRevision`: a display filename or download is never a native
+save receipt. The review explicitly describes local browser checkpoints, not a
+comparison with a downloaded file.
+
+### Storage and publication
+
+The origin-local `tilewright-recovery` IndexedDB database has schema version 2.
+The `lineages` store contains closed version-1 browser lineage records and the
+existing immutable version-1 recovery metadata; `payloads` contains complete
+project bytes keyed by `[documentId, sequence]`. Schema v1 has the same stores
+and records; the tested v1-to-v2 upgrade adds a `documentId` payload index for
+selected cleanup without rewriting project data. Future database versions are
+reported as unsupported and left untouched. Connections close on `versionchange`.
+A blocked upgrade reports which tabs to close and offers Retry; an abandoned open
+request aborts its eventual upgrade rather than silently creating a late service.
+
+Prepare validates the complete project, clones the bytes, hashes them, and holds
+one private pending payload per tab. Pending data is never discoverable. Commit
+rechecks writer/epoch and publishes the payload, metadata, next sequence and
+retention deletions in **one readwrite transaction** across both stores. Only the
+transaction's `complete` event acknowledges recovery. Aborts, quota failures and
+tab termination before publication leave the prior committed data intact. A
+sequence reserved only in memory may be reused after an interrupted prepare;
+no published sequence is reused within an unresolved lineage. Transactions use
+IndexedDB's strict durability hint, not a promise against physical power loss.
+See the [IndexedDB transaction specification](https://www.w3.org/TR/IndexedDB/).
+
+Retain two complete generations per lineage, at most ten unresolved lineages per
+origin, and at most 1 GiB of logically retained metadata/payload bytes (with a
+64 KiB bookkeeping allowance). The transaction checks all lineage metadata before
+admitting bytes; it never evicts another unresolved map to make space. Prefer the
+most recent valid previous generation if a newer one is corrupt. No age-based
+eviction is performed. The browser's actual quota may be smaller; database
+implementation overhead, temporary transaction copies and per-tab pending memory
+are additional, and are subject to the browser's own limits. An externally
+corrupted/unsupported store pauses publication conservatively, while valid rows
+remain independently reviewable. Selected discard removes that lineage's payloads
+and metadata together, including malformed payload remnants, in one transaction.
+
+### Tabs, transitions and failures
+
+Each live lineage holds an exclusive, nonwaiting Web Lock. Random document/writer
+UUIDs separate tabs and independent openings of the same file. Locks are held for
+the live session, including background/suspended tabs, without a clock expiry.
+Review shows another live tab's work as currently open, and both claim and discard
+reacquire/check the lock at action time. A stale review cannot override an owner.
+The browser releases locks on document termination; normal application disposal
+also aborts transactions that have not entered commit, drops private pending data and closes the
+connection. See [Web Locks lifetime](https://www.w3.org/TR/web-locks/#termination).
+Browsers without IndexedDB or Web Locks on a secure origin report recovery
+unavailable; editing and explicit downloads continue.
+
+| Event                                                                | Browser recovery result                                                                                                                                                                                                                        |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Committed edit, undo/redo, fresh untitled/imported/recovered session | Shared 2s debounce, 10s maximum scheduling delay, 5s minimum spacing; one job and one coalesced request per tab. Shutdown is not required.                                                                                                     |
+| Draft text, pointer preview, unfinished fill/gesture                 | Never captured; only the committed model enters a checkpoint. Preferences ride with the next capture, as on desktop.                                                                                                                           |
+| Project download or agent export                                     | Keep recovery. No saved acknowledgement, native receipt, or automatic resolution.                                                                                                                                                              |
+| New/Open/restore canceled, invalid or superseded                     | Keep outgoing work and its completed recovery; resume pending capture.                                                                                                                                                                         |
+| New/Open/restore approved and completely validated                   | Fence pending jobs, gate outgoing committed edits, transactionally discard only the departing lineage, then install. Resolution failure keeps the current document and allows retry/cancel.                                                    |
+| Restore                                                              | Claim the selected inactive lineage with a fresh writer; keep its durable checkpoint. Install full content/preferences into a fresh dirty, pathless session with no file handle or old history. A second crash can recover the retained bytes. |
+| Review discard                                                       | Named confirmation removes only the chosen inactive lineage; other maps and downloaded files remain.                                                                                                                                           |
+| Reload, navigation, close, process loss                              | Retain completed checkpoints for startup review. No final write is promised, and automatic restore never replaces the current document.                                                                                                        |
+
+Storage failures show Recovery unavailable with the last completed capture, if
+any, plus Retry. The shared transient backoff and capacity pause apply. Checkpoint
+acknowledgement never happens on a failed transaction. Editing, project downloads
+and agent exports remain available. Downloading does not silence navigation risk
+or consume recovery; the page cannot confirm a file reached disk.
+
+### User ownership and limitations
+
+Recovery belongs to this **browser profile and exact origin** (scheme, host and
+port), not a Git repository or downloaded filename. Localhost, a Pages origin and
+a custom domain have separate stores; paths on the same origin share the bounded
+store. Other profiles/devices cannot see it. Clearing site data, browser eviction,
+profile loss, unavailable storage and private-mode session cleanup can remove or
+prevent recovery. No persistent-storage permission or cloud backup is requested.
+Downloaded `.tilewright` files are the durable, user-owned copies: download them
+regularly and check the actual files. A checkpoint can omit edits since its capture.
+
+`tests/browser-recovery.spec.ts` uses isolated Chromium contexts with real IndexedDB
+and Web Locks. It covers shipping reload/restore, complete project semantics,
+selected discard, invalid Open, New/Open resolution, active tabs, interrupted
+publication, bad data, bounded rotation/capacity, quota/unavailable storage,
+upgrade blocking/migration, unknown versions, retries and transient gestures.
+Standard browser APIs are instrumented only for deterministic failure injection;
+the shipping recovery codec and adapter perform storage and validation. Shared
+recovery domain tests and native Rust/UI regressions protect desktop behavior.
+Actual outcomes and qualification limits are recorded in WRK. Full-snapshot capture,
+validation and hashing still use whole buffers; TW-049/TW-050 performance deferrals
+remain unchanged, with no latency or physical-memory guarantee from these tests.

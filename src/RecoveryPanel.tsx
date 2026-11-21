@@ -117,7 +117,9 @@ function RecoveryDialog({
     const source =
       entry.saved?.path ??
       entry.generations.find((g) => g.metadata)?.metadata?.saved?.path ??
-      "Untitled unsaved work";
+      (browser.bridge.kind === "browser"
+        ? "Local browser checkpoints"
+        : "Untitled unsaved work");
     groups.set(source, [...(groups.get(source) ?? []), entry]);
   }
   return (
@@ -136,6 +138,14 @@ function RecoveryDialog({
         Restore a captured checkpoint as an editable, unsaved copy. Your saved
         project stays separate. Changes after the capture may be missing.
       </p>
+      {browser.bridge.kind === "browser" && (
+        <p>
+          Recovery is local to this browser and site origin. Clearing site data,
+          storage eviction or private browsing can remove it. Downloaded project
+          files are your durable, user-owned copies; check those files
+          regularly.
+        </p>
+      )}
       <div className="dialog-actions">
         <button type="button" autoFocus onClick={() => browser.dismiss()}>
           Not now
@@ -207,7 +217,11 @@ function RecoveryRow({
       <p className="recovery-identity">Map identity: {entry.documentId}</p>
       {current && (
         <p>
-          Currently open — use Save or the document’s Discard changes action.
+          {browser.bridge.kind === "browser"
+            ? entry.documentId === browser.currentDocumentId
+              ? "Currently open — use the document’s Discard changes action to replace it. Downloads retain recovery."
+              : "Currently open in another tab — close that tab before restoring or discarding here."
+            : "Currently open — use Save or the document’s Discard changes action."}
         </p>
       )}
       {entry.error && <p role="alert">Recovery unavailable: {entry.error}</p>}
@@ -259,8 +273,9 @@ function RecoveryRow({
                 </p>
               )}
               <p className="hint">
-                Saved-file checks are advisory and can change. Restore never
-                writes to that file.
+                {browser.bridge.kind === "browser"
+                  ? "No source-file comparison is available. Restore never changes a downloaded file."
+                  : "Saved-file checks are advisory and can change. Restore never writes to that file."}
               </p>
             </>
           )}
