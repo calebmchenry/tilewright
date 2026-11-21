@@ -1,4 +1,4 @@
-# Browser builds and GitHub Pages (TW-060)
+# Browser builds and GitHub Pages
 
 The browser artifact is static HTML, JavaScript and CSS. Building it requires
 Node/npm; it needs no Rust, macOS, Tauri runtime or application server. The editor
@@ -7,9 +7,10 @@ browser recovery. No accounts, cloud project storage or backend are added.
 See the [platform contract](platform-services.md),
 [browser lifecycle](browser-lifecycle.md) and [recovery policy](recovery-policy.md).
 
-This ticket supplies local build evidence and a deployment-capable workflow.
-It does **not** establish a live Pages site. TW-061 owns browser acceptance;
-TW-062 owns repository/Pages/domain setup and live publication. Performance
+The [browser acceptance record](browser-validation.md) supplies local production
+qualification and the [user guide](browser-guide.md) explains files and recovery.
+This does **not** establish a live Pages site: TW-062 owns repository/Pages/domain
+setup and live publication. Performance
 refinement remains deferred to TW-049/TW-050 under the working baseline.
 
 ## Reproduce a browser artifact
@@ -68,14 +69,18 @@ by official actions, not passed to the browser build as application data.
 ## Validate the production files
 
 ```sh
-npx playwright install chromium
+npx playwright install chromium firefox webkit
 npm run format:check:web
 npm test
 TILEWRIGHT_WEB_BASE=/pages-smoke/ npm run test:web
 TILEWRIGHT_WEB_BASE=/ npm run test:web
 ```
 
-`test:web` type-checks and rebuilds, then runs Chromium against the strict static
+Install Python 3.9+ as well as the pinned Node/npm dependencies; the independent
+agent consumer uses only Python's standard library. On Linux, use
+`npx playwright install --with-deps chromium firefox webkit` for engine libraries.
+
+`test:web` type-checks and rebuilds, then runs Chromium, Firefox and WebKit against the strict static
 preview with the same base. Stop any interactive preview before testing: the
 test never reuses an existing server. `playwright.web.config.ts` isolates these
 production tests from the existing development/harness suite.
@@ -87,14 +92,31 @@ real editor's WebGL startup, project open/edit/undo/download round-trip, agent
 export and reload at the selected path. The worker environment import verifies
 asset/module resolution; it is not evidence of an application worker workload.
 Browser startup is separately checked for native IPC/chunk absence and local-only
-requests. This is a Chromium artifact smoke, not TW-061 cross-browser acceptance
-or a packaged WKWebView test. The existing bundle-size warning is not a release
-performance pass and remains deferred with TW-049/TW-050.
+requests. The required suite also covers a coherent drawing/layers/registry/areas/
+selection/transform/undo session, project download/reopen and recovery, malformed
+imports, stale reads, unsaved navigation, multiple live tabs, corrupt checkpoints,
+storage failures/retry and complete populated-map project and agent round trips.
+Real browser File, download, IndexedDB and Web Locks paths are used; no native IPC
+mock or editor harness is served. Standard APIs are instrumented only for explicit
+failure injection. See [coverage and actual results](browser-validation.md).
 
-Local terminal output identifies failing checks. Production traces/screenshots
-and the asset inventory are in `test-results/`; the HTML report is in
-`playwright-report/` (`npx playwright show-report`). A subsequent Playwright run
-replaces these directories, so copy them first when retaining earlier evidence.
+All three engine projects are required, with no retries or browser-specific skips.
+Playwright is pinned to 1.64.1 because 1.65.x's Firefox chooser interception emits
+an erroneous cancel before file selection ([upstream issue](https://github.com/microsoft/playwright/issues/43994)).
+Do not remove application cancellation handling to accommodate that tooling bug.
+When updating the pin, rerun the full functional suite and refresh the recorded
+browser versions. This automation is distinct from Safari or packaged WKWebView.
+The existing bundle-size warning remains deferred with TW-049/TW-050.
+
+Local terminal output identifies failing checks. Production traces, screenshots,
+actual downloaded projects and evidence attachments are in `test-results-web/`;
+the HTML report is in `playwright-report-web/`
+(`npx playwright show-report playwright-report-web`). Development tests retain
+`test-results/` and `playwright-report/`, so they cannot erase production traces.
+A subsequent run of the same suite replaces its report directories; copy them
+first when retaining evidence. A focused diagnostic run uses, for example,
+`TILEWRIGHT_WEB_BASE=/pages-smoke/ npm run test:web -- --project=firefox`.
+That diagnostic subset does not replace the required three-engine release gate.
 
 ## Manual workflow and target setup
 
@@ -106,12 +128,12 @@ and [GitHub's custom Pages workflows](https://docs.github.com/en/pages/getting-s
 
 The workflow accepts a required `base` path and a `deploy` boolean that defaults
 to **false**. A validation-only run does not query or change Pages configuration.
-On Ubuntu it selects `.nvmrc`, runs `npm ci`, installs Chromium and its system
+On Ubuntu it selects `.nvmrc`, runs `npm ci`, installs all three browser engines and their system
 dependencies, checks formatting, builds the shared desktop frontend without
-Rust, runs the complete domain/development UI suites, and builds/smokes both a
+Rust, runs the complete domain/development UI suites, and runs the entire production functional suite at both a
 non-root path and the selected final base. Only then does it upload `dist-web/`
 as the `github-pages` artifact. It uploads neither the repository nor `dist/`.
-The second smoke rebuilds so the uploaded artifact is the exact tested final base.
+The second qualification rebuilds so the uploaded artifact is the exact tested final base.
 
 The build job has only `contents: read`. The dependent deployment job alone has
 `pages: write` and `id-token: write`, uses the `github-pages` environment and

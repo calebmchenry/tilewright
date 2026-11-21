@@ -2,16 +2,17 @@
 
 Project requirements are in [INTENT.md](INTENT.md). Tickets are managed with `wrk`.
 
-One shared editor targets macOS through Tauri and browsers through GitHub Pages.
-The [platform contract](docs/platform-services.md) describes the boundary and
-current browser preview: rendering/editing, local project Open/drop, and editable
-project downloads work without Tauri. The [browser lifecycle](docs/browser-lifecycle.md) provides download-relative status,
-deliberate document replacement and best-effort navigation warnings. Whole-map
-[agent export downloads](docs/agent-export-format.md#browser-export-workflow-tw-058)
-are available, along with [local browser recovery](docs/recovery-policy.md#browser-indexeddb-recovery-tw-059).
-[Browser production builds and manual Pages CI](docs/github-pages.md) are ready
-for validation; live publication remains TW-062. Download a project and check
-the file before leaving the page; a request does not confirm a disk write.
+One shared editor targets macOS through Tauri and desktop browsers through GitHub
+Pages. The [browser user guide](docs/browser-guide.md) covers local Open/drop,
+editable project downloads, separate agent exports, unsaved-work protection and
+local recovery. Download projects regularly and check the actual files; a request
+does not confirm a disk save. Project content stays local, with no accounts,
+application backend or cloud file storage.
+
+The [production browser acceptance record](docs/browser-validation.md) describes
+Chromium, Firefox and WebKit verification and the separate real Safari smoke.
+[Browser production builds and gated manual Pages CI](docs/github-pages.md) provide
+the release candidate; live publication remains TW-062.
 
 For a clean macOS checkout, prerequisites, development commands, tests, and local
 packaged builds, see [desktop development](docs/desktop-development.md).
