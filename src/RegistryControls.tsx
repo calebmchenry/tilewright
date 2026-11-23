@@ -18,6 +18,159 @@ type Mode =
   | { kind: "edit" | "adopt" | "remove"; id: RegistryId; version: number };
 type Props = { session: EditorSession };
 
+function RegistryActions({
+  name,
+  disabled,
+  onAction,
+}: {
+  name: string;
+  disabled: boolean;
+  onAction: (kind: "edit" | "adopt" | "remove") => void;
+}) {
+  const menuId = useId();
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const close = () => {
+    menu.current?.hidePopover();
+    trigger.current?.focus({ preventScroll: true });
+  };
+  const show = (last = false) => {
+    const element = menu.current!;
+    element.showPopover();
+    const anchor = trigger.current!.getBoundingClientRect();
+    const { width, height } = element.getBoundingClientRect();
+    const top =
+      anchor.bottom + 4 + height <= window.innerHeight - 8
+        ? anchor.bottom + 4
+        : anchor.top - height - 4;
+    element.style.left = `${Math.max(8, Math.min(anchor.right - width, window.innerWidth - width - 8))}px`;
+    element.style.top = `${Math.max(8, Math.min(top, window.innerHeight - height - 8))}px`;
+    const items = element.querySelectorAll<HTMLButtonElement>("button");
+    items[last ? items.length - 1 : 0]?.focus({ preventScroll: true });
+  };
+  useEffect(() => {
+    if (!expanded) return;
+    // Dismiss when the sidebar moves so the menu cannot float away from its row.
+    const dismiss = (event: Event) => {
+      if (event.target instanceof Node && menu.current?.contains(event.target))
+        return;
+      close();
+    };
+    window.addEventListener("resize", dismiss);
+    document.addEventListener("scroll", dismiss, true);
+    return () => {
+      window.removeEventListener("resize", dismiss);
+      document.removeEventListener("scroll", dismiss, true);
+    };
+  }, [expanded]);
+  return (
+    <div
+      className="registry-actions"
+      onBlur={(event) => {
+        if (
+          event.relatedTarget &&
+          !event.currentTarget.contains(event.relatedTarget)
+        )
+          menu.current?.hidePopover();
+      }}
+    >
+      <button
+        ref={trigger}
+        type="button"
+        className="overflow-button"
+        disabled={disabled}
+        aria-label={`More options for ${name}`}
+        title={`More options for ${name}`}
+        aria-haspopup="menu"
+        aria-expanded={expanded}
+        aria-controls={menuId}
+        popoverTarget={menuId}
+        onClick={(event) => {
+          event.preventDefault();
+          menu.current?.matches(":popover-open") ? close() : show();
+        }}
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            show(event.key === "ArrowUp");
+          } else if (event.key === "Escape") close();
+        }}
+      >
+        <span aria-hidden="true">⋯</span>
+      </button>
+      <div
+        ref={menu}
+        id={menuId}
+        role="menu"
+        aria-label={`Actions for ${name}`}
+        popover="auto"
+        className="registry-menu"
+        onToggle={(event) => setExpanded(event.newState === "open")}
+        onKeyDown={(event) => {
+          event.stopPropagation();
+          if (event.key === "Escape") {
+            event.preventDefault();
+            close();
+          } else if (
+            ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)
+          ) {
+            event.preventDefault();
+            const items = Array.from(
+              event.currentTarget.querySelectorAll<HTMLButtonElement>("button"),
+            );
+            const index = items.indexOf(
+              document.activeElement as HTMLButtonElement,
+            );
+            const next =
+              event.key === "Home"
+                ? 0
+                : event.key === "End"
+                  ? items.length - 1
+                  : (index +
+                      (event.key === "ArrowDown" ? 1 : -1) +
+                      items.length) %
+                    items.length;
+            items[next]?.focus();
+          }
+        }}
+      >
+        {(
+          [
+            ["edit", "Edit", `Edit ${name}`],
+            ["adopt", "Adopt raw tiles", `Adopt raw tiles into ${name}`],
+            ["remove", "Remove", `Remove ${name}`],
+          ] as const
+        ).map(([kind, label, accessibleLabel]) => (
+          <button
+            key={kind}
+            type="button"
+            role="menuitem"
+            tabIndex={-1}
+            aria-label={accessibleLabel}
+            onClick={() => {
+              const opener = trigger.current;
+              const fallback = opener
+                ?.closest(".registry-controls")
+                ?.querySelector<HTMLButtonElement>("[data-register-color]");
+              close();
+              onAction(kind);
+              // Removing an unused color has no dialog to restore focus for us.
+              queueMicrotask(() => {
+                if (!opener?.isConnected)
+                  fallback?.focus({ preventScroll: true });
+              });
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Swatch({ color }: { color: string }) {
   return (
     <i
@@ -400,32 +553,11 @@ export function RegistryControls({ session }: Props) {
                   <Swatch color={valid ? String(record.rgba) : "#ff00ff"} />
                   <span>{name}</span>
                 </button>
-                <div className="registry-actions">
-                  <button
-                    type="button"
-                    disabled={!valid}
-                    onClick={() => open("edit", id)}
-                    aria-label={`Edit ${name}`}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!valid}
-                    onClick={() => open("adopt", id)}
-                    aria-label={`Adopt raw tiles into ${name}`}
-                  >
-                    Adopt
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!valid}
-                    onClick={() => open("remove", id)}
-                    aria-label={`Remove ${name}`}
-                  >
-                    Remove
-                  </button>
-                </div>
+                <RegistryActions
+                  name={name}
+                  disabled={!valid}
+                  onAction={(kind) => open(kind, id)}
+                />
                 {!valid && <p className="hint">Invalid named color record.</p>}
               </li>
             );

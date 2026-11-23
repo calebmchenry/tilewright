@@ -695,7 +695,16 @@ footer {
   list-style: none;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 6px;
+}
+.registry-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+}
+.registry-list > li > .hint {
+  grid-column: 1 / -1;
 }
 .registry-choice {
   display: flex;
@@ -720,14 +729,35 @@ footer {
 }
 .registry-actions {
   display: flex;
-  gap: 4px;
-  margin-top: 4px;
 }
-.registry-actions button {
-  flex: 1;
-  min-width: 0;
-  font-size: 11px;
-  padding: 5px 2px;
+.registry-actions .overflow-button {
+  height: 34px;
+}
+.registry-menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 184px;
+  max-width: calc(100vw - 16px);
+  padding: 4px;
+  border: 1px solid #3d4b5b;
+  border-radius: 6px;
+  background: #202a36;
+  color: #e1e6ef;
+  box-shadow: 0 6px 24px #0006;
+}
+.registry-menu:popover-open {
+  display: grid;
+  gap: 2px;
+}
+.registry-menu button {
+  text-align: left;
+  border-color: transparent;
+  background: transparent;
+}
+.registry-menu button:focus-visible {
+  outline-offset: -2px;
+  background: #35485a;
 }
 .registry-dialog form {
   display: grid;

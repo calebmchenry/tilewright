@@ -161,7 +161,10 @@ for (const multi of [false, true])
     await button(page, "Apply area").click();
     await checkpoint();
     await button(page, "Deselect area").click();
-    await button(page, "Edit Grass").click();
+    await button(page, "More options for Grass").click();
+    await page
+      .getByRole("menuitem", { name: "Edit Grass", exact: true })
+      .click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Named color hex").fill(newGrass.slice(0, 7));
     await dialog

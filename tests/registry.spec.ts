@@ -82,7 +82,10 @@ test("registry creates stable meanings, adopts hidden/covered cells, edits atomi
   ).toEqual(["buildings"]);
 
   await panel(page)
-    .getByRole("button", { name: "Edit Grass", exact: true })
+    .getByRole("button", { name: "More options for Grass" })
+    .click();
+  await panel(page)
+    .getByRole("menuitem", { name: "Edit Grass", exact: true })
     .click();
   let dialog = page.getByRole("dialog");
   await dialog.getByLabel("Name", { exact: true }).fill("Meadow");
@@ -109,7 +112,10 @@ test("registry creates stable meanings, adopts hidden/covered cells, edits atomi
   ).toHaveAttribute("aria-pressed", "true");
   await page.evaluate(() => window.editorProbe.session.perform("redo"));
   await panel(page)
-    .getByRole("button", { name: "Remove Meadow", exact: true })
+    .getByRole("button", { name: "More options for Meadow" })
+    .click();
+  await panel(page)
+    .getByRole("menuitem", { name: "Remove Meadow", exact: true })
     .click();
   dialog = page.getByRole("dialog", { name: "Remove named color" });
   await expect(dialog.getByTestId("registry-counts")).toContainText(
@@ -169,8 +175,15 @@ test("R13: Cancel and Escape in every registry dialog preserve all state and blo
     "Remove Grass",
   ]) {
     for (const cancel of ["button", "escape"]) {
+      if (opener !== "Register color")
+        await panel(page)
+          .getByRole("button", { name: "More options for Grass" })
+          .click();
       await panel(page)
-        .getByRole("button", { name: opener, exact: true })
+        .getByRole(opener === "Register color" ? "button" : "menuitem", {
+          name: opener,
+          exact: true,
+        })
         .click();
       const dialog = page.getByRole("dialog");
       const button = dialog.getByRole("button", {
@@ -186,7 +199,10 @@ test("R13: Cancel and Escape in every registry dialog preserve all state and blo
       await expect(dialog).not.toBeVisible();
       expect(await snapshot(page)).toEqual(before);
       await expect(
-        panel(page).getByRole("button", { name: opener, exact: true }),
+        panel(page).getByRole("button", {
+          name: opener === "Register color" ? opener : "More options for Grass",
+          exact: true,
+        }),
       ).toBeFocused();
     }
   }
@@ -200,7 +216,10 @@ test("R09: Edit recolors the selected named swatch through history while raw sel
   const linked = await snapshot(page);
   const edit = async (color: string) => {
     await panel(page)
-      .getByRole("button", { name: "Edit Grass", exact: true })
+      .getByRole("button", { name: "More options for Grass" })
+      .click();
+    await panel(page)
+      .getByRole("menuitem", { name: "Edit Grass", exact: true })
       .click();
     const dialog = page.getByRole("dialog", {
       name: "Edit named color",
@@ -300,7 +319,10 @@ test("duplicate registration identifies its owner; explicit adoption and selecti
     ),
   ).toHaveLength(2);
   await panel(page)
-    .getByRole("button", { name: "Adopt raw tiles into Grass", exact: true })
+    .getByRole("button", { name: "More options for Grass" })
+    .click();
+  await panel(page)
+    .getByRole("menuitem", { name: "Adopt raw tiles into Grass", exact: true })
     .click();
   dialog = page.getByRole("dialog");
   await expect(dialog.getByTestId("registry-counts")).toContainText(
@@ -333,7 +355,10 @@ test("stale adoption/removal previews require refreshed counts and preserve sele
   const id = await addGrass(page);
   for (const kind of ["adopt", "remove"] as const) {
     await panel(page)
-      .getByRole("button", {
+      .getByRole("button", { name: "More options for Grass" })
+      .click();
+    await panel(page)
+      .getByRole("menuitem", {
         name: kind === "adopt" ? "Adopt raw tiles into Grass" : "Remove Grass",
         exact: true,
       })
@@ -437,8 +462,9 @@ test("registry RGB/picker validation, unused removal, duplicate names and minimu
   await expect(
     row.getByRole("button", { name: "Paint with Mountain" }),
   ).toHaveAttribute("title", new RegExp(id));
+  await row.getByRole("button", { name: "More options for Mountain" }).click();
   await row
-    .getByRole("button", { name: "Remove Mountain", exact: true })
+    .getByRole("menuitem", { name: "Remove Mountain", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect((await snapshot(page)).registry.some(([key]) => key === id)).toBe(

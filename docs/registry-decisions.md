@@ -309,7 +309,9 @@ raw paint, even at the same shade. Future drawing tools consume `currentPaint()`
 this ticket does not add pencil gestures.
 
 `src/RegistryControls.tsx` supplies rows with name, swatch, ID in the tooltip, and
-Edit/Adopt/Remove actions. Register starts with adoption unchecked. Add/edit dialogs
+an adjacent three-dot menu for Edit/Adopt/Remove actions. The menu supports arrow
+keys, Home/End, Escape, and outside-click dismissal; dialogs return focus to the
+menu button. Register starts with adoption unchecked. Add/edit dialogs
 share opaque hex, RGB and native-picker validation with raw authoring. A collision
 shows its owner and explicit Choose/Adopt actions. Existing adoption and populated
 removal show exact counts and require confirmation; Cancel has initial focus.

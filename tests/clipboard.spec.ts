@@ -185,8 +185,11 @@ for (const dpr of [1, 2])
     expect(await content(page)).toEqual(pasted);
     // Actual registry Edit control, then framebuffer verification on both copies.
     await page
+      .getByRole("button", { name: "More options for Stone", exact: true })
+      .click();
+    await page
       .locator("main")
-      .getByRole("button", { name: "Edit Stone", exact: true })
+      .getByRole("menuitem", { name: "Edit Stone", exact: true })
       .click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Named color hex", { exact: true }).fill("#112233");

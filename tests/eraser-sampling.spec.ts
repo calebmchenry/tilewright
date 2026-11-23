@@ -179,7 +179,10 @@ for (const dpr of [1, 2]) {
     await page.mouse.move(10, 10);
     const registeredPixels = await tilePixels(page, 62, 65);
     expect(await tilePixels(page, 66, 65)).toEqual(registeredPixels);
-    await action(page, "Edit Grass").click();
+    await action(page, "More options for Grass").click();
+    await page
+      .getByRole("menuitem", { name: "Edit Grass", exact: true })
+      .click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Named color hex").fill("#557755");
     await dialog

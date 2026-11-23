@@ -207,7 +207,8 @@ test("complete production session: author, move chosen layers, transform, recolo
   await host(page).press("Escape");
   await button(page, "Hide Furniture").click();
   await page.getByLabel("Zoom", { exact: true }).selectOption("0.125");
-  await button(page, "Edit Grass").click();
+  await button(page, "More options for Grass").click();
+  await page.getByRole("menuitem", { name: "Edit Grass", exact: true }).click();
   await page.getByLabel("Named color hex").fill("#557755");
   await button(page, "Edit named color").click();
   const final = await download(page);
