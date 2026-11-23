@@ -412,7 +412,7 @@ async function choose(page: Page, contents = JSON.stringify(exampleProject)) {
   ).toBeEnabled();
 }
 async function review(page: Page) {
-  await page.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("button", { name: "More options", exact: true }).click();
   await page.getByRole("button", { name: "Review recovery…" }).click();
   await expect(
     page.getByRole("button", { name: "Refresh recovery" }),

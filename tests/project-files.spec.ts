@@ -928,7 +928,7 @@ test("startup recovery offers corrupt fallback, guards restore and saves exact c
   );
   await expect(page.locator(".document-title")).toContainText("Unsaved");
   expect(await page.evaluate(() => window.fileProbe.writes)).toEqual([]);
-  await page.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("button", { name: "More options", exact: true }).click();
   await page.getByRole("button", { name: "Review recovery…" }).click();
   await expect(dialog).toContainText("Currently open");
   await expect(
@@ -957,11 +957,11 @@ test("stale recovery is reviewable without prompting and Escape keeps it at narr
   ]);
   const dialog = page.getByRole("dialog", { name: "Recover unsaved work" });
   await expect(
-    page.getByRole("button", { name: "More options" }),
+    page.getByRole("button", { name: "More options", exact: true }),
   ).toBeEnabled();
   await expect(dialog).toBeHidden();
   await page.setViewportSize({ width: 640, height: 480 });
-  await page.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("button", { name: "More options", exact: true }).click();
   await page.getByRole("button", { name: "Review recovery…" }).click();
   await expect(dialog).toContainText("Already matches saved file");
   const size = await dialog.boundingBox();
@@ -1196,12 +1196,12 @@ test("New and recovery dismissal restore their opener without background map edi
   await dialog.getByLabel("Width (tiles)").press("Escape");
   await expect(name).toBeFocused();
   const review = page.getByRole("button", { name: "Review recovery…" });
-  await page.getByRole("button", { name: "More options" }).click();
+  await page.getByRole("button", { name: "More options", exact: true }).click();
   await review.click();
   const recovery = page.getByRole("dialog", { name: "Recover unsaved work" });
   await recovery.press("Escape");
   await expect(
-    page.getByRole("button", { name: "More options" }),
+    page.getByRole("button", { name: "More options", exact: true }),
   ).toBeFocused();
   for (const action of ["new", "open", "save", "save-as", "export-agent"]) {
     await expect
@@ -1250,7 +1250,7 @@ test("compact chrome keeps one-line coordinates, save time and keyboard recovery
     .poll(() => menuState(page, "save"))
     .toMatchObject({ enabled: true });
   await expect(page.getByTestId("save-timestamp")).toHaveText(saved!);
-  const more = page.getByRole("button", { name: "More options" });
+  const more = page.getByRole("button", { name: "More options", exact: true });
   await more.focus();
   await more.press("Enter");
   await expect(more).toHaveAttribute("aria-expanded", "true");

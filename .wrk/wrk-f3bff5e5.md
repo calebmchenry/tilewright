@@ -25,3 +25,8 @@ Validation (Node 24.22.3):
 - Changed-file Prettier check, git diff --check, and wrk validate passed.
 
 Existing bundle-size warning remains; no performance budget pass is claimed. Rendering/presentation and large-edit performance deferrals remain unchanged.
+
+Pages deployment follow-up (2026-11-23):
+- Committed and pushed the scoped feature as 9d6c3af; a clean checkout passed all 21 affected UI tests, browser formatting, and build checks.
+- Workflow 45241735643 passed all domain tests and 195 development UI tests, but two recovery tests used substring matching for the application More options button and also matched the new color menus. Publication was correctly blocked.
+- Made application overflow selectors exact in browser-platform, browser-recovery, and project-files tests. All 28 focused platform/recovery workflows pass from the clean release checkout, including both CI failures. No application behavior or deployment gates were changed.

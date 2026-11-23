@@ -16,9 +16,9 @@ test("browser startup and editing never load native services", async ({
     false,
   );
   await expect(page.locator(".app-header")).not.toHaveClass(/native-titlebar/);
-  await expect(page.getByRole("button", { name: "More options" })).toHaveCount(
-    1,
-  );
+  await expect(
+    page.getByRole("button", { name: "More options", exact: true }),
+  ).toHaveCount(1);
   await expect(
     page.getByRole("status", { name: "Browser availability" }),
   ).toContainText("Recovery stays in this browser");
